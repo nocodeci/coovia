@@ -1,3 +1,4 @@
+import { ClipboardPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -15,6 +16,7 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
+import Paiement from "@/components/paiement";
 
 export default function Dashboard() {
   return (
@@ -32,9 +34,14 @@ export default function Dashboard() {
       {/* ===== Main ===== */}
       <Main>
         <div className='mb-2 flex items-center justify-between space-y-2'>
-          <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
+          <h1 className='text-2xl font-bold tracking-tight'>Tableau de bord</h1>
           <div className='flex items-center space-x-2'>
-            <Button>Download</Button>
+          <Button
+              className='bg-[oklch(0.8944_0.1931_121.75)] text-foreground hover:bg-[oklch(0.8_0.19_121)]' /* Nouvelle couleur de bouton et texte sombre */
+            >
+              Ajouter un produit
+              <ClipboardPlus />
+            </Button>
           </div>
         </div>
         <Tabs
@@ -44,12 +51,12 @@ export default function Dashboard() {
         >
           <div className='w-full overflow-x-auto pb-2'>
             <TabsList>
-              <TabsTrigger value='overview'>Overview</TabsTrigger>
+              <TabsTrigger value='overview'>Vue d'ensemble</TabsTrigger>
               <TabsTrigger value='analytics' disabled>
-                Analytics
+              Analyse
               </TabsTrigger>
               <TabsTrigger value='reports' disabled>
-                Reports
+              Rapports
               </TabsTrigger>
               <TabsTrigger value='notifications' disabled>
                 Notifications
@@ -58,7 +65,9 @@ export default function Dashboard() {
           </div>
           <TabsContent value='overview' className='space-y-4'>
             <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-              <Card>
+            <Card
+                className='bg-[oklch(0.2274_0.0492_157.66)] text-[oklch(1_0_0)] border-none' /* Nouvelle couleur de fond et texte blanc */
+              >
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
                     Total Revenue
@@ -71,22 +80,22 @@ export default function Dashboard() {
                     strokeLinecap='round'
                     strokeLinejoin='round'
                     strokeWidth='2'
-                    className='text-muted-foreground h-4 w-4'
+                    className='text-[oklch(1_0_0)] h-4 w-4' /* Icône en blanc */
                   >
                     <path d='M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' />
                   </svg>
                 </CardHeader>
                 <CardContent>
                   <div className='text-2xl font-bold'>$45,231.89</div>
-                  <p className='text-muted-foreground text-xs'>
-                    +20.1% from last month
+                  <p className='text-[oklch(1_0_0)] text-xs opacity-80'>
+                    +20.1% du mois dernier
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
-                    Subscriptions
+                  Abonnements
                   </CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
@@ -106,13 +115,13 @@ export default function Dashboard() {
                 <CardContent>
                   <div className='text-2xl font-bold'>+2350</div>
                   <p className='text-muted-foreground text-xs'>
-                    +180.1% from last month
+                    +180.1% du mois dernier
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>Sales</CardTitle>
+                  <CardTitle className='text-sm font-medium'>Vente</CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
                     viewBox='0 0 24 24'
@@ -130,14 +139,14 @@ export default function Dashboard() {
                 <CardContent>
                   <div className='text-2xl font-bold'>+12,234</div>
                   <p className='text-muted-foreground text-xs'>
-                    +19% from last month
+                    +19% du mois dernier
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
-                    Active Now
+                  Actif maintenant
                   </CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
@@ -155,7 +164,7 @@ export default function Dashboard() {
                 <CardContent>
                   <div className='text-2xl font-bold'>+573</div>
                   <p className='text-muted-foreground text-xs'>
-                    +201 since last hour
+                    +201 depuis la dernière heure
                   </p>
                 </CardContent>
               </Card>
@@ -163,7 +172,7 @@ export default function Dashboard() {
             <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
               <Card className='col-span-1 lg:col-span-4'>
                 <CardHeader>
-                  <CardTitle>Overview</CardTitle>
+                  <CardTitle>Vue d'ensemble</CardTitle>
                 </CardHeader>
                 <CardContent className='pl-2'>
                   <Overview />
@@ -171,9 +180,9 @@ export default function Dashboard() {
               </Card>
               <Card className='col-span-1 lg:col-span-3'>
                 <CardHeader>
-                  <CardTitle>Recent Sales</CardTitle>
+                  <CardTitle>Ventes récentes</CardTitle>
                   <CardDescription>
-                    You made 265 sales this month.
+                  Vous avez réalisé 265 ventes ce mois-ci.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -183,6 +192,9 @@ export default function Dashboard() {
             </div>
           </TabsContent>
         </Tabs>
+        <div className='mt-4'>
+          <Paiement />
+        </div>
       </Main>
     </>
   )
