@@ -51,7 +51,7 @@ export const sidebarData: SidebarData = {
       title: 'General',
       items: [
         {
-          title: 'Dashboard',
+          title: 'Acceuil',
           url: '/',
           icon: IconLayoutDashboard,
         },

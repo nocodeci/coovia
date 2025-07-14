@@ -11,8 +11,9 @@
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
+  /* Nouvelle couleur principale pour le thème clair */
+  --primary: oklch(0.2274 0.0492 157.66); 
+  --primary-foreground: oklch(0.984 0.003 247.858); /* Le texte sur votre couleur principale */
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
@@ -29,12 +30,13 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  --sidebar: var(--background);
-  --sidebar-foreground: var(--foreground);
+  --sidebar: oklch(0.2274 0.0492 157.66);
+  --header-sidebar : oklch(0.9757 0.0017 247.84);
+  --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--accent);
-  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-accent: oklch(0.5744 0.1204 121.28);
+  --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
 }
@@ -46,8 +48,9 @@
   --card-foreground: oklch(0.984 0.003 247.858);
   --popover: oklch(0.208 0.042 265.755);
   --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
+  /* Nouvelle couleur principale pour le thème sombre (souvent une version plus claire ou complémentaire) */
+  --primary: oklch(0.208 0.042 265.755); /* J'ai gardé une valeur un peu plus claire pour le dark mode, mais vous pouvez ajuster */
+  --primary-foreground: oklch(0.984 0.003 247.858); /* Le texte sur votre couleur principale en dark mode */
   --secondary: oklch(0.279 0.041 260.031);
   --secondary-foreground: oklch(0.984 0.003 247.858);
   --muted: oklch(0.279 0.041 260.031);
