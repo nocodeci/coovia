@@ -1,93 +1,121 @@
 "use client"
 
+import { useNavigate } from "@tanstack/react-router"
 import type React from "react"
-
 import { cn } from "@/lib/utils"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   type ColumnDef,
-  type ColumnFiltersState,
   type FilterFn,
-  type PaginationState,
-  type SortingState,
-  type VisibilityState,
   flexRender,
-  getCoreRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  getFilteredRowModel,
+  getFacetedUniqueValues,
 } from "@tanstack/react-table"
 import {
   RiArrowDownSLine,
   RiArrowUpSLine,
-  RiErrorWarningLine,
   RiCloseCircleLine,
-  RiDeleteBinLine,
-  RiBardLine,
   RiFilter3Line,
   RiSearch2Line,
   RiCheckLine,
-  RiMoreLine,
   RiTimeLine,
   RiLoader4Line,
   RiCloseLine,
   RiBankCardLine,
+  RiSmartphoneLine,
+  RiGlobalLine,
+  RiEyeLine,
+  RiFileCopyLine,
+  RiDownloadLine,
+  RiPrinterLine,
 } from "@remixicon/react"
-import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { type ReactElement, useState, useMemo, useEffect, useRef } from "react"
+import { useId } from "react"
+import type { ColumnFiltersState, VisibilityState, PaginationState, SortingState } from "@tanstack/react-table"
 
-type PaymentMethod = {
-  name: string
-  type: "visa" | "mastercard" | "paypal" | "apple-pay" | "google-pay" | "bank-transfer"
-  image: string
-}
+// Ajouter l'import du Sheet
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Progress } from "@/components/ui/progress"
 
-type Item = {
-  id: string
-  image: string
-  name: string
-  status: "Initié" | "En Attente" | "Succès" | "Échec"
-  location: string
-  verified: boolean
-  paymentMethod: PaymentMethod
-  value: number
-  progression: number // Nouveau champ pour le pourcentage de progression
-  joinDate: string
-}
+// Import des composants et données
+import type { PaymentTransaction } from "../types/payment"
+import { Avatar } from "@/components/avatar"
+import { mockTransactions } from "../data/mock-transactions"
+import { PaymentConnectionAnimation } from "@/components/payment-connection-animation"
 
-const statusFilterFn: FilterFn<Item> = (row, columnId, filterValue: string[]) => {
+// Ajouter ces imports après les imports existants
+import { GatewayFilter } from "@/components/filters/gateway-filter"
+import { PaymentMethodFilter } from "@/components/filters/payment-method-filter"
+import { AmountFilter } from "@/components/filters/amount-filter"
+import { DateFilter } from "@/components/filters/date-filter"
+import { LocationFilter } from "@/components/filters/location-filter"
+import { IdFilter } from "@/components/filters/id-filter"
+
+const statusFilterFn: FilterFn<PaymentTransaction> = (row, columnId, filterValue: string[]) => {
   if (!filterValue?.length) return true
   const status = row.getValue(columnId) as string
   return filterValue.includes(status)
+}
+
+const gatewayFilterFn: FilterFn<PaymentTransaction> = (row, columnId, filterValue: string[]) => {
+  if (!filterValue?.length) return true
+  const gateway = row.original.paymentGateway.name
+  return filterValue.includes(gateway)
+}
+
+const paymentMethodFilterFn: FilterFn<PaymentTransaction> = (row, columnId, filterValue: string[]) => {
+  if (!filterValue?.length) return true
+  const method = row.original.paymentMethod.type
+  return filterValue.includes(method)
+}
+
+const amountFilterFn: FilterFn<PaymentTransaction> = (row, columnId, filterValue: { min?: number; max?: number }) => {
+  if (!filterValue) return true
+  const amount = row.getValue(columnId) as number
+  const { min, max } = filterValue
+  if (min !== undefined && amount < min) return false
+  if (max !== undefined && amount > max) return false
+  return true
+}
+
+const dateFilterFn: FilterFn<PaymentTransaction> = (row, columnId, filterValue: { start?: string; end?: string }) => {
+  if (!filterValue) return true
+  const date = new Date(row.getValue(columnId) as string)
+  const { start, end } = filterValue
+  if (start && date < new Date(start)) return false
+  if (end && date > new Date(end + "T23:59:59")) return false
+  return true
+}
+
+const locationFilterFn: FilterFn<PaymentTransaction> = (row, columnId, filterValue: string[]) => {
+  if (!filterValue?.length) return true
+  const location = row.getValue(columnId) as string
+  return filterValue.includes(location)
+}
+
+const idFilterFn: FilterFn<PaymentTransaction> = (row, columnId, filterValue: string) => {
+  if (!filterValue) return true
+  const id = row.getValue(columnId) as string
+  return id.toLowerCase().includes(filterValue.toLowerCase())
 }
 
 const getStatusIcon = (status: string) => {
@@ -120,84 +148,264 @@ const getStatusColor = (status: string) => {
   }
 }
 
-const getPaymentMethodIcon = (type: PaymentMethod["type"]) => {
-  const iconProps = { size: 20, className: "rounded" }
+const getPaymentMethodIcon = (type: string) => {
+  const iconProps = { size: 16, className: "text-muted-foreground" }
 
   switch (type) {
-    case "visa":
-      return (
-        <div className="w-5 h-5 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
-          V
-        </div>
-      )
-    case "mastercard":
-      return (
-        <div className="w-5 h-5 bg-red-600 rounded flex items-center justify-center text-white text-xs font-bold">
-          M
-        </div>
-      )
-    case "paypal":
-      return (
-        <div className="w-5 h-5 bg-blue-500 rounded flex items-center justify-center text-white text-xs font-bold">
-          P
-        </div>
-      )
-    case "apple-pay":
-      return (
-        <div className="w-5 h-5 bg-black rounded flex items-center justify-center text-white text-xs font-bold">A</div>
-      )
-    case "google-pay":
-      return (
-        <div className="w-5 h-5 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold">
-          G
-        </div>
-      )
+    case "card":
+      return <RiBankCardLine {...iconProps} />
+    case "mobile-money":
+      return <RiSmartphoneLine {...iconProps} />
+    case "digital-wallet":
+      return <RiGlobalLine {...iconProps} />
     case "bank-transfer":
-      return <RiBankCardLine {...iconProps} className="text-gray-600" />
+      return <RiBankCardLine {...iconProps} />
     default:
-      return <RiBankCardLine {...iconProps} className="text-gray-600" />
+      return <RiGlobalLine {...iconProps} />
   }
 }
 
-interface GetColumnsProps {
-  data: Item[]
-  setData: React.Dispatch<React.SetStateAction<Item[]>>
+// Composant TransactionDetailsSheet avec couleur #032313
+function TransactionDetailsSheet({ transaction }: { transaction: PaymentTransaction }) {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="w-10 h-10 p-0 text-[#032313] hover:text-[#032313] hover:bg-[#032313]/10 rounded-full transition-all duration-200 hover:scale-105"
+        >
+          <RiEyeLine size={18} />
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="bg-white text-gray-900 w-[420px] p-0 [&>button]:hidden border-l border-gray-200 shadow-xl">
+        <SheetHeader className="sr-only">
+          <SheetTitle>Détails de la transaction</SheetTitle>
+          <SheetDescription>Informations détaillées sur cette transaction de paiement.</SheetDescription>
+        </SheetHeader>
+
+        <div className="flex h-full w-full flex-col">
+          {/* Header */}
+          <div className="flex flex-col gap-3 p-6 border-b border-gray-100 bg-gradient-to-r from-[#032313]/5 to-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#032313] to-[#032313]/80 flex items-center justify-center shadow-lg">
+                <RiEyeLine className="text-white" size={20} />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Transaction</h2>
+                <p className="text-sm text-gray-500">#{transaction.id}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-auto p-4">
+            {/* Statut Group */}
+            <div className="relative flex w-full min-w-0 flex-col p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+              <div className="text-[#032313] flex h-6 shrink-0 items-center px-1 text-xs font-medium uppercase tracking-wide mb-3">
+                Statut de la transaction
+              </div>
+              <div className="w-full text-sm space-y-3">
+                <div className="flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 text-left text-sm bg-[#032313]/5 border border-[#032313]/10">
+                  <Badge
+                    variant="outline"
+                    className={cn("gap-2 py-1.5 px-3 text-sm border-2 font-medium", getStatusColor(transaction.status))}
+                  >
+                    {getStatusIcon(transaction.status)}
+                    {transaction.status}
+                  </Badge>
+                </div>
+                <div className="flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 text-left text-sm">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Progression</span>
+                      <span className="text-[#032313] font-medium">{transaction.progression}%</span>
+                    </div>
+                    <Progress className="h-2 bg-gray-100 [&>div]:bg-[#032313]" value={transaction.progression} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Client Group */}
+            <div className="relative flex w-full min-w-0 flex-col p-3 bg-white rounded-xl border border-gray-100 shadow-sm mt-2">
+              <div className="text-[#032313] flex h-6 shrink-0 items-center px-1 text-xs font-medium uppercase tracking-wide mb-3">
+                Informations client
+              </div>
+              <div className="w-full text-sm">
+                <div className="flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 text-left text-sm hover:bg-[#032313]/5 transition-colors">
+                  <Avatar name={transaction.clientName} size="md" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate text-gray-900">{transaction.clientName}</div>
+                    <div className="text-sm text-gray-500 truncate">{transaction.location}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Montant Group */}
+            <div className="relative flex w-full min-w-0 flex-col p-3 bg-white rounded-xl border border-gray-100 shadow-sm mt-2">
+              <div className="text-[#032313] flex h-6 shrink-0 items-center px-1 text-xs font-medium uppercase tracking-wide mb-3">
+                Montant
+              </div>
+              <div className="w-full text-sm">
+                <div className="flex w-full items-center gap-3 overflow-hidden rounded-lg p-4 text-left text-sm bg-gradient-to-r from-[#032313]/10 to-[#032313]/5 border border-[#032313]/20">
+                  <div className="w-10 h-10 bg-[#032313]/10 rounded-lg flex items-center justify-center">
+                    <RiBankCardLine className="text-[#032313]" size={20} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-2xl font-bold text-[#032313]">{transaction.value.toLocaleString()} CFA</div>
+                    <div className="text-sm text-[#032313]/70">Montant total</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ID Transaction Group */}
+            <div className="relative flex w-full min-w-0 flex-col p-3 bg-white rounded-xl border border-gray-100 shadow-sm mt-2">
+              <div className="text-[#032313] flex h-6 shrink-0 items-center px-1 text-xs font-medium uppercase tracking-wide mb-3">
+                ID de transaction
+              </div>
+              <div className="w-full text-sm">
+                <div className="flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 text-left text-sm hover:bg-[#032313]/5 transition-colors">
+                  <code className="flex-1 text-sm font-mono bg-[#032313]/5 px-3 py-2 rounded-lg border border-[#032313]/10">
+                    {transaction.id}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-[#032313]/10 text-[#032313] rounded-lg"
+                    onClick={() => navigator.clipboard.writeText(transaction.id)}
+                  >
+                    <RiFileCopyLine size={14} />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Moyen de paiement Group */}
+            <div className="relative flex w-full min-w-0 flex-col p-3 bg-white rounded-xl border border-gray-100 shadow-sm mt-2">
+              <div className="text-[#032313] flex h-6 shrink-0 items-center px-1 text-xs font-medium uppercase tracking-wide mb-3">
+                Moyen de paiement
+              </div>
+              <div className="w-full text-sm">
+                <div className="flex w-full items-center gap-4 overflow-hidden rounded-lg p-3 text-left text-sm hover:bg-[#032313]/5 transition-colors">
+                  <div className="w-12 h-12 bg-[#032313]/5 rounded-lg flex items-center justify-center border border-[#032313]/10 flex-shrink-0">
+                    <img
+                      src={transaction.paymentMethod.logo || "/placeholder.svg"}
+                      alt={transaction.paymentMethod.name}
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate text-gray-900">{transaction.paymentMethod.name}</div>
+                    <div className="text-sm text-gray-500 truncate">{transaction.paymentMethod.details}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      {getPaymentMethodIcon(transaction.paymentMethod.type)}
+                      <span className="text-xs text-gray-500">{transaction.paymentMethod.provider}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Passerelle Group */}
+            <div className="relative flex w-full min-w-0 flex-col p-3 bg-white rounded-xl border border-gray-100 shadow-sm mt-2">
+              <div className="text-[#032313] flex h-6 shrink-0 items-center px-1 text-xs font-medium uppercase tracking-wide mb-3">
+                Passerelle de paiement
+              </div>
+              <div className="w-full text-sm">
+                <div className="flex w-full items-center gap-4 overflow-hidden rounded-lg p-3 text-left text-sm hover:bg-[#032313]/5 transition-colors">
+                  <div className="w-12 h-12 bg-[#032313]/5 rounded-lg flex items-center justify-center border border-[#032313]/10 flex-shrink-0">
+                    <img
+                      src={transaction.paymentGateway.logo || "/placeholder.svg"}
+                      alt={transaction.paymentGateway.name}
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate text-gray-900">{transaction.paymentGateway.name}</div>
+                    <div className="text-sm text-gray-500">Passerelle de paiement</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Date et heure Group */}
+            <div className="relative flex w-full min-w-0 flex-col p-3 bg-white rounded-xl border border-gray-100 shadow-sm mt-2 mb-4">
+              <div className="text-[#032313] flex h-6 shrink-0 items-center px-1 text-xs font-medium uppercase tracking-wide mb-3">
+                Date et heure
+              </div>
+              <div className="w-full text-sm space-y-1">
+                <div className="flex w-full items-center justify-between gap-3 overflow-hidden rounded-lg p-3 text-left text-sm hover:bg-[#032313]/5 transition-colors">
+                  <span className="text-gray-600 text-sm">Date</span>
+                  <span className="font-medium text-sm text-[#032313]">
+                    {new Date(transaction.joinDate).toLocaleDateString("fr-FR", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                <div className="flex w-full items-center justify-between gap-3 overflow-hidden rounded-lg p-3 text-left text-sm hover:bg-[#032313]/5 transition-colors">
+                  <span className="text-gray-600 text-sm">Heure</span>
+                  <span className="font-medium text-sm text-[#032313]">
+                    {new Date(transaction.joinDate).toLocaleTimeString("fr-FR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex flex-col gap-3 p-4 border-t border-gray-100 bg-[#032313]/5">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 bg-white hover:bg-[#032313]/5 text-[#032313] text-sm border-[#032313]/20 hover:border-[#032313]/30"
+              >
+                <RiDownloadLine size={16} className="mr-2" />
+                Exporter
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 bg-white hover:bg-[#032313]/5 text-[#032313] text-sm border-[#032313]/20 hover:border-[#032313]/30"
+              >
+                <RiPrinterLine size={16} className="mr-2" />
+                Imprimer
+              </Button>
+            </div>
+            <SheetClose asChild>
+              <Button size="sm" className="w-full text-sm bg-[#032313] hover:bg-[#032313]/90 text-white">
+                Fermer
+              </Button>
+            </SheetClose>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
 }
 
-const getColumns = ({ data, setData }: GetColumnsProps): ColumnDef<Item>[] => [
+interface GetColumnsProps {
+  data: PaymentTransaction[]
+  setData: React.Dispatch<React.SetStateAction<PaymentTransaction[]>>
+}
+
+const getColumns = ({ data }: GetColumnsProps): ColumnDef<PaymentTransaction>[] => [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Sélectionner tout"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Sélectionner la ligne"
-      />
-    ),
-    size: 28,
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    header: "Nom",
-    accessorKey: "name",
+    header: "Client",
+    accessorKey: "clientName",
     cell: ({ row }) => (
       <div className="flex items-center gap-3">
-        <img
-          className="rounded-full"
-          src={row.original.image || "/placeholder.svg"}
-          width={32}
-          height={32}
-          alt={row.getValue("name")}
-        />
-        <div className="font-medium">{row.getValue("name")}</div>
+        <Avatar name={row.getValue("clientName")} size="md" />
+        <div className="font-medium">{row.getValue("clientName")}</div>
       </div>
     ),
     size: 180,
@@ -206,8 +414,9 @@ const getColumns = ({ data, setData }: GetColumnsProps): ColumnDef<Item>[] => [
   {
     header: "ID",
     accessorKey: "id",
-    cell: ({ row }) => <span className="text-muted-foreground">{row.getValue("id")}</span>,
+    cell: ({ row }) => <span className="text-muted-foreground font-mono text-sm">{row.getValue("id")}</span>,
     size: 110,
+    filterFn: idFilterFn,
   },
   {
     header: "Statut",
@@ -231,17 +440,23 @@ const getColumns = ({ data, setData }: GetColumnsProps): ColumnDef<Item>[] => [
     accessorKey: "location",
     cell: ({ row }) => <span className="text-muted-foreground">{row.getValue("location")}</span>,
     size: 140,
+    filterFn: locationFilterFn,
   },
   {
-    header: "Moyen de paiement",
-    accessorKey: "paymentMethod",
+    header: "Flux de Paiement",
+    accessorKey: "paymentFlow",
     cell: ({ row }) => (
-      <div className="flex items-center gap-3">
-        {getPaymentMethodIcon(row.original.paymentMethod.type)}
-        <div className="text-muted-foreground">{row.original.paymentMethod.name}</div>
+      <div className="flex items-center justify-center py-2">
+        <PaymentConnectionAnimation
+          paymentMethodLogo={row.original.paymentMethod.logo || "/placeholder.svg?height=32&width=48&text=Payment"}
+          paymentGatewayLogo={row.original.paymentGateway.logo || "/placeholder.svg"}
+          paymentMethodName={row.original.paymentMethod.name}
+          paymentGatewayName={row.original.paymentGateway.name}
+          status={row.original.status}
+        />
       </div>
     ),
-    size: 160,
+    size: 200,
   },
   {
     header: "Montant",
@@ -253,17 +468,18 @@ const getColumns = ({ data, setData }: GetColumnsProps): ColumnDef<Item>[] => [
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex h-full w-full items-center">
-                <span className="font-medium">{value}€</span>
+                <span className="font-medium">{value} CFA</span>
               </div>
             </TooltipTrigger>
             <TooltipContent align="start" sideOffset={-8}>
-              <p>Montant: {value}€</p>
+              <p>Montant: {value} CFA</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       )
     },
     size: 100,
+    filterFn: amountFilterFn,
   },
   {
     header: "Date",
@@ -289,39 +505,22 @@ const getColumns = ({ data, setData }: GetColumnsProps): ColumnDef<Item>[] => [
       )
     },
     size: 120,
-  },
-  {
-    header: "Progression",
-    accessorKey: "progression",
-    cell: ({ row }) => {
-      const progression = row.getValue("progression") as number
-      return (
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex h-full w-full items-center">
-                <Progress className="h-2 max-w-16" value={progression} />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent align="start" sideOffset={-8}>
-              <p>{progression}%</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )
-    },
-    size: 90,
+    filterFn: dateFilterFn,
   },
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => <RowActions setData={setData} data={data} item={row.original} />,
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <TransactionDetailsSheet transaction={row.original} />
+      </div>
+    ),
     size: 60,
     enableHiding: false,
   },
 ]
 
-export default function Paiement() {
+export default function Paiement(): ReactElement {
   const id = useId()
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -332,133 +531,29 @@ export default function Paiement() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [sorting, setSorting] = useState<SortingState>([
     {
-      id: "name",
+      id: "clientName",
       desc: false,
     },
   ])
-  const [data, setData] = useState<Item[]>([])
+  const [data, setData] = useState<PaymentTransaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const columns = useMemo(() => getColumns({ data, setData }), [data])
 
   useEffect(() => {
-    async function fetchPosts() {
+    async function fetchTransactions() {
       try {
-        // Données de test pour les paiements
-        const mockData: Item[] = [
-          {
-            id: "PAY001",
-            image: "/placeholder.svg?height=32&width=32",
-            name: "Jean Dupont",
-            status: "Succès",
-            location: "Paris, FR",
-            verified: true,
-            paymentMethod: {
-              name: "Visa **** 1234",
-              type: "visa",
-              image: "/placeholder.svg?height=20&width=20",
-            },
-            value: 150,
-            progression: 100,
-            joinDate: "2024-01-15T14:30:00",
-          },
-          {
-            id: "PAY002",
-            image: "/placeholder.svg?height=32&width=32",
-            name: "Marie Martin",
-            status: "En Attente",
-            location: "Lyon, FR",
-            verified: true,
-            paymentMethod: {
-              name: "PayPal",
-              type: "paypal",
-              image: "/placeholder.svg?height=20&width=20",
-            },
-            value: 75,
-            progression: 65,
-            joinDate: "2024-01-14T09:15:00",
-          },
-          {
-            id: "PAY003",
-            image: "/placeholder.svg?height=32&width=32",
-            name: "Pierre Durand",
-            status: "Échec",
-            location: "Marseille, FR",
-            verified: false,
-            paymentMethod: {
-              name: "MasterCard **** 5678",
-              type: "mastercard",
-              image: "/placeholder.svg?height=20&width=20",
-            },
-            value: 200,
-            progression: 25,
-            joinDate: "2024-01-13T16:45:00",
-          },
-          {
-            id: "PAY004",
-            image: "/placeholder.svg?height=32&width=32",
-            name: "Sophie Bernard",
-            status: "Initié",
-            location: "Toulouse, FR",
-            verified: true,
-            paymentMethod: {
-              name: "Apple Pay",
-              type: "apple-pay",
-              image: "/placeholder.svg?height=20&width=20",
-            },
-            value: 120,
-            progression: 10,
-            joinDate: "2024-01-12T11:20:00",
-          },
-          {
-            id: "PAY005",
-            image: "/placeholder.svg?height=32&width=32",
-            name: "Antoine Moreau",
-            status: "Succès",
-            location: "Nice, FR",
-            verified: true,
-            paymentMethod: {
-              name: "Google Pay",
-              type: "google-pay",
-              image: "/placeholder.svg?height=20&width=20",
-            },
-            value: 89,
-            progression: 100,
-            joinDate: "2024-01-11T13:10:00",
-          },
-          {
-            id: "PAY006",
-            image: "/placeholder.svg?height=32&width=32",
-            name: "Camille Leroy",
-            status: "En Attente",
-            location: "Bordeaux, FR",
-            verified: false,
-            paymentMethod: {
-              name: "Virement bancaire",
-              type: "bank-transfer",
-              image: "/placeholder.svg?height=20&width=20",
-            },
-            value: 300,
-            progression: 45,
-            joinDate: "2024-01-10T08:30:00",
-          },
-        ]
-        setData(mockData)
+        // Simulation d'un délai de chargement
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        setData(mockTransactions)
       } catch (error) {
         console.error("Erreur lors de la récupération des données :", error)
       } finally {
         setIsLoading(false)
       }
     }
-    fetchPosts()
+    fetchTransactions()
   }, [])
-
-  const handleDeleteRows = () => {
-    const selectedRows = table.getSelectedRowModel().rows
-    const updatedData = data.filter((item) => !selectedRows.some((row) => row.original.id === item.id))
-    setData(updatedData)
-    table.resetRowSelection()
-  }
 
   const table = useReactTable({
     data,
@@ -505,7 +600,6 @@ export default function Paiement() {
   const handleStatusChange = (checked: boolean, value: string) => {
     const filterValue = table.getColumn("status")?.getFilterValue() as string[]
     const newFilterValue = filterValue ? [...filterValue] : []
-
     if (checked) {
       newFilterValue.push(value)
     } else {
@@ -514,7 +608,6 @@ export default function Paiement() {
         newFilterValue.splice(index, 1)
       }
     }
-
     table.getColumn("status")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined)
   }
 
@@ -531,23 +624,23 @@ export default function Paiement() {
               ref={inputRef}
               className={cn(
                 "peer min-w-60 ps-9 bg-background bg-gradient-to-br from-accent/60 to-accent",
-                Boolean(table.getColumn("name")?.getFilterValue()) && "pe-9",
+                Boolean(table.getColumn("clientName")?.getFilterValue()) && "pe-9",
               )}
-              value={(table.getColumn("name")?.getFilterValue() ?? "") as string}
-              onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
-              placeholder="Recherche par nom"
+              value={(table.getColumn("clientName")?.getFilterValue() ?? "") as string}
+              onChange={(e) => table.getColumn("clientName")?.setFilterValue(e.target.value)}
+              placeholder="Recherche par nom du client"
               type="text"
-              aria-label="Rechercher par nom"
+              aria-label="Rechercher par nom du client"
             />
             <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 text-muted-foreground/60 peer-disabled:opacity-50">
               <RiSearch2Line size={20} aria-hidden="true" />
             </div>
-            {Boolean(table.getColumn("name")?.getFilterValue()) && (
+            {Boolean(table.getColumn("clientName")?.getFilterValue()) && (
               <button
                 className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/60 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Effacer le filtre"
                 onClick={() => {
-                  table.getColumn("name")?.setFilterValue("")
+                  table.getColumn("clientName")?.setFilterValue("")
                   if (inputRef.current) {
                     inputRef.current.focus()
                   }
@@ -560,52 +653,15 @@ export default function Paiement() {
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-3">
-          {/* Delete button */}
-          {table.getSelectedRowModel().rows.length > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button className="ml-auto bg-transparent" variant="outline">
-                  <RiDeleteBinLine className="-ms-1 opacity-60" size={16} aria-hidden="true" />
-                  Supprimer
-                  <span className="-me-1 ms-1 inline-flex h-5 max-h-full items-center rounded border border-border bg-background px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-                    {table.getSelectedRowModel().rows.length}
-                  </span>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <div className="flex flex-col gap-2 max-sm:items-center sm:flex-row sm:gap-4">
-                  <div
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border"
-                    aria-hidden="true"
-                  >
-                    <RiErrorWarningLine className="opacity-80" size={16} />
-                  </div>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Cette action est irréversible. Cela supprimera définitivement{" "}
-                      {table.getSelectedRowModel().rows.length}{" "}
-                      {table.getSelectedRowModel().rows.length === 1 ? "la ligne" : "les lignes"} sélectionnée(s).
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                </div>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteRows}>Supprimer</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Filter by status */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline">
-                <RiFilter3Line className="size-5 -ms-1.5 text-muted-foreground/60" size={20} aria-hidden="true" />
-                Filtrer
+              <Button variant="outline" size="sm">
+                <RiFilter3Line className="size-4 -ms-1 text-muted-foreground/60" aria-hidden="true" />
+                Statut
                 {selectedStatuses.length > 0 && (
-                  <span className="-me-1 ms-3 inline-flex h-5 max-h-full items-center rounded border border-border bg-background px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
+                  <span className="-me-1 ms-2 inline-flex h-4 max-h-full items-center rounded border border-border bg-background px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
                     {selectedStatuses.length}
                   </span>
                 )}
@@ -617,12 +673,14 @@ export default function Paiement() {
                 <div className="space-y-3">
                   {uniqueStatusValues.map((value, i) => (
                     <div key={value} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`${id}-${i}`}
+                      <input
+                        type="checkbox"
+                        id={`${id}-status-${i}`}
                         checked={selectedStatuses.includes(value)}
-                        onCheckedChange={(checked: boolean) => handleStatusChange(checked, value)}
+                        onChange={(e) => handleStatusChange(e.target.checked, value)}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                       />
-                      <Label htmlFor={`${id}-${i}`} className="flex grow justify-between gap-2 font-normal">
+                      <Label htmlFor={`${id}-status-${i}`} className="flex grow justify-between gap-2 font-normal">
                         <div className="flex items-center gap-2">
                           {getStatusIcon(value)}
                           {value}
@@ -636,10 +694,35 @@ export default function Paiement() {
             </PopoverContent>
           </Popover>
 
-          {/* New filter button */}
-          <Button variant="outline">
-            <RiBardLine className="size-5 -ms-1.5 text-muted-foreground/60" size={20} aria-hidden="true" />
-            Nouveau filtre
+          {/* Filter by gateway */}
+          <GatewayFilter table={table} id={id} />
+
+          {/* Filter by payment method */}
+          <PaymentMethodFilter table={table} id={id} />
+
+          {/* Filter by amount */}
+          <AmountFilter table={table} id={id} />
+
+          {/* Filter by date */}
+          <DateFilter table={table} id={id} />
+
+          {/* Filter by location */}
+          <LocationFilter table={table} id={id} />
+
+          {/* Filter by ID */}
+          <IdFilter table={table} id={id} />
+
+          {/* Clear all filters */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              table.resetColumnFilters()
+            }}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <RiCloseLine className="size-4 -ms-1" />
+            Effacer
           </Button>
         </div>
       </div>
@@ -758,102 +841,27 @@ export default function Paiement() {
   )
 }
 
-function RowActions({
-  setData,
-  data,
-  item,
-}: {
-  setData: React.Dispatch<React.SetStateAction<Item[]>>
-  data: Item[]
-  item: Item
-}) {
-  const [isUpdatePending, startUpdateTransition] = useTransition()
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-
-  const handleStatusChange = (newStatus: Item["status"]) => {
-    startUpdateTransition(() => {
-      const updatedData = data.map((dataItem) => {
-        if (dataItem.id === item.id) {
-          return {
-            ...dataItem,
-            status: newStatus,
-          }
-        }
-        return dataItem
-      })
-      setData(updatedData)
-    })
-  }
-
-  const handleDelete = () => {
-    startUpdateTransition(() => {
-      const updatedData = data.filter((dataItem) => dataItem.id !== item.id)
-      setData(updatedData)
-      setShowDeleteDialog(false)
-    })
-  }
-
+function ViewDetailsButton({ transactionId }: { transactionId: string }): ReactElement {
+  const navigate = useNavigate()
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+    <TooltipProvider delayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger asChild>
           <div className="flex justify-end">
             <Button
-              size="icon"
+              size="sm"
               variant="ghost"
-              className="shadow-none text-muted-foreground/60"
-              aria-label="Modifier l'élément"
+              className="w-10 h-10 p-0 text-[#032313] hover:text-[#032313] hover:bg-[#032313]/10 rounded-full transition-all duration-200 hover:scale-105"
+              onClick={() => navigate({ to: `/paiement/${transactionId}` })}
             >
-              <RiMoreLine className="size-5" size={20} aria-hidden="true" />
+              <RiEyeLine size={18} />
             </Button>
           </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-auto">
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => handleStatusChange("Initié")} disabled={isUpdatePending}>
-              Marquer comme Initié
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange("En Attente")} disabled={isUpdatePending}>
-              Marquer comme En Attente
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange("Succès")} disabled={isUpdatePending}>
-              Marquer comme Succès
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange("Échec")} disabled={isUpdatePending}>
-              Marquer comme Échec
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setShowDeleteDialog(true)}
-            variant="destructive"
-            className="dark:data-[variant=destructive]:focus:bg-destructive/10"
-          >
-            Supprimer
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Cela supprimera définitivement ce paiement.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isUpdatePending}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isUpdatePending}
-              className="bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          <p>Voir les détails</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
