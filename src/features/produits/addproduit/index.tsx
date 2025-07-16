@@ -28,8 +28,11 @@ import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { RichTextEditor } from "./components/rich-text-editor"
 import { useToast } from "@/hooks/use-toast"
+import "@blocknote/core/fonts/inter.css";
+import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
+import { useCreateBlockNote } from "@blocknote/react";
 
 const categories = [
   "Arts Créatifs",
@@ -75,6 +78,7 @@ interface UploadedFile {
 }
 
 export default function AddProduct() {
+  const editor = useCreateBlockNote()
   const { toast } = useToast()
   const [selectedType, setSelectedType] = useState("telechargeable")
   const [productName, setProductName] = useState("")
@@ -418,16 +422,10 @@ export default function AddProduct() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
                 <Label htmlFor="description" className="text-sm font-medium">
                   Description détaillée
                 </Label>
-                <RichTextEditor
-                  value={description}
-                  onChange={setDescription}
-                  placeholder="Décrivez votre produit en détail... Utilisez la barre d'outils pour formater votre texte, ajouter des images et créer du contenu attractif."
-                />
-              </div>
+                <BlockNoteView editor={editor} />;
             </CardContent>
           </Card>
 
