@@ -28,8 +28,9 @@ import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { RichTextEditor } from "./components/rich-text-editor"
 import { useToast } from "@/hooks/use-toast"
+import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
+
 
 const categories = [
   "Arts Créatifs",
@@ -82,7 +83,7 @@ export default function AddProduct() {
   const [pricingModel, setPricingModel] = useState("Paiement unique")
   const [price, setPrice] = useState("")
   const [promotionalPrice, setPromotionalPrice] = useState("")
-  const [description, setDescription] = useState("")
+  const [description, ] = useState("")
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
 
@@ -422,11 +423,7 @@ export default function AddProduct() {
                 <Label htmlFor="description" className="text-sm font-medium">
                   Description détaillée
                 </Label>
-                <RichTextEditor
-                  value={description}
-                  onChange={setDescription}
-                  placeholder="Décrivez votre produit en détail... Utilisez la barre d'outils pour formater votre texte, ajouter des images et créer du contenu attractif."
-                />
+                <SimpleEditor />
               </div>
             </CardContent>
           </Card>
