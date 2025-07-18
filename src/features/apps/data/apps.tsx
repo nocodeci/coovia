@@ -10,7 +10,6 @@ import {
   IconBrandSkype,
   IconBrandSlack,
   IconBrandStripe,
-  IconBrandTelegram,
   IconBrandTrello,
   IconBrandWhatsapp,
   IconBrandZoom,
@@ -19,7 +18,7 @@ import {
 export const apps = [
   {
     name: 'Telegram',
-    logo: <IconBrandTelegram />,
+    logo: <img src="/src/assets/images/moneroo.png" alt="Moneroo Logo" className="w-6 h-6" />,
     connected: false,
     desc: 'Connect with Telegram for real-time communication.',
   },
