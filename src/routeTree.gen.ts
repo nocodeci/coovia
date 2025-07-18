@@ -29,6 +29,7 @@ import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedProduitsIndexRouteImport } from './routes/_authenticated/produits/index'
+import { Route as AuthenticatedMarketingIndexRouteImport } from './routes/_authenticated/marketing/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
@@ -40,6 +41,7 @@ import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedProduitsAddproduitIndexRouteImport } from './routes/_authenticated/produits/addproduit/index'
+import { Route as AuthenticatedMarketingAjouterIndexRouteImport } from './routes/_authenticated/marketing/ajouter/index'
 
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
   id: '/clerk',
@@ -141,6 +143,12 @@ const AuthenticatedProduitsIndexRoute =
     path: '/produits/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingIndexRoute =
+  AuthenticatedMarketingIndexRouteImport.update({
+    id: '/marketing/',
+    path: '/marketing/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexRouteImport.update({
     id: '/help-center/',
@@ -203,6 +211,12 @@ const AuthenticatedProduitsAddproduitIndexRoute =
     path: '/produits/addproduit/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingAjouterIndexRoute =
+  AuthenticatedMarketingAjouterIndexRouteImport.update({
+    id: '/marketing/ajouter/',
+    path: '/marketing/ajouter/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
@@ -229,10 +243,12 @@ export interface FileRoutesByFullPath {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/marketing': typeof AuthenticatedMarketingIndexRoute
   '/produits': typeof AuthenticatedProduitsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/marketing/ajouter': typeof AuthenticatedMarketingAjouterIndexRoute
   '/produits/addproduit': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
 export interface FileRoutesByTo {
@@ -258,10 +274,12 @@ export interface FileRoutesByTo {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/marketing': typeof AuthenticatedMarketingIndexRoute
   '/produits': typeof AuthenticatedProduitsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/marketing/ajouter': typeof AuthenticatedMarketingAjouterIndexRoute
   '/produits/addproduit': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
 export interface FileRoutesById {
@@ -292,10 +310,12 @@ export interface FileRoutesById {
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/_authenticated/marketing/': typeof AuthenticatedMarketingIndexRoute
   '/_authenticated/produits/': typeof AuthenticatedProduitsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/marketing/ajouter/': typeof AuthenticatedMarketingAjouterIndexRoute
   '/_authenticated/produits/addproduit/': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
 export interface FileRouteTypes {
@@ -325,10 +345,12 @@ export interface FileRouteTypes {
     | '/apps'
     | '/chats'
     | '/help-center'
+    | '/marketing'
     | '/produits'
     | '/settings/'
     | '/tasks'
     | '/users'
+    | '/marketing/ajouter'
     | '/produits/addproduit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -354,10 +376,12 @@ export interface FileRouteTypes {
     | '/apps'
     | '/chats'
     | '/help-center'
+    | '/marketing'
     | '/produits'
     | '/settings'
     | '/tasks'
     | '/users'
+    | '/marketing/ajouter'
     | '/produits/addproduit'
   id:
     | '__root__'
@@ -387,10 +411,12 @@ export interface FileRouteTypes {
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
     | '/_authenticated/help-center/'
+    | '/_authenticated/marketing/'
     | '/_authenticated/produits/'
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/_authenticated/marketing/ajouter/'
     | '/_authenticated/produits/addproduit/'
   fileRoutesById: FileRoutesById
 }
@@ -551,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProduitsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing/': {
+      id: '/_authenticated/marketing/'
+      path: '/marketing'
+      fullPath: '/marketing'
+      preLoaderRoute: typeof AuthenticatedMarketingIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
       path: '/help-center'
@@ -628,6 +661,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProduitsAddproduitIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing/ajouter/': {
+      id: '/_authenticated/marketing/ajouter/'
+      path: '/marketing/ajouter'
+      fullPath: '/marketing/ajouter'
+      preLoaderRoute: typeof AuthenticatedMarketingAjouterIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -660,9 +700,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
+  AuthenticatedMarketingIndexRoute: typeof AuthenticatedMarketingIndexRoute
   AuthenticatedProduitsIndexRoute: typeof AuthenticatedProduitsIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedMarketingAjouterIndexRoute: typeof AuthenticatedMarketingAjouterIndexRoute
   AuthenticatedProduitsAddproduitIndexRoute: typeof AuthenticatedProduitsAddproduitIndexRoute
 }
 
@@ -672,9 +714,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
+  AuthenticatedMarketingIndexRoute: AuthenticatedMarketingIndexRoute,
   AuthenticatedProduitsIndexRoute: AuthenticatedProduitsIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedMarketingAjouterIndexRoute:
+    AuthenticatedMarketingAjouterIndexRoute,
   AuthenticatedProduitsAddproduitIndexRoute:
     AuthenticatedProduitsAddproduitIndexRoute,
 }

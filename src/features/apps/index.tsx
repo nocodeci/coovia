@@ -22,9 +22,9 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { apps } from './data/apps'
 
 const appText = new Map<string, string>([
-  ['all', 'All Apps'],
-  ['connected', 'Connected'],
-  ['notConnected', 'Not Connected'],
+  ['all', 'Toutes les applications'],
+  ['connected', 'Connectées'],
+  ['notConnected', 'Non connectées'],
 ])
 
 export default function Apps() {
@@ -49,7 +49,7 @@ export default function Apps() {
 
   return (
     <>
-      {/* ===== Top Heading ===== */}
+      {/* ===== En-tête Supérieure ===== */}
       <Header>
         <Search />
         <div className='ml-auto flex items-center gap-4'>
@@ -58,20 +58,20 @@ export default function Apps() {
         </div>
       </Header>
 
-      {/* ===== Content ===== */}
+      {/* ===== Contenu ===== */}
       <Main fixed>
         <div>
           <h1 className='text-2xl font-bold tracking-tight'>
-            App Integrations
+            Intégrations d'applications
           </h1>
           <p className='text-muted-foreground'>
-            Here&apos;s a list of your apps for the integration!
+            Voici une liste de vos applications pour l'intégration !
           </p>
         </div>
         <div className='my-4 flex items-end justify-between sm:my-0 sm:items-center'>
           <div className='flex flex-col gap-4 sm:my-4 sm:flex-row'>
             <Input
-              placeholder='Filter apps...'
+              placeholder='Filtrer les applications...'
               className='h-9 w-40 lg:w-[250px]'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -81,9 +81,9 @@ export default function Apps() {
                 <SelectValue>{appText.get(appType)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='all'>All Apps</SelectItem>
-                <SelectItem value='connected'>Connected</SelectItem>
-                <SelectItem value='notConnected'>Not Connected</SelectItem>
+                <SelectItem value='all'>Toutes les applications</SelectItem>
+                <SelectItem value='connected'>Connectées</SelectItem>
+                <SelectItem value='notConnected'>Non connectées</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -98,13 +98,13 @@ export default function Apps() {
               <SelectItem value='ascending'>
                 <div className='flex items-center gap-4'>
                   <IconSortAscendingLetters size={16} />
-                  <span>Ascending</span>
+                  <span>Croissant</span>
                 </div>
               </SelectItem>
               <SelectItem value='descending'>
                 <div className='flex items-center gap-4'>
                   <IconSortDescendingLetters size={16} />
-                  <span>Descending</span>
+                  <span>Décroissant</span>
                 </div>
               </SelectItem>
             </SelectContent>
@@ -128,7 +128,7 @@ export default function Apps() {
                   size='sm'
                   className={`${app.connected ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900' : ''}`}
                 >
-                  {app.connected ? 'Connected' : 'Connect'}
+                  {app.connected ? 'Connectée' : 'Connecter'}
                 </Button>
               </div>
               <div>
