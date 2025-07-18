@@ -66,7 +66,7 @@ export const sidebarData: SidebarData = {
           icon: IconPackages,
         },
         {
-          title: "Apps",
+          title: "Application",
           url: "/apps",
           icon: IconPackages,
         },
@@ -77,8 +77,8 @@ export const sidebarData: SidebarData = {
           icon: IconMessages,
         },
         {
-          title: "Users",
-          url: "/users",
+          title: "Clients",
+          url: "/clients",
           icon: IconUsers,
         },
         {
