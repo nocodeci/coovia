@@ -1,47 +1,56 @@
+"use client"
+
 import { useState } from "react"
+import type React from "react"
 import {
   ArrowLeft,
   Eye,
-  MoreHorizontal,
+  Save,
   Package,
-  BookOpen,
-  Upload,
-  Check,
-  Store,
-  Bell,
-  Grid3X3,
-  Search,
-  User,
-  RefreshCw,
+  ImageIcon,
+  Video,
+  Plus,
   X,
   FileImage,
+  Upload,
+  Check,
+  ChevronsUpDown,
+  BookOpen,
+  RefreshCw,
 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { RichTextEditor } from "@/components/editor/rich-text-editor"
+import { ShineBorder } from "@/components/magicui/shine-border"
 import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
-import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
-
+import { toast } from "sonner"
 
 const categories = [
-  "Arts Créatifs",
-  "Logiciel",
-  "E-book",
-  "Cours en ligne",
-  "Template",
-  "Plugin",
-  "Consultation",
-  "Maintenance",
-  "Formation",
+  { value: "logiciel", label: "Logiciel" },
+  { value: "formation", label: "Formation" },
+  { value: "ebook", label: "E-book" },
+  { value: "template", label: "Template" },
+  { value: "plugin", label: "Plugin" },
+  { value: "consultation", label: "Consultation" },
 ]
 
 const productTypes = [
@@ -65,8 +74,6 @@ const productTypes = [
   },
 ]
 
-const pricingModels = ["Paiement unique", "Abonnement mensuel", "Abonnement annuel", "Paiement à l'usage", "Gratuit"]
-
 interface UploadedFile {
   id: string
   name: string
@@ -76,30 +83,20 @@ interface UploadedFile {
 }
 
 export default function AddProduct() {
-  const { toast } = useToast()
-  const [selectedType, setSelectedType] = useState("telechargeable")
   const [productName, setProductName] = useState("")
+  const [selectedType, setSelectedType] = useState("telechargeable")
   const [category, setCategory] = useState("")
-  const [pricingModel, setPricingModel] = useState("Paiement unique")
   const [price, setPrice] = useState("")
+  const [description, setDescription] = useState("")
   const [promotionalPrice, setPromotionalPrice] = useState("")
-  const [description, ] = useState("")
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [featuredImage, setFeaturedImage] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false)
+  const [videoUrl, setVideoUrl] = useState("")
 
-  // Options avancées
-  const [autoReduction, setAutoReduction] = useState(false)
-  const [validityPeriod, setValidityPeriod] = useState(false)
-  const [customUrl, setCustomUrl] = useState(false)
-  const [postPurchaseGuide, setPostPurchaseGuide] = useState(false)
-  const [passwordProtection, setPasswordProtection] = useState(false)
-  const [watermarkFiles, setWatermarkFiles] = useState(true)
-  const [purchaseLimit, setPurchaseLimit] = useState(false)
-  const [hideFromStore, setHideFromStore] = useState(false)
-
-  const handleGoBack = () => {
-    window.history.back()
-  }
+  // États pour les combobox
+  const [openCategory, setOpenCategory] = useState(false)
 
   const handleFileUpload = (files: FileList | null) => {
     if (!files) return
@@ -113,36 +110,29 @@ export default function AddProduct() {
         type: file.type,
       }
 
-      // Créer une preview pour les images
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith("image/")) {
         const reader = new FileReader()
         reader.onload = (e) => {
-          setUploadedFiles(prev => prev.map(f => 
-            f.id === id ? { ...f, preview: e.target?.result as string } : f
-          ))
+          setUploadedFiles((prev) => prev.map((f) => (f.id === id ? { ...f, preview: e.target?.result as string } : f)))
         }
         reader.readAsDataURL(file)
       }
 
-      setUploadedFiles(prev => [...prev, newFile])
+      setUploadedFiles((prev) => [...prev, newFile])
     })
 
-    toast({
-      title: "Fichiers ajoutés",
+    toast.success("Fichiers ajoutés", {
       description: `${files.length} fichier(s) ajouté(s) avec succès.`,
+      style: {
+        background: "hsl(var(--card))",
+        color: "hsl(var(--card-foreground))",
+        border: "1px solid hsl(var(--border))",
+      },
     })
   }
 
   const removeFile = (id: string) => {
-    setUploadedFiles(prev => prev.filter(f => f.id !== id))
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    setUploadedFiles((prev) => prev.filter((f) => f.id !== id))
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -161,487 +151,659 @@ export default function AddProduct() {
     handleFileUpload(e.dataTransfer.files)
   }
 
-  const handleSubmit = () => {
-    if (!productName || !category) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires.",
-        variant: "destructive",
-      })
-      return
+  const insertVideo = () => {
+    if (!videoUrl.trim()) {
+      return // Ne pas afficher d'erreur, juste ne rien faire
     }
 
-    const productData = {
-      name: productName,
-      type: selectedType,
-      category,
-      pricingModel,
-      price,
-      promotionalPrice,
-      description,
-      files: uploadedFiles,
-      options: {
-        autoReduction,
-        validityPeriod,
-        customUrl,
-        postPurchaseGuide,
-        passwordProtection,
-        watermarkFiles,
-        purchaseLimit,
-        hideFromStore,
-      }
-    }
+    // Ajouter la vidéo à la description
+    const videoHtml = `<iframe src="${videoUrl}" width="560" height="315" frameborder="0" allowfullscreen style="max-width: 100%; height: auto;"></iframe>`
+    setDescription(description + videoHtml)
+    setVideoUrl("")
+    setIsVideoDialogOpen(false)
 
-    console.log("Publication du produit:", productData)
-    
-    toast({
-      title: "Produit publié",
-      description: "Votre produit a été publié avec succès !",
+    toast.success("Vidéo ajoutée", {
+      description: "La vidéo a été insérée avec succès.",
+      style: {
+        background: "hsl(var(--card))",
+        color: "hsl(var(--card-foreground))",
+        border: "1px solid hsl(var(--border))",
+      },
     })
   }
 
-  const isFormValid = productName && category && (uploadedFiles.length > 0 || selectedType === "cours")
+  const handlePublish = () => {
+    toast("🎉 Produit publié avec succès !", {
+      description: "Votre produit est maintenant visible par tous les utilisateurs",
+      style: {
+        background: "hsl(var(--card))",
+        color: "hsl(var(--card-foreground))",
+        border: "1px solid hsl(var(--primary))",
+      },
+      action: {
+        label: "Voir le produit",
+        onClick: () => console.log("Redirection vers le produit"),
+      },
+    })
+  }
+
+  const handleSaveDraft = () => {
+    toast("💾 Brouillon sauvegardé", {
+      description: "Votre produit a été sauvegardé en tant que brouillon",
+      style: {
+        background: "hsl(var(--card))",
+        color: "hsl(var(--card-foreground))",
+        border: "1px solid hsl(var(--border))",
+      },
+      action: {
+        label: "Continuer",
+        onClick: () => console.log("Continuer l'édition"),
+      },
+    })
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes"
+    const k = 1024
+    const sizes = ["Bytes", "KB", "MB", "GB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+  }
+
+  const isFormValid = productName && category && selectedType
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header personnalisé */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="flex h-16 items-center px-6">
-          {/* Left side */}
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={handleGoBack}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
-            </Button>
-            <h1 className="text-lg font-semibold">Ajouter un produit</h1>
-          </div>
-
-          {/* Center - Search */}
-          <div className="flex-1 max-w-md mx-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Trouvez n'importe quoi : Appuyez sur espace sur votre clavier"
-                className="pl-10 bg-muted/50"
-              />
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      {/* Header Simple */}
+      <div className="bg-background/80 backdrop-blur-sm border-b sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Retour
+              </Button>
+              <h1 className="text-xl font-semibold text-foreground">Nouveau produit</h1>
             </div>
-          </div>
-
-          {/* Right side */}
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
-              <Store className="h-4 w-4 mr-2" />
-              Visiter ma boutique
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Bell className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="/placeholder.svg?height=32&width=32" />
-              <AvatarFallback>
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
-          </div>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="px-6 py-2 bg-muted/50">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-            <span>Progression de création</span>
-            <span>{isFormValid ? "85" : "45"}%</span>
-          </div>
-          <Progress value={isFormValid ? 85 : 45} className="h-2" />
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Informations de base */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Informations de base
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Nom du produit */}
-              <div className="space-y-2">
-                <Label htmlFor="product-name" className="text-sm font-medium">
-                  Nom du produit <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="product-name"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  placeholder="Entrez le nom de votre produit"
-                  className="h-11"
-                />
-              </div>
-
-              {/* Type de produit */}
-              <div className="space-y-4">
-                <Label className="text-sm font-medium">Type de produit</Label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {productTypes.map((type) => {
-                    const Icon = type.icon
-                    const isSelected = selectedType === type.id
-                    return (
-                      <Card
-                        key={type.id}
-                        className={cn(
-                          "cursor-pointer transition-all border-2 relative hover:shadow-sm",
-                          isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50",
-                        )}
-                        onClick={() => setSelectedType(type.id)}
-                      >
-                        {isSelected && (
-                          <div className="absolute -top-2 -right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                            <Check className="w-3 h-3 text-primary-foreground" />
-                          </div>
-                        )}
-                        <CardContent className="p-4">
-                          <div className="flex items-start space-x-3">
-                            <div
-                              className={cn(
-                                "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
-                                isSelected ? "bg-primary text-primary-foreground" : "bg-muted",
-                              )}
-                            >
-                              <Icon className="w-5 h-5" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-sm">{type.title}</h3>
-                              <p className="text-xs text-muted-foreground mt-1">{type.description}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Catégorie et Modèle de tarification */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="category" className="text-sm font-medium">
-                    Catégorie <span className="text-destructive">*</span>
-                  </Label>
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="h-12 w-full">
-                      <SelectValue placeholder="Sélectionner une catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat.toLowerCase()}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Modèle de tarification */}
-                <div className="space-y-2">
-                  <Label htmlFor="pricing-model" className="text-sm font-medium">
-                    Modèle de tarification
-                  </Label>
-                  <Select value={pricingModel} onValueChange={setPricingModel}>
-                    <SelectTrigger className="h-12 w-full">
-                      <SelectValue placeholder="Sélectionner un modèle" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {pricingModels.map((model) => (
-                        <SelectItem key={model} value={model}>
-                          {model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Prix */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-sm font-medium">
-                    Prix
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">FCFA</span>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      className="pl-16 h-11"
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="promotional-price" className="text-sm font-medium">
-                    Prix promotionnel
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      Optionnel
-                    </Badge>
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">FCFA</span>
-                    <Input
-                      id="promotional-price"
-                      type="number"
-                      value={promotionalPrice}
-                      onChange={(e) => setPromotionalPrice(e.target.value)}
-                      className="pl-16 h-11"
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Description du produit
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium">
-                  Description détaillée
-                </Label>
-                <SimpleEditor />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Fichiers */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5" />
-                Fichiers du produit
-                {selectedType !== "cours" && <span className="text-destructive">*</span>}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Zone de drop */}
-              <div
-                className={cn(
-                  "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
-                  isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25",
-                )}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Glissez vos fichiers ici</h3>
-                <p className="text-sm text-muted-foreground mb-4">ou cliquez pour sélectionner des fichiers</p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const input = document.createElement('input')
-                    input.type = 'file'
-                    input.multiple = true
-                    input.onchange = (e) => {
-                      const target = e.target as HTMLInputElement
-                      handleFileUpload(target.files)
-                    }
-                    input.click()
-                  }}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Choisir des fichiers
-                </Button>
-              </div>
-
-              {/* Liste des fichiers uploadés */}
-              {uploadedFiles.length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium">Fichiers ajoutés ({uploadedFiles.length})</h4>
-                  <div className="space-y-2">
-                    {uploadedFiles.map((file) => (
-                      <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          {file.preview ? (
-                            <img src={file.preview} alt={file.name} className="w-10 h-10 object-cover rounded" />
-                          ) : (
-                            <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
-                              <FileImage className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="text-sm font-medium">{file.name}</p>
-                            <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(file.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Options avancées */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Options avancées</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Réduction automatique */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-sm font-medium">Réduction automatique</Label>
-                    <Badge variant="secondary" className="text-xs">
-                      Premium
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Offrez des réductions automatiques aux clients lors du 3ème rappel d'abandon.
-                  </p>
-                </div>
-                <Switch checked={autoReduction} onCheckedChange={setAutoReduction} />
-              </div>
-
-              <Separator />
-
-              {/* Période de validité */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">Période de validité du prix</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Définissez les dates de début et de fin de votre prix de vente
-                  </p>
-                </div>
-                <Switch checked={validityPeriod} onCheckedChange={setValidityPeriod} />
-              </div>
-
-              <Separator />
-
-              {/* URL personnalisée */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">URL personnalisée</Label>
-                  <p className="text-sm text-muted-foreground">Personnalisez l'URL de votre produit</p>
-                </div>
-                <Switch checked={customUrl} onCheckedChange={setCustomUrl} />
-              </div>
-
-              <Separator />
-
-              {/* Guide après-achat */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">Guide après-achat</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Ajoutez des instructions utiles que les clients verront après l'achat
-                  </p>
-                </div>
-                <Switch checked={postPurchaseGuide} onCheckedChange={setPostPurchaseGuide} />
-              </div>
-
-              <Separator />
-
-              {/* Protection par mot de passe */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">Protection par mot de passe</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Exigez un mot de passe pour accéder aux fichiers après l'achat
-                  </p>
-                </div>
-                <Switch checked={passwordProtection} onCheckedChange={setPasswordProtection} />
-              </div>
-
-              <Separator />
-
-              {/* Filigrane */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">Filigranes automatiques</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Ajoutez automatiquement des filigranes avec les détails du client
-                  </p>
-                </div>
-                <Switch checked={watermarkFiles} onCheckedChange={setWatermarkFiles} />
-              </div>
-
-              <Separator />
-
-              {/* Limite d'achat */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">Limite d'achat</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Limitez le nombre de fois où ce produit peut être acheté
-                  </p>
-                </div>
-                <Switch checked={purchaseLimit} onCheckedChange={setPurchaseLimit} />
-              </div>
-
-              <Separator />
-
-              {/* Masquer de la boutique */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">Masquer de la boutique</Label>
-                  <p className="text-sm text-muted-foreground">Ce produit ne sera visible que via un lien direct</p>
-                </div>
-                <Switch checked={hideFromStore} onCheckedChange={setHideFromStore} />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          <div className="flex items-center justify-between pt-6 pb-8">
-            <Button variant="outline" onClick={handleGoBack}>
-              Annuler
-            </Button>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline">
+            <div className="flex items-center gap-3">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Save className="h-4 w-4 mr-2" />
+                    Brouillon
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Sauvegarder en brouillon ?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Votre produit sera sauvegardé en tant que brouillon. Vous pourrez le modifier et le publier plus
+                      tard.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="border-border hover:bg-muted">Annuler</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleSaveDraft}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      Sauvegarder
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button variant="outline" size="sm">
                 <Eye className="h-4 w-4 mr-2" />
                 Aperçu
               </Button>
-              <Button onClick={handleSubmit} disabled={!isFormValid}>
-                Publier le produit
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Sauvegarder comme brouillon</DropdownMenuItem>
-                  <DropdownMenuItem>Dupliquer</DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Contenu Principal */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Informations de base */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Package className="h-5 w-5 text-primary" />
+                  Informations générales
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="product-name" className="text-sm font-medium">
+                    Nom du produit <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="product-name"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="Entrez le nom de votre produit"
+                    className="h-12 text-base"
+                  />
+                </div>
+
+                {/* Type de produit - Prend toute la largeur */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">
+                    Type de produit <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {productTypes.map((type) => {
+                      const Icon = type.icon
+                      const isSelected = selectedType === type.id
+                      return (
+                        <Card
+                          key={type.id}
+                          className={cn(
+                            "cursor-pointer transition-all border-2 relative hover:shadow-sm",
+                            isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50",
+                          )}
+                          onClick={() => setSelectedType(type.id)}
+                        >
+                          {isSelected && (
+                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                              <Check className="w-3 h-3 text-primary-foreground" />
+                            </div>
+                          )}
+                          <CardContent className="p-4">
+                            <div className="flex items-start space-x-3">
+                              <div
+                                className={cn(
+                                  "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                                  isSelected ? "bg-primary text-primary-foreground" : "bg-muted",
+                                )}
+                              >
+                                <Icon className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-sm">{type.title}</h3>
+                                <p className="text-xs text-muted-foreground mt-1">{type.description}</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Catégorie */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Catégorie <span className="text-destructive">*</span>
+                  </Label>
+                  <Popover open={openCategory} onOpenChange={setOpenCategory}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openCategory}
+                        className="w-full h-12 justify-between bg-transparent"
+                      >
+                        {category
+                          ? categories.find((cat) => cat.value === category)?.label
+                          : "Sélectionner une catégorie..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[300px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Rechercher une catégorie..." className="h-9" />
+                        <CommandList>
+                          <CommandEmpty>Aucune catégorie trouvée.</CommandEmpty>
+                          <CommandGroup>
+                            {categories.map((cat) => (
+                              <CommandItem
+                                key={cat.value}
+                                value={cat.value}
+                                onSelect={(currentValue) => {
+                                  setCategory(currentValue === category ? "" : currentValue)
+                                  setOpenCategory(false)
+                                }}
+                              >
+                                {cat.label}
+                                <Check
+                                  className={cn(
+                                    "ml-auto h-4 w-4",
+                                    category === cat.value ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Section Prix */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">Tarification</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="price" className="text-sm font-medium text-muted-foreground">
+                        Prix de vente
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="price"
+                          type="number"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          className="h-12 pl-16 text-base"
+                          placeholder="0"
+                        />
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                          FCFA
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="promotional-price" className="text-sm font-medium text-muted-foreground">
+                          Prix promotionnel
+                        </Label>
+                        <Badge variant="secondary" className="text-xs">
+                          Optionnel
+                        </Badge>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="promotional-price"
+                          type="number"
+                          value={promotionalPrice}
+                          onChange={(e) => setPromotionalPrice(e.target.value)}
+                          className="h-12 pl-16 text-base"
+                          placeholder="0"
+                        />
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                          FCFA
+                        </span>
+                      </div>
+                      {promotionalPrice && price && Number(promotionalPrice) < Number(price) && (
+                        <p className="text-xs text-green-600 font-medium">
+                          Économie de {Math.round(((Number(price) - Number(promotionalPrice)) / Number(price)) * 100)}%
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Aperçu des prix */}
+                  {(price || promotionalPrice) && (
+                    <div className="bg-muted/30 rounded-lg p-4 border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Aperçu client :</span>
+                        <div className="flex items-center gap-2">
+                          {promotionalPrice && price && Number(promotionalPrice) < Number(price) ? (
+                            <>
+                              <span className="text-lg font-semibold text-green-600">{promotionalPrice} FCFA</span>
+                              <span className="text-sm text-muted-foreground line-through">{price} FCFA</span>
+                            </>
+                          ) : (
+                            <span className="text-lg font-semibold">{price || promotionalPrice} FCFA</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Description */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Description du produit</CardTitle>
+                  <AlertDialog open={isVideoDialogOpen} onOpenChange={setIsVideoDialogOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Video className="h-4 w-4 mr-2" />
+                        Ajouter vidéo
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Ajouter une vidéo</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Entrez l'URL de votre vidéo YouTube, Vimeo ou tout autre lien vidéo pour l'intégrer à la
+                          description de votre produit.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="video-url">URL de la vidéo</Label>
+                          <Input
+                            id="video-url"
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            value={videoUrl}
+                            onChange={(e) => setVideoUrl(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-border hover:bg-muted">Annuler</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={insertVideo}
+                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          Insérer la vidéo
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <RichTextEditor value={description} onChange={setDescription} />
+              </CardContent>
+            </Card>
+
+            {/* Fichiers */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">Fichiers du produit</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                    isDragging
+                      ? "border-primary bg-primary/5 scale-[1.02]"
+                      : "border-muted-foreground/25 hover:border-primary/50"
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Glissez vos fichiers ici</h3>
+                  <p className="text-sm text-muted-foreground mb-4">ou cliquez pour sélectionner</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const input = document.createElement("input")
+                      input.type = "file"
+                      input.multiple = true
+                      input.onchange = (e) => {
+                        const target = e.target as HTMLInputElement
+                        handleFileUpload(target.files)
+                      }
+                      input.click()
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Choisir des fichiers
+                  </Button>
+                </div>
+
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Fichiers ajoutés ({uploadedFiles.length})</h4>
+                    <div className="grid gap-3">
+                      {uploadedFiles.map((file) => (
+                        <div
+                          key={file.id}
+                          className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                        >
+                          <div className="flex items-center gap-3">
+                            {file.preview ? (
+                              <img
+                                src={file.preview || "/placeholder.svg"}
+                                alt={file.name}
+                                className="w-12 h-12 object-cover rounded"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                                <FileImage className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium">{file.name}</p>
+                              <p className="text-sm text-muted-foreground">{formatFileSize(file.size)}</p>
+                            </div>
+                          </div>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Supprimer ce fichier ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Cette action ne peut pas être annulée. Le fichier "{file.name}" sera définitivement
+                                  supprimé.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => removeFile(file.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Supprimer
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Image du produit */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">Image du produit</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {featuredImage ? (
+                  <div className="relative group">
+                    <img
+                      src={featuredImage || "/placeholder.svg"}
+                      alt="Image du produit"
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm" className="bg-destructive/80 hover:bg-destructive">
+                            <X className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer l'image du produit ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Cette action ne peut pas être annulée. L'image du produit sera définitivement supprimée.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => setFeaturedImage(null)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full h-48 border-dashed bg-muted/30 hover:bg-muted/50 transition-colors"
+                    onClick={() => {
+                      const input = document.createElement("input")
+                      input.type = "file"
+                      input.accept = "image/*"
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0]
+                        if (file) {
+                          const reader = new FileReader()
+                          reader.onload = (e) => setFeaturedImage(e.target?.result as string)
+                          reader.readAsDataURL(file)
+                        }
+                      }
+                      input.click()
+                    }}
+                  >
+                    <div className="text-center">
+                      <ImageIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                      <div className="font-medium">Ajouter une image</div>
+                      <div className="text-sm text-muted-foreground mt-1">Cliquez pour sélectionner</div>
+                    </div>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Section Publication avec ShineBorder */}
+            <div className="relative">
+              <Card className="relative shadow-sm bg-background">
+                <ShineBorder />
+                <CardHeader className="pb-4 relative z-10">
+                  <CardTitle className="text-lg">Publication</CardTitle>
+                  <CardDescription>Gérez la publication et la visibilité de votre produit</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Statut :</span>
+                    <Badge variant="secondary">Brouillon</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Visibilité :</span>
+                    <Badge variant="outline">Publique</Badge>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="featured" />
+                    <Label htmlFor="featured" className="text-sm">
+                      Produit en vedette
+                    </Label>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-col space-y-3 pt-6 relative z-10">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button className="w-full" disabled={!isFormValid}>
+                        Publier le produit
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Publier ce produit ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Votre produit sera publié et visible par tous les utilisateurs. Assurez-vous que toutes les
+                          informations sont correctes.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-border hover:bg-muted">Annuler</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handlePublish}
+                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          Publier
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="w-full bg-transparent">
+                        <Save className="h-4 w-4 mr-2" />
+                        Sauvegarder comme brouillon
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Sauvegarder en brouillon ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Votre produit sera sauvegardé en tant que brouillon. Vous pourrez le modifier et le publier
+                          plus tard.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-border hover:bg-muted">Annuler</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleSaveDraft}
+                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          Sauvegarder
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <Button variant="outline" className="w-full bg-transparent">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Aperçu du produit
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+
+            {/* Résumé */}
+            <Card className="shadow-sm bg-primary/5 border-primary/20">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg text-primary">Résumé</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>Nom :</span>
+                  <span className="font-medium">{productName || "Non défini"}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Type :</span>
+                  <span className="font-medium">
+                    {productTypes.find((t) => t.id === selectedType)?.title || "Non défini"}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Catégorie :</span>
+                  <span className="font-medium">
+                    {categories.find((c) => c.value === category)?.label || "Non définie"}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Prix :</span>
+                  <span className="font-medium">{price ? `${price} FCFA` : "Gratuit"}</span>
+                </div>
+                {promotionalPrice && (
+                  <div className="flex justify-between text-sm">
+                    <span>Prix promo :</span>
+                    <span className="font-medium text-green-600">{promotionalPrice} FCFA</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span>Fichiers :</span>
+                  <span className="font-medium">{uploadedFiles.length}</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
