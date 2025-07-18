@@ -17,10 +17,10 @@ import {
 
 export const apps = [
   {
-    name: 'Telegram',
+    name: 'Moneroo',
     logo: <img src="/src/assets/images/moneroo.png" alt="Moneroo Logo" className="w-6 h-6" />,
     connected: false,
-    desc: 'Connect with Telegram for real-time communication.',
+    desc: 'Connecter Moneroo et utiliser vos propre moyen de paiement.',
   },
   {
     name: 'Notion',

@@ -1,3 +1,5 @@
+// src/components/layout/nav-group.tsx
+
 import { ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
@@ -39,7 +41,7 @@ export function NavGroup({ title, items }: NavGroup) {
           const key = `${item.title}-${item.url}`
 
           if (!item.items)
-            return <SidebarMenuLink key={key} item={item} href={href} />
+            return <SidebarMenuLink key={key} item={item} href={href} isTopLevelLink={true} />
 
           if (state === 'collapsed' && !isMobile)
             return (
@@ -57,13 +59,13 @@ const NavBadge = ({ children }: { children: ReactNode }) => (
   <Badge className='rounded-full px-1 py-0 text-xs'>{children}</Badge>
 )
 
-const SidebarMenuLink = ({ item, href }: { item: NavLink; href: string }) => {
+const SidebarMenuLink = ({ item, href, isTopLevelLink = false }: { item: NavLink; href: string; isTopLevelLink?: boolean }) => {
   const { setOpenMobile } = useSidebar()
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         asChild
-        isActive={checkIsActive(href, item)}
+        isActive={checkIsActive(href, item, isTopLevelLink)}
         tooltip={item.title}
       >
         <Link to={item.url} onClick={() => setOpenMobile(false)}>
@@ -135,7 +137,7 @@ const SidebarMenuCollapsedDropdown = ({
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton
             tooltip={item.title}
-            isActive={checkIsActive(href, item)}
+            isActive={checkIsActive(href, item, true)}
           >
             {item.icon && <item.icon />}
             <span>{item.title}</span>
@@ -169,12 +171,19 @@ const SidebarMenuCollapsedDropdown = ({
 }
 
 function checkIsActive(href: string, item: NavItem, mainNav = false) {
-  return (
-    href === item.url || // /endpint?search=param
-    href.split('?')[0] === item.url || // endpoint
-    !!item?.items?.filter((i) => i.url === href).length || // if child nav is active
-    (mainNav &&
-      href.split('/')[1] !== '' &&
-      href.split('/')[1] === item?.url?.split('/')[1])
-  )
+  const currentPath = href.split('?')[0] 
+  const itemPath = item.url ?? ''
+
+  if (itemPath === '/') {
+    return currentPath === '/'; 
+  }
+
+  if (currentPath === itemPath) return true
+
+  if (item.items?.some((i) => currentPath === i.url)) return true
+
+ 
+  if (mainNav && currentPath.startsWith(itemPath)) return true
+
+  return false
 }
