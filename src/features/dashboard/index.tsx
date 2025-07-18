@@ -19,7 +19,6 @@ import { RecentSales } from './components/recent-sales'
 import Paiement from "@/components/paiement";
 import { mockTransactions } from "@/data/mock-transactions"
 import { useMemo } from 'react'
-import DraggableDashboard, { DraggableWrapper } from "@/components/draggable-dashboard"
 
 
 export default function Dashboard() {

@@ -1,5 +1,3 @@
-// src/routes/_authenticated/marketing/index.tsx
-
 "use client"
 
 import { createFileRoute, Link } from "@tanstack/react-router"
@@ -72,24 +70,19 @@ const promoCodes = [
   },
 ]
 
-// Définition de la route pour le composant PromoCodesPage
-export const Route = createFileRoute('/_authenticated/marketing/')({
-  component: PromoCodesPage,
-});
-
-function PromoCodesPage() {
+export function PromoCodesPage() {
   return (
     <div className="container mx-auto px-6 py-8">
-      {/* En-tête de la page avec bouton d'ajout */}
+      {/* En-tête avec titre et bouton créer */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Codes Promo</h1>
-          <p className="text-muted-foreground">Gérez vos codes de réduction et promotions.</p>
+          <h1 className="text-3xl font-bold">Codes Promo</h1>
+          <p className="text-muted-foreground mt-1">Gérez vos codes de réduction et promotions</p>
         </div>
-        <Link to="/marketing/ajouter"> {/* Utilisez le chemin TanStack Router */}
+        <Link to="/marketing/ajouter">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Nouveau code promo
+            Créer un code promo
           </Button>
         </Link>
       </div>
@@ -217,7 +210,7 @@ function PromoCodesPage() {
             <Percent className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Aucun code promo</h3>
             <p className="text-muted-foreground mb-4">Commencez par créer votre premier code de réduction</p>
-            <Link to="/marketing/ajouter"> {/* Utilisez le chemin TanStack Router */}
+            <Link to="/marketing/ajouter">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Créer un code promo
@@ -229,3 +222,7 @@ function PromoCodesPage() {
     </div>
   )
 }
+
+export const Route = createFileRoute("/_authenticated/marketing/")({
+  component: PromoCodesPage,
+})

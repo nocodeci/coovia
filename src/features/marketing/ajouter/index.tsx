@@ -1,8 +1,6 @@
 "use client"
-
 import { useState } from "react"
 import { ArrowLeft, Percent, Package, Settings, Eye, Save, Check, ChevronsUpDown, X } from "lucide-react"
-import { MarketingPrimaryButtons } from "./components/marketin-primary-bouton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,20 +12,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle,AlertDialogTrigger,} from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-
 import { produits } from "../../produits/produit/data/produits"
 
 // Filtrer seulement les produits actifs pour les codes promo
@@ -102,12 +89,8 @@ export default function AddPromoCode() {
 
   const isFormValid = promoCode && discountValue && (applyToAll || selectedProducts.length > 0)
 
- 
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      
-
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contenu Principal */}
@@ -144,7 +127,6 @@ export default function AddPromoCode() {
                   </div>
                   <p className="text-xs text-muted-foreground">Le code sera automatiquement converti en majuscules</p>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="description" className="text-sm font-medium">
                     Description
@@ -174,8 +156,9 @@ export default function AddPromoCode() {
                               htmlFor={type.id}
                               className={cn(
                                 "flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all",
-                                "peer-checked:border-primary peer-checked:bg-primary/5",
+                                "peer-checked:border-primary peer-checked:bg-primary/5", // This should work if your Tailwind setup is correct
                                 "hover:border-primary/50",
+                                discountType === type.id && "border-primary bg-primary/5 shadow-sm" // **THE FIX IS HERE**
                               )}
                             >
                               <div className="flex items-center gap-3 mb-2">
@@ -364,7 +347,6 @@ export default function AddPromoCode() {
                     />
                     <p className="text-xs text-muted-foreground">Laissez vide pour un usage illimité</p>
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="minimum-amount" className="text-sm font-medium">
                       Montant minimum
@@ -399,7 +381,6 @@ export default function AddPromoCode() {
                       className="h-12"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="valid-until" className="text-sm font-medium">
                       Valide jusqu'au
@@ -482,7 +463,6 @@ export default function AddPromoCode() {
                   <span className="text-sm">Statut :</span>
                   <Badge variant={isActive ? "default" : "secondary"}>{isActive ? "Actif" : "Inactif"}</Badge>
                 </div>
-
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="is-active"
@@ -506,7 +486,6 @@ export default function AddPromoCode() {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-
                         <AlertDialogTitle>Créer ce code promo ?</AlertDialogTitle>
                         <AlertDialogDescription>
                           Le code promo "{promoCode}" sera créé et{" "}
@@ -519,7 +498,6 @@ export default function AddPromoCode() {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-
                   <Button variant="outline" className="w-full bg-transparent">
                     <Eye className="h-4 w-4 mr-2" />
                     Aperçu client
@@ -547,9 +525,7 @@ export default function AddPromoCode() {
                   </div>
                   <div className="flex justify-between">
                     <span>Produits :</span>
-                    <span className="font-medium">
-                      {applyToAll ? "Tous" : `${selectedProducts.length} sélectionné(s)`}
-                    </span>
+                    <span className="font-medium">{applyToAll ? "Tous" : `${selectedProducts.length} sélectionné(s)`}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Statut :</span>
