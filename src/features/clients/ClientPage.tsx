@@ -17,17 +17,13 @@ import {
   Plus,
   MoreHorizontal,
   UserPlus,
-  Clock,
-  CreditCard,
-  Tag,
-  BarChart3,
   Gift,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -46,11 +42,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { mockClients, type Client } from "@/data/mock-clients"
 
-// Composant de statistiques
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(" ")
+}
+
+// Composant de statistiques simplifié
 function ClientStats({ clients }: { clients: Client[] }) {
   const stats = useMemo(() => {
     const totalClients = clients.length
@@ -71,64 +71,102 @@ function ClientStats({ clients }: { clients: Client[] }) {
     }
   }, [clients])
 
+  const summary = [
+    {
+      name: "Total Clients",
+      value: stats.totalClients.toString(),
+      change: "+23",
+      percentageChange: "+4.9%",
+      changeType: "positive",
+      icon: Users,
+      bgColor: "bg-emerald-50",
+      iconColor: "text-emerald-600",
+    },
+    {
+      name: "Clients Actifs",
+      value: stats.activeClients.toString(),
+      change: "+18",
+      percentageChange: "+4.8%",
+      changeType: "positive",
+      icon: TrendingUp,
+      bgColor: "bg-green-50",
+      iconColor: "text-green-600",
+    },
+    {
+      name: "Nouveaux ce mois",
+      value: stats.newThisMonth.toString(),
+      change: "+0",
+      percentageChange: "0%",
+      changeType: "neutral",
+      icon: UserPlus,
+      bgColor: "bg-orange-50",
+      iconColor: "text-orange-600",
+    },
+  ]
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-2">
-            <Users className="h-4 w-4 text-[#032313]" />
-            <div className="text-sm font-medium text-muted-foreground">Total Clients</div>
-          </div>
-          <div className="text-2xl font-bold text-[#032313]">{stats.totalClients}</div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
+      {summary.map((item) => {
+        const IconComponent = item.icon
+        return (
+          <Card key={item.name} className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-0">
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm font-medium text-gray-600">{item.name}</div>
+                  <div className={cn("p-2 rounded-lg", item.bgColor)}>
+                    <IconComponent className={cn("h-4 w-4", item.iconColor)} />
+                  </div>
+                </div>
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-2">
-            <TrendingUp className="h-4 w-4 text-green-600" />
-            <div className="text-sm font-medium text-muted-foreground">Clients Actifs</div>
-          </div>
-          <div className="text-2xl font-bold text-green-600">{stats.activeClients}</div>
-        </CardContent>
-      </Card>
+                <div className="flex items-baseline justify-between mb-3">
+                  <div className="text-2xl font-bold text-gray-900">{item.value}</div>
+                  <div className="flex items-center space-x-1 text-sm">
+                    <span className="font-medium text-gray-900">{item.change}</span>
+                    <span
+                      className={classNames(
+                        item.changeType === "positive"
+                          ? "text-emerald-700"
+                          : item.changeType === "negative"
+                            ? "text-red-700"
+                            : "text-gray-500",
+                      )}
+                    >
+                      ({item.percentageChange})
+                    </span>
+                  </div>
+                </div>
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-2">
-            <CreditCard className="h-4 w-4 text-blue-600" />
-            <div className="text-sm font-medium text-muted-foreground">Chiffre d'affaires</div>
-          </div>
-          <div className="text-2xl font-bold text-blue-600">{stats.totalRevenue.toLocaleString()} CFA</div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-2">
-            <ShoppingBag className="h-4 w-4 text-purple-600" />
-            <div className="text-sm font-medium text-muted-foreground">Panier Moyen</div>
-          </div>
-          <div className="text-2xl font-bold text-purple-600">
-            {Math.round(stats.avgOrderValue).toLocaleString()} CFA
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-2">
-            <UserPlus className="h-4 w-4 text-orange-600" />
-            <div className="text-sm font-medium text-muted-foreground">Nouveaux ce mois</div>
-          </div>
-          <div className="text-2xl font-bold text-orange-600">{stats.newThisMonth}</div>
-        </CardContent>
-      </Card>
+                {/* Mini graphique simulé avec des barres */}
+                <div className="flex items-end space-x-1 h-8">
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const height = Math.random() * 100 + 20
+                    return (
+                      <div
+                        key={i}
+                        className={cn(
+                          "flex-1 rounded-sm",
+                          item.changeType === "positive"
+                            ? "bg-emerald-200"
+                            : item.changeType === "negative"
+                              ? "bg-red-200"
+                              : "bg-gray-200",
+                        )}
+                        style={{ height: `${height}%` }}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )
+      })}
     </div>
   )
 }
 
-// Composant de détails client
+// Composant de détails client amélioré
 function ClientDetailsSheet({ client }: { client: Client }) {
   return (
     <Sheet>
@@ -137,150 +175,157 @@ function ClientDetailsSheet({ client }: { client: Client }) {
           <Eye className="h-4 w-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[600px] sm:w-[800px]">
-        <SheetHeader>
-          <SheetTitle className="flex items-center space-x-3">
-            <Avatar className="h-12 w-12">
+      <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+        <div className="space-y-6">
+          {/* Header du client */}
+          <div className="flex items-start space-x-4 pb-4 border-b">
+            <Avatar className="h-16 w-16 ring-2 ring-gray-100">
               <AvatarImage src={client.avatar || "/placeholder.svg"} />
-              <AvatarFallback className="bg-[#032313] text-white">
+              <AvatarFallback className="bg-[#032313] text-white text-lg">
                 {client.name
                   .split(" ")
                   .map((n) => n[0])
                   .join("")}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <div className="text-xl font-semibold">{client.name}</div>
-              <div className="text-sm text-muted-foreground">{client.email}</div>
-            </div>
-          </SheetTitle>
-          <SheetDescription>Informations détaillées et historique du client</SheetDescription>
-        </SheetHeader>
-
-        <div className="mt-6 space-y-6">
-          {/* Informations générales */}
-          <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Phone className="h-4 w-4 text-[#032313]" />
-                  <span className="text-sm font-medium">Téléphone</span>
-                </div>
-                <div className="text-sm text-muted-foreground">{client.phone}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <MapPin className="h-4 w-4 text-[#032313]" />
-                  <span className="text-sm font-medium">Localisation</span>
-                </div>
-                <div className="text-sm text-muted-foreground">{client.location}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Calendar className="h-4 w-4 text-[#032313]" />
-                  <span className="text-sm font-medium">Client depuis</span>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {new Date(client.joinDate).toLocaleDateString("fr-FR")}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Tag className="h-4 w-4 text-[#032313]" />
-                  <span className="text-sm font-medium">Segment</span>
-                </div>
-                <Badge variant="outline" className="border-[#032313]/20 text-[#032313]">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-semibold text-gray-900 truncate">{client.name}</h2>
+              <p className="text-sm text-gray-500 truncate">{client.email}</p>
+              <div className="flex items-center space-x-2 mt-2">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-xs",
+                    client.segment === "VIP" && "border-purple-200 bg-purple-50 text-purple-700",
+                    client.segment === "Premium" && "border-blue-200 bg-blue-50 text-blue-700",
+                    client.segment === "Standard" && "border-green-200 bg-green-50 text-green-700",
+                    client.segment === "Nouveau" && "border-orange-200 bg-orange-50 text-orange-700",
+                  )}
+                >
                   {client.segment}
                 </Badge>
-              </CardContent>
-            </Card>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-xs",
+                    client.status === "active" && "border-green-200 bg-green-50 text-green-700",
+                    client.status === "inactive" && "border-gray-200 bg-gray-50 text-gray-700",
+                    client.status === "blocked" && "border-red-200 bg-red-50 text-red-700",
+                  )}
+                >
+                  {client.status === "active" ? "Actif" : client.status === "inactive" ? "Inactif" : "Bloqué"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* Informations de contact */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium text-gray-900">Informations de contact</h3>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <Phone className="h-4 w-4 text-[#032313]" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Téléphone</p>
+                  <p className="text-sm text-gray-600">{client.phone}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <MapPin className="h-4 w-4 text-[#032313]" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Localisation</p>
+                  <p className="text-sm text-gray-600">{client.location}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <Calendar className="h-4 w-4 text-[#032313]" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Client depuis</p>
+                  <p className="text-sm text-gray-600">
+                    {new Date(client.joinDate).toLocaleDateString("fr-FR", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Statistiques d'achat */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[#032313] flex items-center space-x-2">
-                <BarChart3 className="h-5 w-5" />
-                <span>Statistiques d'achat</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#032313]">{client.totalOrders}</div>
-                  <div className="text-sm text-muted-foreground">Commandes</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#032313]">{client.totalSpent.toLocaleString()} CFA</div>
-                  <div className="text-sm text-muted-foreground">Total dépensé</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#032313]">
-                    {Math.round(client.totalSpent / client.totalOrders).toLocaleString()} CFA
-                  </div>
-                  <div className="text-sm text-muted-foreground">Panier moyen</div>
-                </div>
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium text-gray-900">Statistiques d'achat</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <div className="text-xl font-bold text-blue-600">{client.totalOrders}</div>
+                <div className="text-xs text-blue-600">Commandes</div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <div className="text-xl font-bold text-green-600">{(client.totalSpent / 1000000).toFixed(1)}M</div>
+                <div className="text-xs text-green-600">Total CFA</div>
+              </div>
+              <div className="text-center p-3 bg-purple-50 rounded-lg">
+                <div className="text-xl font-bold text-purple-600">
+                  {Math.round(client.totalSpent / client.totalOrders / 1000)}K
+                </div>
+                <div className="text-xs text-purple-600">Panier moy.</div>
+              </div>
+            </div>
+          </div>
 
-          {/* Historique des commandes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[#032313] flex items-center space-x-2">
-                <ShoppingBag className="h-5 w-5" />
-                <span>Dernières commandes</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {client.recentOrders?.map((order, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-[#032313] rounded-full"></div>
-                      <div>
-                        <div className="font-medium">{order.product}</div>
-                        <div className="text-sm text-muted-foreground">{order.date}</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{order.amount.toLocaleString()} CFA</div>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-xs",
-                          order.status === "completed" && "border-green-200 text-green-700 bg-green-50",
-                          order.status === "pending" && "border-yellow-200 text-yellow-700 bg-yellow-50",
-                          order.status === "cancelled" && "border-red-200 text-red-700 bg-red-50",
-                        )}
-                      >
-                        {order.status}
-                      </Badge>
+          {/* Dernières commandes */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium text-gray-900">Dernières commandes</h3>
+            <div className="space-y-2">
+              {client.recentOrders?.slice(0, 3).map((order, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        order.status === "completed" && "bg-green-500",
+                        order.status === "pending" && "bg-yellow-500",
+                        order.status === "cancelled" && "bg-red-500",
+                      )}
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{order.product}</p>
+                      <p className="text-xs text-gray-500">{order.date}</p>
                     </div>
                   </div>
-                )) || <div className="text-center text-muted-foreground py-4">Aucune commande récente</div>}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">{(order.amount / 1000).toFixed(0)}K CFA</p>
+                    <p
+                      className={cn(
+                        "text-xs",
+                        order.status === "completed" && "text-green-600",
+                        order.status === "pending" && "text-yellow-600",
+                        order.status === "cancelled" && "text-red-600",
+                      )}
+                    >
+                      {order.status === "completed" ? "Complété" : order.status === "pending" ? "En attente" : "Annulé"}
+                    </p>
+                  </div>
+                </div>
+              )) || (
+                <div className="text-center py-6 text-gray-500">
+                  <ShoppingBag className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm">Aucune commande récente</p>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Actions rapides */}
-          <div className="flex space-x-2">
-            <Button className="flex-1 bg-[#032313] hover:bg-[#032313]/90 text-white">
+          <div className="space-y-2 pt-4 border-t">
+            <Button className="w-full bg-[#032313] hover:bg-[#032313]/90 text-white">
               <Mail className="h-4 w-4 mr-2" />
               Envoyer un email
             </Button>
             <Button
               variant="outline"
-              className="flex-1 border-[#032313]/20 text-[#032313] hover:bg-[#032313]/5 bg-transparent"
+              className="w-full border-[#032313]/20 text-[#032313] hover:bg-[#032313]/5 bg-transparent"
             >
               <Gift className="h-4 w-4 mr-2" />
               Offrir une réduction
@@ -296,8 +341,6 @@ function ClientDetailsSheet({ client }: { client: Client }) {
 export default function ClientsPageClient() {
   const [clients, setClients] = useState<Client[]>(mockClients)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [segmentFilter, setSegmentFilter] = useState("all")
   const [selectedClients, setSelectedClients] = useState<string[]>([])
 
   // Filtrage des clients
@@ -308,40 +351,9 @@ export default function ClientsPageClient() {
         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.location.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const matchesStatus = statusFilter === "all" || client.status === statusFilter
-      const matchesSegment = segmentFilter === "all" || client.segment === segmentFilter
-
-      return matchesSearch && matchesStatus && matchesSegment
+      return matchesSearch
     })
-  }, [clients, searchTerm, statusFilter, segmentFilter])
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "border-green-200 bg-green-50 text-green-700"
-      case "inactive":
-        return "border-gray-200 bg-gray-50 text-gray-700"
-      case "blocked":
-        return "border-red-200 bg-red-50 text-red-700"
-      default:
-        return "border-gray-200 bg-gray-50 text-gray-700"
-    }
-  }
-
-  const getSegmentColor = (segment: string) => {
-    switch (segment) {
-      case "VIP":
-        return "border-purple-200 bg-purple-50 text-purple-700"
-      case "Premium":
-        return "border-blue-200 bg-blue-50 text-blue-700"
-      case "Standard":
-        return "border-green-200 bg-green-50 text-green-700"
-      case "Nouveau":
-        return "border-orange-200 bg-orange-50 text-orange-700"
-      default:
-        return "border-gray-200 bg-gray-50 text-gray-700"
-    }
-  }
+  }, [clients, searchTerm])
 
   const handleSelectClient = (clientId: string) => {
     setSelectedClients((prev) => (prev.includes(clientId) ? prev.filter((id) => id !== clientId) : [...prev, clientId]))
@@ -354,278 +366,242 @@ export default function ClientsPageClient() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-[#032313]">Clients</h1>
-          <p className="text-muted-foreground">Gérez vos clients et leurs informations</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" className="border-[#032313]/20 text-[#032313] hover:bg-[#032313]/5 bg-transparent">
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau client
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ajouter un nouveau client</DialogTitle>
-                <DialogDescription>Créez un nouveau profil client avec les informations de base.</DialogDescription>
-              </DialogHeader>
-              {/* Formulaire d'ajout de client */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Nom complet</Label>
-                    <Input placeholder="Jean Dupont" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input type="email" placeholder="jean@example.com" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Téléphone</Label>
-                    <Input placeholder="+221 77 123 45 67" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Localisation</Label>
-                    <Input placeholder="Dakar, Sénégal" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Segment</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un segment" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="nouveau">Nouveau</SelectItem>
-                      <SelectItem value="standard">Standard</SelectItem>
-                      <SelectItem value="premium">Premium</SelectItem>
-                      <SelectItem value="vip">VIP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline">Annuler</Button>
-                  <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white">Créer le client</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* Statistiques */}
-      <ClientStats clients={clients} />
-
-      {/* Filtres et recherche */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[300px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher par nom, email ou localisation..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="active">Actif</SelectItem>
-                <SelectItem value="inactive">Inactif</SelectItem>
-                <SelectItem value="blocked">Bloqué</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={segmentFilter} onValueChange={setSegmentFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Segment" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les segments</SelectItem>
-                <SelectItem value="VIP">VIP</SelectItem>
-                <SelectItem value="Premium">Premium</SelectItem>
-                <SelectItem value="Standard">Standard</SelectItem>
-                <SelectItem value="Nouveau">Nouveau</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {selectedClients.length > 0 && (
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="border-[#032313]/20 text-[#032313]">
-                  {selectedClients.length} sélectionné(s)
-                </Badge>
-                <Button variant="outline" size="sm" className="text-[#032313] hover:bg-[#032313]/5 bg-transparent">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Email groupé
-                </Button>
-                <Button variant="outline" size="sm" className="text-[#032313] hover:bg-[#032313]/5 bg-transparent">
-                  <Tag className="h-4 w-4 mr-2" />
-                  Changer segment
-                </Button>
-              </div>
-            )}
+    <div className="min-h-screen bg-gray-50/30">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 space-y-4 lg:space-y-0">
+          <div>
+            <h1 className="text-3xl font-bold text-[#032313]">Gestion des Clients</h1>
+            <p className="text-gray-600 mt-1">Gérez vos clients et leurs informations</p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="outline"
+              className="border-[#032313]/20 text-[#032313] hover:bg-[#032313]/5 bg-transparent"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouveau client
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Ajouter un nouveau client</DialogTitle>
+                  <DialogDescription>Créez un nouveau profil client avec les informations de base.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Nom complet</Label>
+                      <Input placeholder="Jean Dupont" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email</Label>
+                      <Input type="email" placeholder="jean@example.com" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Téléphone</Label>
+                      <Input placeholder="+221 77 123 45 67" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Localisation</Label>
+                      <Input placeholder="Dakar, Sénégal" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Segment</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un segment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="nouveau">Nouveau</SelectItem>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="premium">Premium</SelectItem>
+                        <SelectItem value="vip">VIP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline">Annuler</Button>
+                    <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white">Créer le client</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
 
-      {/* Tableau des clients */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <input
-                    type="checkbox"
-                    checked={selectedClients.length === filteredClients.length && filteredClients.length > 0}
-                    onChange={handleSelectAll}
-                    className="rounded border-gray-300"
+        {/* Statistiques */}
+        <ClientStats clients={clients} />
+
+        {/* Recherche simplifiée */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Rechercher par nom, email ou localisation..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
                   />
-                </TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Localisation</TableHead>
-                <TableHead>Segment</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Commandes</TableHead>
-                <TableHead>Total dépensé</TableHead>
-                <TableHead>Dernière activité</TableHead>
-                <TableHead className="w-12">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredClients.map((client) => (
-                <TableRow key={client.id} className="hover:bg-muted/50">
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={selectedClients.includes(client.id)}
-                      onChange={() => handleSelectClient(client.id)}
-                      className="rounded border-gray-300"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={client.avatar || "/placeholder.svg"} />
-                        <AvatarFallback className="bg-[#032313] text-white">
-                          {client.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{client.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Client depuis {new Date(client.joinDate).toLocaleDateString("fr-FR")}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="text-sm">{client.email}</div>
-                      <div className="text-sm text-muted-foreground">{client.phone}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{client.location}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={cn("border", getSegmentColor(client.segment))}>
-                      {client.segment}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={cn("border", getStatusColor(client.status))}>
-                      {client.status === "active" ? "Actif" : client.status === "inactive" ? "Inactif" : "Bloqué"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-center">
-                      <div className="font-medium">{client.totalOrders}</div>
-                      <div className="text-xs text-muted-foreground">commandes</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{client.totalSpent.toLocaleString()} CFA</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{client.lastActivity}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <ClientDetailsSheet client={client} />
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-[#032313] hover:bg-[#032313]/10">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Mail className="h-4 w-4 mr-2" />
-                            Envoyer un email
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Gift className="h-4 w-4 mr-2" />
-                            Offrir une réduction
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {filteredClients.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-muted-foreground mb-2">Aucun client trouvé</h3>
-              <p className="text-sm text-muted-foreground">
-                Essayez de modifier vos filtres ou ajoutez un nouveau client.
-              </p>
+                </div>
+              </div>
+              {selectedClients.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-[#032313]/20 text-[#032313]">
+                    {selectedClients.length} sélectionné(s)
+                  </Badge>
+                  <Button variant="outline" size="sm" className="text-[#032313] hover:bg-[#032313]/5 bg-transparent">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Actions
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Tableau des clients simplifié */}
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedClients.length === filteredClients.length && filteredClients.length > 0}
+                        onChange={handleSelectAll}
+                        className="rounded border-gray-300"
+                      />
+                    </TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead className="hidden md:table-cell">Localisation</TableHead>
+                    <TableHead className="text-center">Commandes</TableHead>
+                    <TableHead className="text-right">Total dépensé</TableHead>
+                    <TableHead className="w-12">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredClients.map((client) => (
+                    <TableRow key={client.id} className="hover:bg-gray-50/50">
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selectedClients.includes(client.id)}
+                          onChange={() => handleSelectClient(client.id)}
+                          className="rounded border-gray-300"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={client.avatar || "/placeholder.svg"} />
+                            <AvatarFallback className="bg-[#032313] text-white">
+                              {client.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <div className="font-medium text-gray-900 truncate">{client.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {client.segment} •{" "}
+                              {client.status === "active"
+                                ? "Actif"
+                                : client.status === "inactive"
+                                  ? "Inactif"
+                                  : "Bloqué"}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="text-sm text-gray-900 truncate">{client.email}</div>
+                          <div className="text-sm text-gray-500">{client.phone}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          <span className="text-sm text-gray-700 truncate">{client.location}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="font-medium text-gray-900">{client.totalOrders}</div>
+                        <div className="text-xs text-gray-500">commandes</div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="font-medium text-gray-900">{(client.totalSpent / 1000000).toFixed(1)}M CFA</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <ClientDetailsSheet client={client} />
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="text-[#032313] hover:bg-[#032313]/10">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Modifier
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Envoyer un email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Gift className="h-4 w-4 mr-2" />
+                                Offrir une réduction
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Supprimer
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {filteredClients.length === 0 && (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun client trouvé</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Essayez de modifier votre recherche ou ajoutez un nouveau client.
+                  </p>
+                  <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter un client
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
