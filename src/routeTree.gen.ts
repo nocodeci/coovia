@@ -31,7 +31,6 @@ import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedProduitsIndexRouteImport } from './routes/_authenticated/produits/index'
 import { Route as AuthenticatedMarketingIndexRouteImport } from './routes/_authenticated/marketing/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
-import { Route as AuthenticatedEditorIndexRouteImport } from './routes/_authenticated/editor/index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
@@ -157,12 +156,6 @@ const AuthenticatedHelpCenterIndexRoute =
     path: '/help-center/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedEditorIndexRoute =
-  AuthenticatedEditorIndexRouteImport.update({
-    id: '/editor/',
-    path: '/editor/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedClientsIndexRoute =
   AuthenticatedClientsIndexRouteImport.update({
     id: '/clients/',
@@ -257,7 +250,6 @@ export interface FileRoutesByFullPath {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
-  '/editor': typeof AuthenticatedEditorIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/marketing': typeof AuthenticatedMarketingIndexRoute
   '/produits': typeof AuthenticatedProduitsIndexRoute
@@ -290,7 +282,6 @@ export interface FileRoutesByTo {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
-  '/editor': typeof AuthenticatedEditorIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/marketing': typeof AuthenticatedMarketingIndexRoute
   '/produits': typeof AuthenticatedProduitsIndexRoute
@@ -328,7 +319,6 @@ export interface FileRoutesById {
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
-  '/_authenticated/editor/': typeof AuthenticatedEditorIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/marketing/': typeof AuthenticatedMarketingIndexRoute
   '/_authenticated/produits/': typeof AuthenticatedProduitsIndexRoute
@@ -365,7 +355,6 @@ export interface FileRouteTypes {
     | '/apps'
     | '/chats'
     | '/clients'
-    | '/editor'
     | '/help-center'
     | '/marketing'
     | '/produits'
@@ -398,7 +387,6 @@ export interface FileRouteTypes {
     | '/apps'
     | '/chats'
     | '/clients'
-    | '/editor'
     | '/help-center'
     | '/marketing'
     | '/produits'
@@ -435,7 +423,6 @@ export interface FileRouteTypes {
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
     | '/_authenticated/clients/'
-    | '/_authenticated/editor/'
     | '/_authenticated/help-center/'
     | '/_authenticated/marketing/'
     | '/_authenticated/produits/'
@@ -617,13 +604,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/editor/': {
-      id: '/_authenticated/editor/'
-      path: '/editor'
-      fullPath: '/editor'
-      preLoaderRoute: typeof AuthenticatedEditorIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/clients/': {
       id: '/_authenticated/clients/'
       path: '/clients'
@@ -740,7 +720,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedClientsIndexRoute: typeof AuthenticatedClientsIndexRoute
-  AuthenticatedEditorIndexRoute: typeof AuthenticatedEditorIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedMarketingIndexRoute: typeof AuthenticatedMarketingIndexRoute
   AuthenticatedProduitsIndexRoute: typeof AuthenticatedProduitsIndexRoute
@@ -756,7 +735,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedClientsIndexRoute: AuthenticatedClientsIndexRoute,
-  AuthenticatedEditorIndexRoute: AuthenticatedEditorIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedMarketingIndexRoute: AuthenticatedMarketingIndexRoute,
   AuthenticatedProduitsIndexRoute: AuthenticatedProduitsIndexRoute,
