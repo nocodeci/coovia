@@ -1,25 +1,21 @@
-import { ClipboardPlus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { TopNav } from '@/components/layout/top-nav'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { Overview } from './components/overview'
-import { RecentSales } from './components/recent-sales'
-import Paiement from "@/components/paiement";
-import { mockTransactions } from "@/data/mock-transactions"
-import { useMemo } from 'react'
+"use client"
 
+import { ClipboardPlus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Header } from "@/components/layout/header"
+import { Main } from "@/components/layout/main"
+import { Search } from "@/components/search"
+import { SearchProvider } from "@/context/search-context"
+import { NotificationProvider } from "@/components/notification-provider"
+import { StoreSelector } from "@/components/store-selector"
+import { SimpleNav } from "@/components/simple-nav"
+import { Overview } from "./components/overview"
+import { RecentSales } from "./components/recent-sales"
+import Paiement from "@/components/paiement"
+import { mockTransactions } from "@/data/mock-transactions"
+import { useMemo } from "react"
 
 export default function Dashboard() {
   // Calculer les statistiques basées sur les vraies données de paiement
@@ -45,11 +41,9 @@ export default function Dashboard() {
     const currentMonthRevenue = currentMonthTransactions
       .filter((t) => t.status === "Succès")
       .reduce((sum, t) => sum + t.value, 0)
-
     const previousMonthRevenue = previousMonthTransactions
       .filter((t) => t.status === "Succès")
       .reduce((sum, t) => sum + t.value, 0)
-
     const revenueGrowth =
       previousMonthRevenue > 0 ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 : 100
 
@@ -94,53 +88,72 @@ export default function Dashboard() {
     }
   }, [])
 
+  const handleBack = () => {
+    console.log("Retour en arrière")
+  }
+
   return (
-    <>
-      {/* ===== Top Heading ===== */}
+    <SearchProvider>
+      {/* ===== Header pleine largeur ===== */}
       <Header>
-        <TopNav links={topNav} />
-        <div className="ml-auto flex items-center space-x-4">
-          <Search />
-          <ThemeSwitch />
-          <ProfileDropdown />
+        <div className="flex items-center justify-between w-full px-4">
+          {/* Section gauche - Navigation simple */}
+          <div className="flex items-center flex-shrink-0">
+            <SimpleNav title="Tableau de bord" onBack={handleBack} showBackButton={true} />
+          </div>
+
+          {/* Section centre - Barre de recherche élargie */}
+          <div className="flex justify-center flex-1 px-8">
+            <Search placeholder="Rechercher..." className="w-full" />
+          </div>
+
+          {/* Section droite - Actions */}
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <NotificationProvider />
+            <StoreSelector />
+          </div>
         </div>
       </Header>
 
       {/* ===== Main ===== */}
       <Main>
-        <div className="mb-2 flex items-center justify-between space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">Tableau de bord</h1>
-          <div className="flex items-center space-x-2">
-            <Button
-              className="bg-[oklch(0.8944_0.1931_121.75)] text-foreground hover:bg-[oklch(0.8_0.19_121)]" /* Nouvelle couleur de bouton et texte sombre */
-            >
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Tableau de bord</h1>
+            <p className="text-gray-600 mt-2">Gérez votre boutique et suivez vos performances</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Button variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50 bg-transparent">
+              Exporter
+            </Button>
+            <Button className="bg-[oklch(0.8944_0.1931_121.75)] text-foreground hover:bg-[oklch(0.8_0.19_121)] shadow-sm">
+              <ClipboardPlus className="mr-2 h-4 w-4" />
               Ajouter un produit
-              <ClipboardPlus />
             </Button>
           </div>
         </div>
 
         <Tabs orientation="vertical" defaultValue="overview" className="space-y-4">
           <div className="w-full overflow-x-auto pb-2">
-            <TabsList>
-              <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-              <TabsTrigger value="analytics" disabled>
+            <TabsList className="bg-gray-50 p-1 rounded-lg">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                Vue d'ensemble
+              </TabsTrigger>
+              <TabsTrigger value="analytics" disabled className="opacity-50">
                 Analyse
               </TabsTrigger>
-              <TabsTrigger value="reports" disabled>
+              <TabsTrigger value="reports" disabled className="opacity-50">
                 Rapports
               </TabsTrigger>
-              <TabsTrigger value="notifications" disabled>
+              <TabsTrigger value="notifications" disabled className="opacity-50">
                 Notifications
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Card
-                className="bg-[oklch(0.2274_0.0492_157.66)] text-[oklch(1_0_0)] border-none" /* Nouvelle couleur de fond et texte blanc */
-              >
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <Card className="bg-[oklch(0.2274_0.0492_157.66)] text-[oklch(1_0_0)] border-none shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                   <svg
@@ -151,7 +164,7 @@ export default function Dashboard() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    className="text-[oklch(1_0_0)] h-4 w-4" /* Icône en blanc */
+                    className="text-[oklch(1_0_0)] h-4 w-4"
                   >
                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                   </svg>
@@ -165,7 +178,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Transactions</CardTitle>
                   <svg
@@ -192,7 +205,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Ventes</CardTitle>
                   <svg
@@ -218,7 +231,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Actif maintenant</CardTitle>
                   <svg
@@ -241,8 +254,8 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
-              <Card className="col-span-1 lg:col-span-4">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-7">
+              <Card className="col-span-1 lg:col-span-4 shadow-sm">
                 <CardHeader>
                   <CardTitle>Vue d'ensemble</CardTitle>
                 </CardHeader>
@@ -251,7 +264,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="col-span-1 lg:col-span-3">
+              <Card className="col-span-1 lg:col-span-3 shadow-sm">
                 <CardHeader>
                   <CardTitle>Ventes récentes</CardTitle>
                   <CardDescription>Vous avez réalisé {stats.sales.current} ventes ce mois-ci.</CardDescription>
@@ -264,37 +277,10 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-4">
+        <div className="mt-6">
           <Paiement />
         </div>
       </Main>
-    </>
+    </SearchProvider>
   )
 }
-
-const topNav = [
-  {
-    title: "Overview",
-    href: "dashboard/overview",
-    isActive: true,
-    disabled: false,
-  },
-  {
-    title: "Customers",
-    href: "dashboard/customers",
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: "Products",
-    href: "dashboard/products",
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: "Settings",
-    href: "dashboard/settings",
-    isActive: false,
-    disabled: true,
-  },
-]
