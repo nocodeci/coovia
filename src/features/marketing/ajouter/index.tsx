@@ -1,6 +1,8 @@
 "use client"
+
+import type React from "react"
 import { useState } from "react"
-import { ArrowLeft, Percent, Package, Settings, Eye, Save, Check, ChevronsUpDown, X } from "lucide-react"
+import { Percent, Package, Settings, Eye, Save, Check, ChevronsUpDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,10 +14,48 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle,AlertDialogTrigger,} from "@/components/ui/alert-dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-import { produits } from "../../produits/produit/data/produits"
+import { AddPromoCodeTopBar } from "./components/add-promo-code-top-bar"
+
+// Mock data - remplacez par vos vraies données
+const produits = [
+  {
+    id: "1",
+    nom: "Formation React Avancée",
+    prix: 25000,
+    categorie: "Formation",
+    statut: "actif",
+    image: "/placeholder.svg?height=32&width=32&text=React",
+  },
+  {
+    id: "2",
+    nom: "E-book JavaScript",
+    prix: 15000,
+    categorie: "E-book",
+    statut: "actif",
+    image: "/placeholder.svg?height=32&width=32&text=JS",
+  },
+  {
+    id: "3",
+    nom: "Template Dashboard",
+    prix: 8000,
+    categorie: "Template",
+    statut: "actif",
+    image: "/placeholder.svg?height=32&width=32&text=UI",
+  },
+]
 
 // Filtrer seulement les produits actifs pour les codes promo
 const availableProducts = produits.filter((product) => product.statut === "actif")
@@ -49,6 +89,7 @@ export default function AddPromoCode() {
   const [validUntil, setValidUntil] = useState("")
   const [minimumAmount, setMinimumAmount] = useState("")
   const [isActive, setIsActive] = useState(true)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   // États pour les combobox
   const [openProducts, setOpenProducts] = useState(false)
@@ -60,16 +101,19 @@ export default function AddPromoCode() {
       result += chars.charAt(Math.floor(Math.random() * chars.length))
     }
     setPromoCode(result)
+    setHasUnsavedChanges(true)
   }
 
   const toggleProduct = (productId: string) => {
     setSelectedProducts((prev) =>
       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId],
     )
+    setHasUnsavedChanges(true)
   }
 
   const removeProduct = (productId: string) => {
     setSelectedProducts((prev) => prev.filter((id) => id !== productId))
+    setHasUnsavedChanges(true)
   }
 
   const handleSave = () => {
@@ -85,13 +129,73 @@ export default function AddPromoCode() {
         onClick: () => console.log("Redirection vers la liste"),
       },
     })
+    setHasUnsavedChanges(false)
+  }
+
+  const handleDiscard = () => {
+    // Reset form
+    setPromoCode("")
+    setDescription("")
+    setDiscountType("percentage")
+    setDiscountValue("")
+    setSelectedProducts([])
+    setApplyToAll(false)
+    setUsageLimit("")
+    setValidFrom("")
+    setValidUntil("")
+    setMinimumAmount("")
+    setIsActive(true)
+    setHasUnsavedChanges(false)
+  }
+
+  const handleBack = () => {
+    // Navigate back to promo codes list
+    console.log("Navigate back")
+  }
+
+  const handleSuggestionApply = (type: string, value: string) => {
+    switch (type) {
+      case "template":
+        setPromoCode(value)
+        setHasUnsavedChanges(true)
+        break
+      case "discount":
+        // Focus on discount input
+        break
+      case "products":
+        if (value === "all") {
+          setApplyToAll(true)
+          setSelectedProducts([])
+        } else {
+          // Open products selector
+          setOpenProducts(true)
+        }
+        setHasUnsavedChanges(true)
+        break
+      default:
+        break
+    }
   }
 
   const isFormValid = promoCode && discountValue && (applyToAll || selectedProducts.length > 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="max-w-6xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <AddPromoCodeTopBar
+        promoCode={promoCode}
+        discountType={discountType}
+        discountValue={discountValue}
+        selectedProducts={selectedProducts}
+        applyToAll={applyToAll}
+        isFormValid={true}
+        hasUnsavedChanges={hasUnsavedChanges}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+        onBack={handleBack}
+        onSuggestionApply={handleSuggestionApply}
+      />
+
+      <div className="max-w-6xl mx-auto px-6 py-8 pt-24">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contenu Principal */}
           <div className="lg:col-span-2 space-y-6">
@@ -112,7 +216,10 @@ export default function AddPromoCode() {
                     <Input
                       id="promo-code"
                       value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      onChange={(e) => {
+                        setPromoCode(e.target.value.toUpperCase())
+                        setHasUnsavedChanges(true)
+                      }}
                       placeholder="WELCOME20"
                       className="h-12 text-base font-mono"
                     />
@@ -127,6 +234,7 @@ export default function AddPromoCode() {
                   </div>
                   <p className="text-xs text-muted-foreground">Le code sera automatiquement converti en majuscules</p>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="description" className="text-sm font-medium">
                     Description
@@ -134,7 +242,10 @@ export default function AddPromoCode() {
                   <Textarea
                     id="description"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => {
+                      setDescription(e.target.value)
+                      setHasUnsavedChanges(true)
+                    }}
                     placeholder="Décrivez brièvement cette promotion..."
                     className="min-h-[80px]"
                   />
@@ -145,7 +256,13 @@ export default function AddPromoCode() {
                   <Label className="text-sm font-medium">
                     Type de réduction <span className="text-destructive">*</span>
                   </Label>
-                  <RadioGroup value={discountType} onValueChange={setDiscountType}>
+                  <RadioGroup
+                    value={discountType}
+                    onValueChange={(value) => {
+                      setDiscountType(value)
+                      setHasUnsavedChanges(true)
+                    }}
+                  >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {discountTypes.map((type) => {
                         const Icon = type.icon
@@ -156,9 +273,9 @@ export default function AddPromoCode() {
                               htmlFor={type.id}
                               className={cn(
                                 "flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all",
-                                "peer-checked:border-primary peer-checked:bg-primary/5", // This should work if your Tailwind setup is correct
+                                "peer-checked:border-primary peer-checked:bg-primary/5",
                                 "hover:border-primary/50",
-                                discountType === type.id && "border-primary bg-primary/5 shadow-sm" // **THE FIX IS HERE**
+                                discountType === type.id && "border-primary bg-primary/5 shadow-sm",
                               )}
                             >
                               <div className="flex items-center gap-3 mb-2">
@@ -185,7 +302,10 @@ export default function AddPromoCode() {
                       id="discount-value"
                       type="number"
                       value={discountValue}
-                      onChange={(e) => setDiscountValue(e.target.value)}
+                      onChange={(e) => {
+                        setDiscountValue(e.target.value)
+                        setHasUnsavedChanges(true)
+                      }}
                       className="h-12 text-base pr-16"
                       placeholder="0"
                     />
@@ -218,6 +338,7 @@ export default function AddPromoCode() {
                       if (checked) {
                         setSelectedProducts([])
                       }
+                      setHasUnsavedChanges(true)
                     }}
                   />
                   <Label htmlFor="apply-all" className="text-sm font-medium">
@@ -341,12 +462,16 @@ export default function AddPromoCode() {
                       id="usage-limit"
                       type="number"
                       value={usageLimit}
-                      onChange={(e) => setUsageLimit(e.target.value)}
+                      onChange={(e) => {
+                        setUsageLimit(e.target.value)
+                        setHasUnsavedChanges(true)
+                      }}
                       placeholder="100"
                       className="h-12"
                     />
                     <p className="text-xs text-muted-foreground">Laissez vide pour un usage illimité</p>
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="minimum-amount" className="text-sm font-medium">
                       Montant minimum
@@ -356,7 +481,10 @@ export default function AddPromoCode() {
                         id="minimum-amount"
                         type="number"
                         value={minimumAmount}
-                        onChange={(e) => setMinimumAmount(e.target.value)}
+                        onChange={(e) => {
+                          setMinimumAmount(e.target.value)
+                          setHasUnsavedChanges(true)
+                        }}
                         placeholder="0"
                         className="h-12 pr-16"
                       />
@@ -377,10 +505,14 @@ export default function AddPromoCode() {
                       id="valid-from"
                       type="date"
                       value={validFrom}
-                      onChange={(e) => setValidFrom(e.target.value)}
+                      onChange={(e) => {
+                        setValidFrom(e.target.value)
+                        setHasUnsavedChanges(true)
+                      }}
                       className="h-12"
                     />
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="valid-until" className="text-sm font-medium">
                       Valide jusqu'au
@@ -389,7 +521,10 @@ export default function AddPromoCode() {
                       id="valid-until"
                       type="date"
                       value={validUntil}
-                      onChange={(e) => setValidUntil(e.target.value)}
+                      onChange={(e) => {
+                        setValidUntil(e.target.value)
+                        setHasUnsavedChanges(true)
+                      }}
                       className="h-12"
                     />
                   </div>
@@ -463,11 +598,15 @@ export default function AddPromoCode() {
                   <span className="text-sm">Statut :</span>
                   <Badge variant={isActive ? "default" : "secondary"}>{isActive ? "Actif" : "Inactif"}</Badge>
                 </div>
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="is-active"
                     checked={isActive}
-                    onCheckedChange={(checked) => setIsActive(checked as boolean)}
+                    onCheckedChange={(checked) => {
+                      setIsActive(checked as boolean)
+                      setHasUnsavedChanges(true)
+                    }}
                   />
                   <Label htmlFor="is-active" className="text-sm">
                     Activer immédiatement
@@ -498,6 +637,7 @@ export default function AddPromoCode() {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+
                   <Button variant="outline" className="w-full bg-transparent">
                     <Eye className="h-4 w-4 mr-2" />
                     Aperçu client
@@ -525,7 +665,9 @@ export default function AddPromoCode() {
                   </div>
                   <div className="flex justify-between">
                     <span>Produits :</span>
-                    <span className="font-medium">{applyToAll ? "Tous" : `${selectedProducts.length} sélectionné(s)`}</span>
+                    <span className="font-medium">
+                      {applyToAll ? "Tous" : `${selectedProducts.length} sélectionné(s)`}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Statut :</span>

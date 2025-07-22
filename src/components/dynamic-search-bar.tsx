@@ -105,7 +105,7 @@ export function DynamicSearchBar({
   const [currentState, setCurrentState] = useState(0)
   const [isActive, setIsActive] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null!)
 
   const states = searchStates[currentPage] || searchStates.dashboard
   const activeState = states[currentState]
