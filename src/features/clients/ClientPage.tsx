@@ -3,13 +3,11 @@
 import { useState, useMemo } from "react"
 import {
   Users,
-  Search,
   Download,
   Mail,
   Phone,
   MapPin,
   Calendar,
-  ShoppingBag,
   TrendingUp,
   Eye,
   Edit,
@@ -45,12 +43,13 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { mockClients, type Client } from "@/data/mock-clients"
+import { ClientsTopBar } from "./components/client-top-bar"
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ")
 }
 
-// Composant de statistiques simplifié
+// Composant de statistiques simplifiée
 function ClientStats({ clients }: { clients: Client[] }) {
   const stats = useMemo(() => {
     const totalClients = clients.length
@@ -105,7 +104,7 @@ function ClientStats({ clients }: { clients: Client[] }) {
   ]
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8" >
       {summary.map((item) => {
         const IconComponent = item.icon
         return (
@@ -118,7 +117,6 @@ function ClientStats({ clients }: { clients: Client[] }) {
                     <IconComponent className={cn("h-4 w-4", item.iconColor)} />
                   </div>
                 </div>
-
                 <div className="flex items-baseline justify-between mb-3">
                   <div className="text-2xl font-bold text-gray-900">{item.value}</div>
                   <div className="flex items-center space-x-1 text-sm">
@@ -136,7 +134,6 @@ function ClientStats({ clients }: { clients: Client[] }) {
                     </span>
                   </div>
                 </div>
-
                 {/* Mini graphique simulé avec des barres */}
                 <div className="flex items-end space-x-1 h-8">
                   {Array.from({ length: 12 }, (_, i) => {
@@ -274,49 +271,6 @@ function ClientDetailsSheet({ client }: { client: Client }) {
             </div>
           </div>
 
-          {/* Dernières commandes */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">Dernières commandes</h3>
-            <div className="space-y-2">
-              {client.recentOrders?.slice(0, 3).map((order, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={cn(
-                        "w-2 h-2 rounded-full",
-                        order.status === "completed" && "bg-green-500",
-                        order.status === "pending" && "bg-yellow-500",
-                        order.status === "cancelled" && "bg-red-500",
-                      )}
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{order.product}</p>
-                      <p className="text-xs text-gray-500">{order.date}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">{(order.amount / 1000).toFixed(0)}K CFA</p>
-                    <p
-                      className={cn(
-                        "text-xs",
-                        order.status === "completed" && "text-green-600",
-                        order.status === "pending" && "text-yellow-600",
-                        order.status === "cancelled" && "text-red-600",
-                      )}
-                    >
-                      {order.status === "completed" ? "Complété" : order.status === "pending" ? "En attente" : "Annulé"}
-                    </p>
-                  </div>
-                </div>
-              )) || (
-                <div className="text-center py-6 text-gray-500">
-                  <ShoppingBag className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                  <p className="text-sm">Aucune commande récente</p>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Actions rapides */}
           <div className="space-y-2 pt-4 border-t">
             <Button className="w-full bg-[#032313] hover:bg-[#032313]/90 text-white">
@@ -342,6 +296,7 @@ export default function ClientsPageClient() {
   const [clients, setClients] = useState<Client[]>(mockClients)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedClients, setSelectedClients] = useState<string[]>([])
+  const [filters, setFilters] = useState<any>({})
 
   // Filtrage des clients
   const filteredClients = useMemo(() => {
@@ -351,9 +306,16 @@ export default function ClientsPageClient() {
         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.location.toLowerCase().includes(searchTerm.toLowerCase())
 
-      return matchesSearch
+      const matchesFilters = Object.entries(filters).every(([key, value]) => {
+        if (!value) return true
+        if (key === "segment") return client.segment.toLowerCase() === value
+        if (key === "filter") return client.status === value
+        return true
+      })
+
+      return matchesSearch && matchesFilters
     })
-  }, [clients, searchTerm])
+  }, [clients, searchTerm, filters])
 
   const handleSelectClient = (clientId: string) => {
     setSelectedClients((prev) => (prev.includes(clientId) ? prev.filter((id) => id !== clientId) : [...prev, clientId]))
@@ -365,243 +327,288 @@ export default function ClientsPageClient() {
     )
   }
 
+  const handleBack = () => {
+    window.location.href = "/"
+  }
+
+  const handleExport = () => {
+    console.log("Export des clients")
+  }
+
+  const handleAddClient = () => {
+    console.log("Ajouter un client")
+  }
+
+  const handleBulkAction = (action: string) => {
+    console.log("Action en lot:", action, selectedClients)
+  }
+
+  const handleFilterChange = (newFilters: any) => {
+    setFilters((prev: any) => ({ ...prev, ...newFilters }))
+  }
+
+  const handleClearFilters = () => {
+    setFilters({})
+    setSearchTerm("")
+    setSelectedClients([])
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 space-y-4 lg:space-y-0">
-          <div>
-            <h1 className="text-3xl font-bold text-[#032313]">Gestion des Clients</h1>
-            <p className="text-gray-600 mt-1">Gérez vos clients et leurs informations</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="outline"
-              className="border-[#032313]/20 text-[#032313] hover:bg-[#032313]/5 bg-transparent"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouveau client
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Ajouter un nouveau client</DialogTitle>
-                  <DialogDescription>Créez un nouveau profil client avec les informations de base.</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Nom complet</Label>
-                      <Input placeholder="Jean Dupont" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Email</Label>
-                      <Input type="email" placeholder="jean@example.com" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Téléphone</Label>
-                      <Input placeholder="+221 77 123 45 67" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Localisation</Label>
-                      <Input placeholder="Dakar, Sénégal" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Segment</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un segment" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="nouveau">Nouveau</SelectItem>
-                        <SelectItem value="standard">Standard</SelectItem>
-                        <SelectItem value="premium">Premium</SelectItem>
-                        <SelectItem value="vip">VIP</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline">Annuler</Button>
-                    <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white">Créer le client</Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+    <>
+      {/* ClientsTopBar avec recherche dynamique */}
+      <ClientsTopBar
+        searchTerm={searchTerm}
+        selectedClients={selectedClients}
+        totalClients={clients.length}
+        onSearchChange={setSearchTerm}
+        onFilterChange={handleFilterChange}
+        onClearFilters={handleClearFilters}
+        onBack={handleBack}
+        onExport={handleExport}
+        onAddClient={handleAddClient}
+        onBulkAction={handleBulkAction}
+      />
 
-        {/* Statistiques */}
-        <ClientStats clients={clients} />
-
-        {/* Recherche simplifiée */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Rechercher par nom, email ou localisation..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              {selectedClients.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="border-[#032313]/20 text-[#032313]">
-                    {selectedClients.length} sélectionné(s)
-                  </Badge>
-                  <Button variant="outline" size="sm" className="text-[#032313] hover:bg-[#032313]/5 bg-transparent">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Actions
-                  </Button>
-                </div>
-              )}
+      {/* Contenu principal */}
+      <div className="min-h-screen bg-gray-50/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 space-y-4 lg:space-y-0" style={{ paddingTop: "6rem" }}>
+            <div>
+              <h1 className="text-3xl font-bold text-[#032313]">Gestion des Clients</h1>
+              <p className="text-gray-600 mt-1">Gérez vos clients et leurs informations</p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Tableau des clients simplifié */}
-        <Card className="overflow-hidden">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    <TableHead className="w-12">
-                      <input
-                        type="checkbox"
-                        checked={selectedClients.length === filteredClients.length && filteredClients.length > 0}
-                        onChange={handleSelectAll}
-                        className="rounded border-gray-300"
-                      />
-                    </TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead className="hidden md:table-cell">Localisation</TableHead>
-                    <TableHead className="text-center">Commandes</TableHead>
-                    <TableHead className="text-right">Total dépensé</TableHead>
-                    <TableHead className="w-12">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredClients.map((client) => (
-                    <TableRow key={client.id} className="hover:bg-gray-50/50">
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          checked={selectedClients.includes(client.id)}
-                          onChange={() => handleSelectClient(client.id)}
-                          className="rounded border-gray-300"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={client.avatar || "/placeholder.svg"} />
-                            <AvatarFallback className="bg-[#032313] text-white">
-                              {client.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <div className="font-medium text-gray-900 truncate">{client.name}</div>
-                            <div className="text-sm text-gray-500">
-                              {client.segment} •{" "}
-                              {client.status === "active"
-                                ? "Actif"
-                                : client.status === "inactive"
-                                  ? "Inactif"
-                                  : "Bloqué"}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="text-sm text-gray-900 truncate">{client.email}</div>
-                          <div className="text-sm text-gray-500">{client.phone}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                          <span className="text-sm text-gray-700 truncate">{client.location}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="font-medium text-gray-900">{client.totalOrders}</div>
-                        <div className="text-xs text-gray-500">commandes</div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="font-medium text-gray-900">{(client.totalSpent / 1000000).toFixed(1)}M CFA</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-1">
-                          <ClientDetailsSheet client={client} />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="text-[#032313] hover:bg-[#032313]/10">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Modifier
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Mail className="h-4 w-4 mr-2" />
-                                Envoyer un email
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Gift className="h-4 w-4 mr-2" />
-                                Offrir une réduction
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Supprimer
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-
-              {filteredClients.length === 0 && (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun client trouvé</h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Essayez de modifier votre recherche ou ajoutez un nouveau client.
-                  </p>
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                className="border-[#032313]/20 text-[#032313] hover:bg-[#032313]/5 bg-transparent"
+                onClick={handleExport}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
                   <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white">
                     <Plus className="h-4 w-4 mr-2" />
-                    Ajouter un client
+                    Nouveau client
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Ajouter un nouveau client</DialogTitle>
+                    <DialogDescription>Créez un nouveau profil client avec les informations de base.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Nom complet</Label>
+                        <Input placeholder="Jean Dupont" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input type="email" placeholder="jean@example.com" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Téléphone</Label>
+                        <Input placeholder="+221 77 123 45 67" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Localisation</Label>
+                        <Input placeholder="Dakar, Sénégal" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Segment</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un segment" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="nouveau">Nouveau</SelectItem>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="premium">Premium</SelectItem>
+                          <SelectItem value="vip">VIP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button variant="outline">Annuler</Button>
+                      <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white">Créer le client</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+
+          {/* Statistiques */}
+          <ClientStats clients={clients} />
+
+          {/* Indicateurs de filtres actifs */}
+          {(searchTerm || Object.keys(filters).length > 0 || selectedClients.length > 0) && (
+            <Card className="mb-6">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <span className="text-sm text-gray-600">Filtres actifs:</span>
+                  {searchTerm && (
+                    <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
+                      Recherche: "{searchTerm}"
+                    </Badge>
+                  )}
+                  {Object.entries(filters).map(([key, value]) => (
+                    <Badge key={key} variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                      {key}: {String(value)}
+                    </Badge>
+                  ))}
+                  {selectedClients.length > 0 && (
+                    <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700">
+                      {selectedClients.length} sélectionné(s)
+                    </Badge>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={handleClearFilters} className="text-gray-500">
+                    Effacer tout
                   </Button>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tableau des clients */}
+          <Card className="overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedClients.length === filteredClients.length && filteredClients.length > 0}
+                          onChange={handleSelectAll}
+                          className="rounded border-gray-300"
+                        />
+                      </TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead className="hidden md:table-cell">Localisation</TableHead>
+                      <TableHead className="text-center">Commandes</TableHead>
+                      <TableHead className="text-right">Total dépensé</TableHead>
+                      <TableHead className="w-12">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredClients.map((client) => (
+                      <TableRow key={client.id} className="hover:bg-gray-50/50">
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedClients.includes(client.id)}
+                            onChange={() => handleSelectClient(client.id)}
+                            className="rounded border-gray-300"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={client.avatar || "/placeholder.svg"} />
+                              <AvatarFallback className="bg-[#032313] text-white">
+                                {client.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="font-medium text-gray-900 truncate">{client.name}</div>
+                              <div className="text-sm text-gray-500">
+                                {client.segment} •{" "}
+                                {client.status === "active"
+                                  ? "Actif"
+                                  : client.status === "inactive"
+                                    ? "Inactif"
+                                    : "Bloqué"}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="text-sm text-gray-900 truncate">{client.email}</div>
+                            <div className="text-sm text-gray-500">{client.phone}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                            <span className="text-sm text-gray-700 truncate">{client.location}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="font-medium text-gray-900">{client.totalOrders}</div>
+                          <div className="text-xs text-gray-500">commandes</div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="font-medium text-gray-900">
+                            {(client.totalSpent / 1000000).toFixed(1)}M CFA
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            <ClientDetailsSheet client={client} />
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-[#032313] hover:bg-[#032313]/10">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Modifier
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Envoyer un email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Gift className="h-4 w-4 mr-2" />
+                                  Offrir une réduction
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-red-600">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Supprimer
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {filteredClients.length === 0 && (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun client trouvé</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Essayez de modifier votre recherche ou ajoutez un nouveau client.
+                    </p>
+                    <Button className="bg-[#032313] hover:bg-[#032313]/90 text-white" onClick={handleAddClient}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter un client
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

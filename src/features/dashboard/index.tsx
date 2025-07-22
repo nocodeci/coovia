@@ -4,18 +4,14 @@ import { ClipboardPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Header } from "@/components/layout/header"
 import { Main } from "@/components/layout/main"
-import { Search } from "@/components/search"
 import { SearchProvider } from "@/context/search-context"
-import { NotificationProvider } from "@/components/notification-provider"
-import { StoreSelector } from "@/components/store-selector"
-import { SimpleNav } from "@/components/simple-nav"
 import { Overview } from "./components/overview"
 import { RecentSales } from "./components/recent-sales"
 import Paiement from "@/components/paiement"
 import { mockTransactions } from "@/data/mock-transactions"
 import { useMemo } from "react"
+import { DashboardTopBar } from "./components/dashboard-top-bar"
 
 export default function Dashboard() {
   // Calculer les statistiques basées sur les vraies données de paiement
@@ -92,41 +88,48 @@ export default function Dashboard() {
     console.log("Retour en arrière")
   }
 
+  const handleExport = () => {
+    console.log("Export des données")
+  }
+
+  const handleAddProduct = () => {
+    window.location.href = "/add-product"
+  }
+
+  const handleNavigate = (section: string) => {
+    console.log("Navigation vers:", section)
+    // Ici vous pouvez implémenter la navigation vers différentes sections
+  }
+
   return (
     <SearchProvider>
-      {/* ===== Header pleine largeur ===== */}
-      <Header>
-        <div className="flex items-center justify-between w-full px-4">
-          {/* Section gauche - Navigation simple */}
-          <div className="flex items-center flex-shrink-0">
-            <SimpleNav title="Tableau de bord" onBack={handleBack} showBackButton={true} />
-          </div>
-
-          {/* Section centre - Barre de recherche élargie */}
-          <div className="flex justify-center flex-1 px-8">
-            <Search placeholder="Rechercher..." className="w-full" />
-          </div>
-
-          {/* Section droite - Actions */}
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <NotificationProvider />
-            <StoreSelector />
-          </div>
-        </div>
-      </Header>
+      {/* ===== TopBar avec recherche dynamique ===== */}
+      <DashboardTopBar
+        onBack={handleBack}
+        onExport={handleExport}
+        onAddProduct={handleAddProduct}
+        onNavigate={handleNavigate}
+      />
 
       {/* ===== Main ===== */}
       <Main>
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between" style={{ paddingTop: "6rem" }}>
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Tableau de bord</h1>
             <p className="text-gray-600 mt-2">Gérez votre boutique et suivez vos performances</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50 bg-transparent">
+            <Button
+              variant="outline"
+              className="border-gray-200 text-gray-700 hover:bg-gray-50 bg-transparent"
+              onClick={handleExport}
+            >
               Exporter
             </Button>
-            <Button className="bg-[oklch(0.8944_0.1931_121.75)] text-foreground hover:bg-[oklch(0.8_0.19_121)] shadow-sm">
+            <Button
+              className="bg-[oklch(0.8944_0.1931_121.75)] text-foreground hover:bg-[oklch(0.8_0.19_121)] shadow-sm"
+              onClick={handleAddProduct}
+            >
               <ClipboardPlus className="mr-2 h-4 w-4" />
               Ajouter un produit
             </Button>
