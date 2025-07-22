@@ -82,7 +82,7 @@ export function DashboardTopBar({ onBack, onExport, onAddProduct, onNavigate }: 
             }}
             className="hidden md:block"
           >
-            My Store
+            Ma Boutique
           </span>
         </div>
       </div>

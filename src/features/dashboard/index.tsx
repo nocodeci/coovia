@@ -26,7 +26,7 @@ export default function Dashboard() {
       return transactionDate >= lastMonth
     })
 
-    // Transactions du mois précédent
+    // Transactions du mois précédent 
     const previousMonth = new Date(now.getFullYear(), now.getMonth() - 2, now.getDate())
     const previousMonthTransactions = mockTransactions.filter((transaction) => {
       const transactionDate = new Date(transaction.joinDate)
