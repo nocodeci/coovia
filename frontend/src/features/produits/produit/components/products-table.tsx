@@ -1,80 +1,28 @@
 "use client"
-import { useState } from "react"
-import { MoreHorizontal, Edit, Trash2, Copy } from "lucide-react"
+import { useState, useEffect } from "react"
+import { MoreHorizontal, Edit, Trash2, Copy, Eye } from "lucide-react"
+import { useProducts } from "@/hooks/useProduct"
+import { useStores } from "@/hooks/use-store"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 type TabType = "tous" | "actifs" | "brouillons" | "archives"
-
-interface Product {
-  id: string
-  name: string
-  image: string
-  status: "Actif" | "Brouillon" | "Archivé"
-  inventory: string
-  category: string
-  channels: number
-}
 
 interface FilterState {
   searchTerm: string
   category: string
 }
-
-const allProducts: Product[] = [
-  {
-    id: "1",
-    name: "T-shirt Premium",
-    image: "/placeholder.svg?height=40&width=40",
-    status: "Actif",
-    inventory: "25 en stock",
-    category: "Vêtements",
-    channels: 3,
-  },
-  {
-    id: "2",
-    name: "Œuvre d'art numérique",
-    image: "/placeholder.svg?height=40&width=40",
-    status: "Actif",
-    inventory: "Illimité",
-    category: "Œuvre d'art numérique",
-    channels: 2,
-  },
-  {
-    id: "3",
-    name: "Produit en développement",
-    image: "/placeholder.svg?height=40&width=40",
-    status: "Brouillon",
-    inventory: "0 en stock",
-    category: "Accessoires",
-    channels: 0,
-  },
-  {
-    id: "4",
-    name: "Ancien produit",
-    image: "/placeholder.svg?height=40&width=40",
-    status: "Archivé",
-    inventory: "0 en stock",
-    category: "Vêtements",
-    channels: 0,
-  },
-  {
-    id: "5",
-    name: "Casquette Sport",
-    image: "/placeholder.svg?height=40&width=40",
-    status: "Actif",
-    inventory: "15 en stock",
-    category: "Accessoires",
-    channels: 2,
-  },
-  {
-    id: "6",
-    name: "Poster Digital",
-    image: "/placeholder.svg?height=40&width=40",
-    status: "Actif",
-    inventory: "Illimité",
-    category: "Œuvre d'art numérique",
-    channels: 1,
-  },
-]
 
 interface ProductsTableProps {
   activeTab: TabType
@@ -83,19 +31,22 @@ interface ProductsTableProps {
 }
 
 export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTableProps) {
+  const { currentStore } = useStores()
+  const { products, isLoading, deleteProduct, fetchProducts } = useProducts(currentStore?.id || "")
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
-  const [showDropdown, setShowDropdown] = useState<string | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<string | null>(null)
 
   // Filtrer les produits selon l'onglet actif
-  const tabFilteredProducts = allProducts.filter((product) => {
+  const tabFilteredProducts = products.filter((product) => {
     switch (activeTab) {
       case "actifs":
-        return product.status === "Actif"
+        return product.status === "active"
       case "brouillons":
-        return product.status === "Brouillon"
+        return product.status === "draft"
       case "archives":
-        return product.status === "Archivé"
+        return product.status === "inactive"
       default:
         return true
     }
@@ -136,37 +87,99 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
     }
   }
 
-  const handleProductAction = (action: string, productId: string) => {
-    console.log(`Action: ${action} sur le produit ${productId}`)
-    setShowDropdown(null)
-
+  const handleProductAction = async (action: string, productId: string) => {
     switch (action) {
+      case "view":
+        window.location.href = `/produits/${productId}`
+        break
       case "edit":
-        // Rediriger vers la page d'édition
         window.location.href = `/produits/edit/${productId}`
         break
       case "duplicate":
-        alert(`Produit ${productId} dupliqué`)
+        // TODO: Implémenter la duplication
+        console.log(`Dupliquer le produit ${productId}`)
         break
       case "delete":
-        if (confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
-          alert(`Produit ${productId} supprimé`)
-        }
+        setProductToDelete(productId)
+        setDeleteDialogOpen(true)
         break
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (productToDelete) {
+      try {
+        await deleteProduct(productToDelete)
+        setDeleteDialogOpen(false)
+        setProductToDelete(null)
+      } catch (error) {
+        console.error("Erreur lors de la suppression:", error)
+      }
     }
   }
 
   const getBadgeClass = (status: string) => {
     switch (status) {
-      case "Actif":
-        return "polaris-badge-success"
-      case "Brouillon":
-        return "polaris-badge-warning"
-      case "Archivé":
-        return "polaris-badge-neutral"
+      case "active":
+        return "bg-green-100 text-green-800 border-green-200"
+      case "draft":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "inactive":
+        return "bg-gray-100 text-gray-800 border-gray-200"
       default:
-        return "polaris-badge-success"
+        return "bg-gray-100 text-gray-800 border-gray-200"
     }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "active":
+        return "Actif"
+      case "draft":
+        return "Brouillon"
+      case "inactive":
+        return "Archivé"
+      default:
+        return status
+    }
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "XOF",
+      minimumFractionDigits: 0,
+    })
+      .format(price)
+      .replace("XOF", "FCFA")
+  }
+
+  useEffect(() => {
+    if (currentStore?.id) {
+      fetchProducts({
+        search: filters.searchTerm,
+        category: filters.category,
+        status:
+          activeTab === "tous"
+            ? undefined
+            : activeTab === "actifs"
+              ? "active"
+              : activeTab === "brouillons"
+                ? "draft"
+                : "inactive",
+      })
+    }
+  }, [currentStore?.id, filters, activeTab, fetchProducts])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement des produits...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -196,10 +209,10 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
             <th style={{ width: "4rem" }}></th>
             <th>Produit</th>
             <th>Statut</th>
-            <th>Inventaire</th>
+            <th>Prix</th>
+            <th>Stock</th>
             <th>Catégorie</th>
-            <th style={{ textAlign: "right", paddingRight: "var(--p-space-400)" }}>Canaux</th>
-            <th style={{ width: "3rem" }}></th>
+            <th style={{ textAlign: "right", paddingRight: "var(--p-space-400)" }}>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -219,7 +232,7 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
               </td>
               <td>
                 <img
-                  src={product.image || "/placeholder.svg"}
+                  src={product.images[0] || "/placeholder.svg?height=40&width=40"}
                   alt={product.name}
                   style={{
                     width: "2.5rem",
@@ -230,73 +243,72 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
                 />
               </td>
               <td>
-                <a
-                  href={`/produits/${product.id}`}
-                  className="polaris-text-link hover:underline"
-                  style={{ fontWeight: "var(--p-font-weight-medium)" }}
+                <div>
+                  <a
+                    href={`/produits/${product.id}`}
+                    className="polaris-text-link hover:underline"
+                    style={{ fontWeight: "var(--p-font-weight-medium)" }}
+                  >
+                    {product.name}
+                  </a>
+                  {product.sku && <div className="text-xs text-gray-500 mt-1">SKU: {product.sku}</div>}
+                </div>
+              </td>
+              <td>
+                <Badge className={getBadgeClass(product.status)}>{getStatusText(product.status)}</Badge>
+              </td>
+              <td>
+                <div>
+                  {product.sale_price && product.sale_price < product.price ? (
+                    <div>
+                      <span className="font-medium text-green-600">{formatPrice(product.sale_price)}</span>
+                      <div className="text-xs text-gray-500 line-through">{formatPrice(product.price)}</div>
+                    </div>
+                  ) : (
+                    <span className="font-medium">{product.price > 0 ? formatPrice(product.price) : "Gratuit"}</span>
+                  )}
+                </div>
+              </td>
+              <td>
+                <span
+                  className={product.stock_quantity <= (product.min_stock_level || 0) ? "text-red-600 font-medium" : ""}
                 >
-                  {product.name}
-                </a>
-              </td>
-              <td>
-                <span className={getBadgeClass(product.status)}>{product.status}</span>
-              </td>
-              <td>
-                <span className={product.inventory.includes("0 en stock") ? "polaris-text-critical" : ""}>
-                  {product.inventory}
+                  {product.stock_quantity} en stock
                 </span>
+                {product.stock_quantity <= (product.min_stock_level || 0) && (
+                  <div className="text-xs text-red-500">Stock faible</div>
+                )}
               </td>
               <td style={{ color: "var(--p-color-text)" }}>{product.category}</td>
-              <td style={{ textAlign: "right", paddingRight: "var(--p-space-400)" }}>
-                <span className="text-sm font-medium">{product.channels}</span>
-              </td>
-              <td className="relative">
-                <button
-                  className="polaris-button-secondary flex items-center justify-center hover:bg-gray-100"
-                  onClick={() => setShowDropdown(showDropdown === product.id ? null : product.id)}
-                  style={{
-                    width: "2rem",
-                    height: "2rem",
-                    padding: "0",
-                    backgroundColor: "var(--p-color-bg-fill-transparent)",
-                  }}
-                >
-                  <MoreHorizontal className="h-4 w-4" style={{ color: "var(--p-color-icon)" }} />
-                </button>
-
-                {showDropdown === product.id && (
-                  <div
-                    className="absolute right-0 top-8 bg-white border rounded-lg shadow-lg z-10 min-w-48"
-                    style={{
-                      backgroundColor: "var(--p-color-bg-surface)",
-                      border: "var(--p-border-width-025) solid var(--p-color-border)",
-                      borderRadius: "var(--p-border-radius-300)",
-                      boxShadow: "var(--p-shadow-200)",
-                    }}
-                  >
-                    <button
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2"
-                      onClick={() => handleProductAction("edit", product.id)}
-                    >
-                      <Edit className="h-4 w-4" />
+              <td className="relative" style={{ textAlign: "right", paddingRight: "var(--p-space-400)" }}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleProductAction("view", product.id)}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Voir
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleProductAction("edit", product.id)}>
+                      <Edit className="mr-2 h-4 w-4" />
                       Modifier
-                    </button>
-                    <button
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2"
-                      onClick={() => handleProductAction("duplicate", product.id)}
-                    >
-                      <Copy className="h-4 w-4" />
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleProductAction("duplicate", product.id)}>
+                      <Copy className="mr-2 h-4 w-4" />
                       Dupliquer
-                    </button>
-                    <button
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
                       onClick={() => handleProductAction("delete", product.id)}
+                      className="text-red-600"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="mr-2 h-4 w-4" />
                       Supprimer
-                    </button>
-                  </div>
-                )}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </td>
             </tr>
           ))}
@@ -327,6 +339,27 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
           </div>
         </div>
       )}
+
+      {/* Dialog de confirmation de suppression */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action ne peut pas être annulée. Le produit sera définitivement supprimé de votre magasin.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

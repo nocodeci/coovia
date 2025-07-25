@@ -1,100 +1,75 @@
-import { StrictMode } from 'react'
-import ReactDOM from 'react-dom/client'
-import { AxiosError } from 'axios'
-import {
-  QueryCache,
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { toast } from 'sonner'
-import { useAuthStore } from '@/stores/authStore'
-import { handleServerError } from '@/utils/handle-server-error'
-import { FontProvider } from './context/font-context'
-import { ThemeProvider } from './context/theme-context'
-import './index.css'
-// Generated Routes
-import { routeTree } from './routeTree.gen'
+import React from "react"
+import ReactDOM from "react-dom/client"
+import { RouterProvider, createRouter } from "@tanstack/react-router"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { Toaster } from "sonner"
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: (failureCount, error) => {
-        // eslint-disable-next-line no-console
-        if (import.meta.env.DEV) console.log({ failureCount, error })
+// Import the generated route tree
+import { routeTree } from "./routeTree.gen"
 
-        if (failureCount >= 0 && import.meta.env.DEV) return false
-        if (failureCount > 3 && import.meta.env.PROD) return false
+// Import providers
+import { AuthProvider } from "@/hooks/useAuth"
+import { ThemeProvider } from "@/context/theme-context"
+import { StoreProvider } from "@/context/store-context"
 
-        return !(
-          error instanceof AxiosError &&
-          [401, 403].includes(error.response?.status ?? 0)
-        )
-      },
-      refetchOnWindowFocus: import.meta.env.PROD,
-      staleTime: 10 * 1000, // 10s
-    },
-    mutations: {
-      onError: (error) => {
-        handleServerError(error)
-
-        if (error instanceof AxiosError) {
-          if (error.response?.status === 304) {
-            toast.error('Content not modified!')
-          }
-        }
-      },
-    },
-  },
-  queryCache: new QueryCache({
-    onError: (error) => {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 401) {
-          toast.error('Session expired!')
-          useAuthStore.getState().auth.reset()
-          const redirect = `${router.history.location.href}`
-          router.navigate({ to: '/sign-in', search: { redirect } })
-        }
-        if (error.response?.status === 500) {
-          toast.error('Internal Server Error!')
-          router.navigate({ to: '/500' })
-        }
-        if (error.response?.status === 403) {
-          // router.navigate("/forbidden", { replace: true });
-        }
-      }
-    },
-  }),
-})
+// Import styles
+import "./index.css"
 
 // Create a new router instance
 const router = createRouter({
   routeTree,
-  context: { queryClient },
-  defaultPreload: 'intent',
-  defaultPreloadStaleTime: 0,
+  context: {
+    queryClient: new QueryClient
+  }
 })
 
 // Register the router instance for type safety
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router
   }
 }
 
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+})
+
 // Render the app
-const rootElement = document.getElementById('root')!
+const rootElement = document.getElementById("root")!
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
-    <StrictMode>
+    <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
-          <FontProvider>
-            <RouterProvider router={router} />
-          </FontProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <StoreProvider>
+              <RouterProvider router={router} />
+              <Toaster
+                position="top-right"
+                expand={true}
+                richColors
+                closeButton
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: "hsl(var(--background))",
+                    color: "hsl(var(--foreground))",
+                    border: "1px solid hsl(var(--border))",
+                  },
+                }}
+              />
+            </StoreProvider>
+          </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>
-    </StrictMode>
+    </React.StrictMode>,
   )
 }

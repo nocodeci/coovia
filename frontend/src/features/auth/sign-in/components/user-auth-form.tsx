@@ -1,123 +1,88 @@
-import { HTMLAttributes, useState } from 'react'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from '@tanstack/react-router'
-import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { PasswordInput } from '@/components/password-input'
+"use client"
 
-type UserAuthFormProps = HTMLAttributes<HTMLFormElement>
+import type * as React from "react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useAuth } from "@/hooks/useAuth"
+import { useNavigate } from "@tanstack/react-router"
+import { RiLoader4Line } from "@remixicon/react"
+import { useState } from "react"
 
-const formSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: 'Please enter your email' })
-    .email({ message: 'Invalid email address' }),
-  password: z
-    .string()
-    .min(1, {
-      message: 'Please enter your password',
-    })
-    .min(7, {
-      message: 'Password must be at least 7 characters long',
-    }),
-})
+interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  })
+  const { login, isLoading } = useAuth()
+  const navigate = useNavigate()
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-    // eslint-disable-next-line no-console
-    console.log(data)
+  async function onSubmit(event: React.SyntheticEvent) {
+    event.preventDefault()
+    setErrors({})
 
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 3000)
+    // Validation simple
+    const newErrors: { email?: string; password?: string } = {}
+    if (!email) newErrors.email = "L'email est requis"
+    if (!password) newErrors.password = "Le mot de passe est requis"
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    try {
+      await login(email, password)
+      navigate({ to: "/" })
+    } catch (error) {
+      console.error("Login failed:", error)
+    }
   }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className={cn('grid gap-3', className)}
-        {...props}
-      >
-        <FormField
-          control={form.control}
-          name='email'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder='name@example.com' {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='password'
-          render={({ field }) => (
-            <FormItem className='relative'>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <PasswordInput placeholder='********' {...field} />
-              </FormControl>
-              <FormMessage />
-              <Link
-                to='/forgot-password'
-                className='text-muted-foreground absolute -top-0.5 right-0 text-sm font-medium hover:opacity-75'
-              >
-                Forgot password?
-              </Link>
-            </FormItem>
-          )}
-        />
-        <Button className='mt-2' disabled={isLoading}>
-          Login
-        </Button>
-
-        <div className='relative my-2'>
-          <div className='absolute inset-0 flex items-center'>
-            <span className='w-full border-t' />
+    <div className={cn("grid gap-6", className)} {...props}>
+      <form onSubmit={onSubmit}>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              placeholder="nom@exemple.com"
+              type="email"
+              autoCapitalize="none"
+              autoComplete="email"
+              autoCorrect="off"
+              disabled={isLoading}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={errors.email ? "border-red-500" : ""}
+            />
+            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
           </div>
-          <div className='relative flex justify-center text-xs uppercase'>
-            <span className='bg-background text-muted-foreground px-2'>
-              Or continue with
-            </span>
+          <div className="grid gap-2">
+            <Label htmlFor="password">Mot de passe</Label>
+            <Input
+              id="password"
+              placeholder="Votre mot de passe"
+              type="password"
+              autoCapitalize="none"
+              autoComplete="current-password"
+              disabled={isLoading}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={errors.password ? "border-red-500" : ""}
+            />
+            {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           </div>
-        </div>
-
-        <div className='grid grid-cols-2 gap-2'>
-          <Button variant='outline' type='button' disabled={isLoading}>
-            <IconBrandGithub className='h-4 w-4' /> GitHub
-          </Button>
-          <Button variant='outline' type='button' disabled={isLoading}>
-            <IconBrandFacebook className='h-4 w-4' /> Facebook
+          <Button disabled={isLoading} type="submit">
+            {isLoading && <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />}
+            Se connecter
           </Button>
         </div>
       </form>
-    </Form>
+    </div>
   )
 }
