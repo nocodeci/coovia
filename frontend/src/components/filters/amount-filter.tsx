@@ -1,98 +1,90 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { RiMoneyDollarCircleLine } from "@remixicon/react"
+import { RiFilter3Line } from "@remixicon/react"
 import type { Table } from "@tanstack/react-table"
-import type { PaymentTransaction } from "../../app/types/payment"
+import { useState } from "react"
 
-interface AmountFilterProps {
-  table: Table<PaymentTransaction>
+interface AmountFilterProps<TData> {
+  table: Table<TData>
   id: string
 }
 
-export function AmountFilter({ table, id }: AmountFilterProps) {
-  const amountColumn = table.getColumn("value")
-  const amountFilterValue = amountColumn?.getFilterValue() as { min?: number; max?: number } | undefined
-
-  const [minAmount, setMinAmount] = useState<string>(amountFilterValue?.min?.toString() || "")
-  const [maxAmount, setMaxAmount] = useState<string>(amountFilterValue?.max?.toString() || "")
+export function AmountFilter<TData>({ table, id }: AmountFilterProps<TData>) {
+  const [min, setMin] = useState<string>("")
+  const [max, setMax] = useState<string>("")
+  const [isFiltering, setIsFiltering] = useState(false)
 
   const handleApplyFilter = () => {
-    const min = minAmount ? Number.parseFloat(minAmount) : undefined
-    const max = maxAmount ? Number.parseFloat(maxAmount) : undefined
+    const minValue = min ? Number.parseFloat(min) : undefined
+    const maxValue = max ? Number.parseFloat(max) : undefined
 
-    if (min !== undefined || max !== undefined) {
-      amountColumn?.setFilterValue({ min, max })
+    if (minValue !== undefined || maxValue !== undefined) {
+      table.getColumn("value")?.setFilterValue({ min: minValue, max: maxValue })
+      setIsFiltering(true)
     } else {
-      amountColumn?.setFilterValue(undefined)
+      table.getColumn("value")?.setFilterValue(undefined)
+      setIsFiltering(false)
     }
   }
 
-  const handleClearFilter = () => {
-    setMinAmount("")
-    setMaxAmount("")
-    amountColumn?.setFilterValue(undefined)
+  const handleResetFilter = () => {
+    setMin("")
+    setMax("")
+    table.getColumn("value")?.setFilterValue(undefined)
+    setIsFiltering(false)
   }
-
-  const isActive = amountFilterValue?.min !== undefined || amountFilterValue?.max !== undefined
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm">
-          <RiMoneyDollarCircleLine className="size-4 -ms-1 text-muted-foreground/60" aria-hidden="true" />
+          <RiFilter3Line className="size-4 -ms-1 text-muted-foreground/60" aria-hidden="true" />
           Montant
-          {isActive && (
+          {isFiltering && (
             <span className="-me-1 ms-2 inline-flex h-4 max-h-full items-center rounded border border-border bg-background px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
               1
             </span>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4" align="end">
-        <div className="space-y-4">
-          <div className="text-xs font-medium uppercase text-muted-foreground/60">Filtrer par montant (CFA)</div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor={`${id}-min-amount`} className="text-sm">
-                Minimum
-              </Label>
+      <PopoverContent className="w-auto min-w-60 p-3" align="end">
+        <div className="space-y-3">
+          <div className="text-xs font-medium uppercase text-muted-foreground/60">Plage de montant</div>
+          <div className="space-y-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`${id}-min-amount`}>Montant minimum (CFA)</Label>
               <Input
                 id={`${id}-min-amount`}
                 type="number"
                 placeholder="0"
-                value={minAmount}
-                onChange={(e) => setMinAmount(e.target.value)}
-                className="h-9"
+                value={min}
+                onChange={(e) => setMin(e.target.value)}
+                className="h-8"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={`${id}-max-amount`} className="text-sm">
-                Maximum
-              </Label>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`${id}-max-amount`}>Montant maximum (CFA)</Label>
               <Input
                 id={`${id}-max-amount`}
                 type="number"
-                placeholder="1000"
-                value={maxAmount}
-                onChange={(e) => setMaxAmount(e.target.value)}
-                className="h-9"
+                placeholder="100000"
+                value={max}
+                onChange={(e) => setMax(e.target.value)}
+                className="h-8"
               />
             </div>
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <Button size="sm" onClick={handleApplyFilter} className="flex-1">
-              Appliquer
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleClearFilter}>
-              Effacer
-            </Button>
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" variant="outline" className="flex-1 bg-transparent" onClick={handleResetFilter}>
+                Réinitialiser
+              </Button>
+              <Button size="sm" className="flex-1" onClick={handleApplyFilter}>
+                Appliquer
+              </Button>
+            </div>
           </div>
         </div>
       </PopoverContent>

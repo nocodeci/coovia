@@ -42,15 +42,9 @@ import { ShineBorder } from "@/components/magicui/shine-border"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { TopBar } from "./components/top-bar-simple"
-
-const categories = [
-  { value: "logiciel", label: "Logiciel" },
-  { value: "formation", label: "Formation" },
-  { value: "ebook", label: "E-book" },
-  { value: "template", label: "Template" },
-  { value: "plugin", label: "Plugin" },
-  { value: "consultation", label: "Consultation" },
-]
+import { useProducts } from "@/hooks/useProduct"
+import { useCategories } from "@/hooks/useCategorie"
+import { useStores } from "@/hooks/use-store"
 
 const productTypes = [
   {
@@ -79,27 +73,42 @@ interface UploadedFile {
   size: number
   type: string
   preview?: string
+  file?: File
 }
 
 export default function AddProduct() {
+  const { stores, currentStore } = useStores()
+  const {
+    createProduct,
+    uploadProductImage,
+    uploadProductFiles,
+    isLoading: isProductLoading,
+  } = useProducts(currentStore?.id || "")
+  const { categories, isLoading: isCategoriesLoading } = useCategories()
+
   const [productName, setProductName] = useState("")
   const [selectedType, setSelectedType] = useState("telechargeable")
   const [category, setCategory] = useState("")
   const [price, setPrice] = useState("")
   const [description, setDescription] = useState("")
   const [promotionalPrice, setPromotionalPrice] = useState("")
+  const [sku, setSku] = useState("")
+  const [stockQuantity, setStockQuantity] = useState("")
+  const [minStockLevel, setMinStockLevel] = useState("")
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [featuredImage, setFeaturedImage] = useState<string | null>(null)
+  const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false)
   const [videoUrl, setVideoUrl] = useState("")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [isFeatured, setIsFeatured] = useState(false)
 
   // États pour les combobox
   const [openCategory, setOpenCategory] = useState(false)
 
   // Calculer si le formulaire est valide
-  const isFormValid = productName.trim() && category && selectedType
+  const isFormValid = productName.trim() && category && selectedType && currentStore
 
   // Détecter les changements non sauvegardés
   useEffect(() => {
@@ -109,10 +118,37 @@ export default function AddProduct() {
       price ||
       description ||
       promotionalPrice ||
+      sku ||
+      stockQuantity ||
+      minStockLevel ||
       uploadedFiles.length > 0 ||
       featuredImage
     setHasUnsavedChanges(true)
-  }, [productName, category, price, description, promotionalPrice, uploadedFiles, featuredImage])
+  }, [
+    productName,
+    category,
+    price,
+    description,
+    promotionalPrice,
+    sku,
+    stockQuantity,
+    minStockLevel,
+    uploadedFiles,
+    featuredImage,
+  ])
+
+  // Générer automatiquement le SKU basé sur le nom du produit
+  useEffect(() => {
+    if (productName && !sku) {
+      const generatedSku = productName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .substring(0, 20)
+      setSku(generatedSku + "-" + Date.now().toString().slice(-4))
+    }
+  }, [productName, sku])
 
   // Gestionnaire pour appliquer les suggestions de recherche
   const handleSuggestionApply = (type: string, value: string) => {
@@ -161,6 +197,7 @@ export default function AddProduct() {
         name: file.name,
         size: file.size,
         type: file.type,
+        file,
       }
 
       if (file.type.startsWith("image/")) {
@@ -174,11 +211,6 @@ export default function AddProduct() {
     })
     toast.success("Fichiers ajoutés", {
       description: `${files.length} fichier(s) ajouté(s) avec succès.`,
-      style: {
-        background: "hsl(var(--card))",
-        color: "hsl(var(--card-foreground))",
-        border: "1px solid hsl(var(--border))",
-      },
     })
   }
 
@@ -213,44 +245,123 @@ export default function AddProduct() {
     setIsVideoDialogOpen(false)
     toast.success("Vidéo ajoutée", {
       description: "La vidéo a été insérée avec succès.",
-      style: {
-        background: "hsl(var(--card))",
-        color: "hsl(var(--card-foreground))",
-        border: "1px solid hsl(var(--border))",
-      },
     })
   }
 
-  const handlePublish = () => {
-    toast("🎉 Produit publié avec succès !", {
-      description: "Votre produit est maintenant visible par tous les utilisateurs",
-      style: {
-        background: "hsl(var(--card))",
-        color: "hsl(var(--card-foreground))",
-        border: "1px solid hsl(var(--primary))",
-      },
-      action: {
-        label: "Voir le produit",
-        onClick: () => console.log("Redirection vers le produit"),
-      },
-    })
-    setHasUnsavedChanges(false)
+  const handlePublish = async () => {
+    if (!currentStore) {
+      toast.error("Erreur", {
+        description: "Aucun magasin sélectionné",
+      })
+      return
+    }
+
+    try {
+      // Créer le produit
+      const productData = {
+        store_id: currentStore.id,
+        name: productName,
+        description,
+        price: Number.parseFloat(price) || 0,
+        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : null,
+        sku,
+        category,
+        stock_quantity: Number.parseInt(stockQuantity) || 0,
+        min_stock_level: Number.parseInt(minStockLevel) || 0,
+        status: "active" as const,
+        images: [],
+        files: [],
+        attributes: {
+          type: selectedType,
+          featured: isFeatured,
+        },
+        seo: {
+          meta_title: productName,
+          meta_description: description.substring(0, 160),
+        },
+      }
+
+      const createdProduct = await createProduct(productData)
+
+      // Télécharger l'image principale si elle existe
+      if (featuredImageFile) {
+        const imageUrl = await uploadProductImage(createdProduct.id, featuredImageFile)
+        // Mettre à jour le produit avec l'URL de l'image
+        // await updateProduct(createdProduct.id, { images: [imageUrl] })
+      }
+
+      // Télécharger les fichiers si ils existent
+      if (uploadedFiles.length > 0) {
+        const filesToUpload = uploadedFiles.filter((f) => f.file).map((f) => f.file!)
+        if (filesToUpload.length > 0) {
+          await uploadProductFiles(createdProduct.id, filesToUpload)
+        }
+      }
+
+      toast.success("🎉 Produit publié avec succès !", {
+        description: "Votre produit est maintenant visible par tous les utilisateurs",
+        action: {
+          label: "Voir le produit",
+          onClick: () => (window.location.href = `/produits/${createdProduct.id}`),
+        },
+      })
+
+      setHasUnsavedChanges(false)
+
+      // Rediriger vers la liste des produits après un délai
+      setTimeout(() => {
+        window.location.href = "/produits"
+      }, 2000)
+    } catch (error) {
+      console.error("Erreur lors de la publication:", error)
+    }
   }
 
-  const handleSaveDraft = () => {
-    toast("💾 Brouillon sauvegardé", {
-      description: "Votre produit a été sauvegardé en tant que brouillon",
-      style: {
-        background: "hsl(var(--card))",
-        color: "hsl(var(--card-foreground))",
-        border: "1px solid hsl(var(--border))",
-      },
-      action: {
-        label: "Continuer",
-        onClick: () => console.log("Continuer l'édition"),
-      },
-    })
-    setHasUnsavedChanges(false)
+  const handleSaveDraft = async () => {
+    if (!currentStore) {
+      toast.error("Erreur", {
+        description: "Aucun magasin sélectionné",
+      })
+      return
+    }
+
+    try {
+      const productData = {
+        store_id: currentStore.id,
+        name: productName || "Produit sans titre",
+        description,
+        price: Number.parseFloat(price) || 0,
+        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : null,
+        sku: sku || `draft-${Date.now()}`,
+        category: category || "non-categorise",
+        stock_quantity: Number.parseInt(stockQuantity) || 0,
+        min_stock_level: Number.parseInt(minStockLevel) || 0,
+        status: "draft" as const,
+        images: [],
+        files: [],
+        attributes: {
+          type: selectedType,
+          featured: isFeatured,
+        },
+        seo: {
+          meta_title: productName,
+          meta_description: description.substring(0, 160),
+        },
+      }
+
+      await createProduct(productData)
+
+      toast.success("💾 Brouillon sauvegardé", {
+        description: "Votre produit a été sauvegardé en tant que brouillon",
+        action: {
+          label: "Continuer",
+          onClick: () => console.log("Continuer l'édition"),
+        },
+      })
+      setHasUnsavedChanges(false)
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde:", error)
+    }
   }
 
   const formatFileSize = (bytes: number) => {
@@ -276,9 +387,14 @@ export default function AddProduct() {
     setPrice("")
     setDescription("")
     setPromotionalPrice("")
+    setSku("")
+    setStockQuantity("")
+    setMinStockLevel("")
     setUploadedFiles([])
     setFeaturedImage(null)
+    setFeaturedImageFile(null)
     setVideoUrl("")
+    setIsFeatured(false)
     setHasUnsavedChanges(false)
     toast.info("Modifications annulées", {
       description: "Toutes les modifications non sauvegardées ont été supprimées",
@@ -286,13 +402,39 @@ export default function AddProduct() {
   }
 
   const handleBack = () => {
-    window.location.href = "/"
+    window.location.href = "/produits"
   }
 
   const handlePreview = () => {
     toast.info("Aperçu du produit", {
       description: "Ouverture de l'aperçu dans un nouvel onglet",
     })
+  }
+
+  const handleFeaturedImageUpload = (file: File) => {
+    setFeaturedImageFile(file)
+    const reader = new FileReader()
+    reader.onload = (e) => setFeaturedImage(e.target?.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  if (!currentStore) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">Aucun magasin sélectionné</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Vous devez sélectionner un magasin pour créer un produit.
+              </p>
+              <Button onClick={() => (window.location.href = "/stores")}>Gérer les magasins</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -339,6 +481,21 @@ export default function AddProduct() {
                       placeholder="Entrez le nom de votre produit"
                       className="h-12 text-base"
                     />
+                  </div>
+
+                  {/* SKU */}
+                  <div className="space-y-2">
+                    <Label htmlFor="sku" className="text-sm font-medium">
+                      SKU (Référence produit)
+                    </Label>
+                    <Input
+                      id="sku"
+                      value={sku}
+                      onChange={(e) => setSku(e.target.value)}
+                      placeholder="Référence unique du produit"
+                      className="h-12 text-base"
+                    />
+                    <p className="text-xs text-muted-foreground">Généré automatiquement si laissé vide</p>
                   </div>
 
                   {/* Type de produit */}
@@ -398,14 +555,15 @@ export default function AddProduct() {
                           role="combobox"
                           aria-expanded={openCategory}
                           className="w-full h-12 justify-between bg-transparent"
+                          disabled={isCategoriesLoading}
                         >
                           {category
-                            ? categories.find((cat) => cat.value === category)?.label
+                            ? categories.find((cat) => cat.name === category)?.name
                             : "Sélectionner une catégorie..."}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[var(--radix-popover-trigger-width)] max-h-[300px] p-0">
+                      <PopoverContent className="w-(--radix-popover-trigger-width) min-w-[var(--radix-popover-trigger-width)] max-h-[300px] p-0">
                         <Command>
                           <CommandInput placeholder="Rechercher une catégorie..." className="h-9" />
                           <CommandList>
@@ -413,18 +571,18 @@ export default function AddProduct() {
                             <CommandGroup>
                               {categories.map((cat) => (
                                 <CommandItem
-                                  key={cat.value}
-                                  value={cat.value}
+                                  key={cat.id}
+                                  value={cat.name}
                                   onSelect={(currentValue) => {
                                     setCategory(currentValue === category ? "" : currentValue)
                                     setOpenCategory(false)
                                   }}
                                 >
-                                  {cat.label}
+                                  {cat.name}
                                   <Check
                                     className={cn(
                                       "ml-auto h-4 w-4",
-                                      category === cat.value ? "opacity-100" : "opacity-0",
+                                      category === cat.name ? "opacity-100" : "opacity-0",
                                     )}
                                   />
                                 </CommandItem>
@@ -507,6 +665,42 @@ export default function AddProduct() {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* Gestion des stocks */}
+                  <div className="space-y-4">
+                    <Label className="text-sm font-medium">Gestion des stocks</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="stock-quantity" className="text-sm font-medium text-muted-foreground">
+                          Quantité en stock
+                        </Label>
+                        <Input
+                          id="stock-quantity"
+                          type="number"
+                          value={stockQuantity}
+                          onChange={(e) => setStockQuantity(e.target.value)}
+                          className="h-12 text-base"
+                          placeholder="0"
+                          min="0"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="min-stock-level" className="text-sm font-medium text-muted-foreground">
+                          Niveau de stock minimum
+                        </Label>
+                        <Input
+                          id="min-stock-level"
+                          type="number"
+                          value={minStockLevel}
+                          onChange={(e) => setMinStockLevel(e.target.value)}
+                          className="h-12 text-base"
+                          placeholder="0"
+                          min="0"
+                        />
+                        <p className="text-xs text-muted-foreground">Alerte quand le stock atteint ce niveau</p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -694,7 +888,10 @@ export default function AddProduct() {
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => setFeaturedImage(null)}
+                                onClick={() => {
+                                  setFeaturedImage(null)
+                                  setFeaturedImageFile(null)
+                                }}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
                                 Supprimer
@@ -715,9 +912,7 @@ export default function AddProduct() {
                         input.onchange = (e) => {
                           const file = (e.target as HTMLInputElement).files?.[0]
                           if (file) {
-                            const reader = new FileReader()
-                            reader.onload = (e) => setFeaturedImage(e.target?.result as string)
-                            reader.readAsDataURL(file)
+                            handleFeaturedImageUpload(file)
                           }
                         }
                         input.click()
@@ -754,7 +949,11 @@ export default function AddProduct() {
                     </div>
                     <Separator />
                     <div className="flex items-center gap-2">
-                      <Checkbox id="featured" />
+                      <Checkbox
+                        id="featured"
+                        checked={isFeatured}
+                        onCheckedChange={(checked) => setIsFeatured(checked as boolean)}
+                      />
                       <Label htmlFor="featured" className="text-sm">
                         Produit en vedette
                       </Label>
@@ -763,8 +962,8 @@ export default function AddProduct() {
                   <CardFooter className="flex flex-col space-y-3 pt-6 relative z-10">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button className="w-full" disabled={!isFormValid}>
-                          Publier le produit
+                        <Button className="w-full" disabled={!isFormValid || isProductLoading}>
+                          {isProductLoading ? "Publication..." : "Publier le produit"}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -789,9 +988,9 @@ export default function AddProduct() {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline" className="w-full bg-transparent">
+                        <Button variant="outline" className="w-full bg-transparent" disabled={isProductLoading}>
                           <Save className="h-4 w-4 mr-2" />
-                          Sauvegarder comme brouillon
+                          {isProductLoading ? "Sauvegarde..." : "Sauvegarder comme brouillon"}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -829,6 +1028,10 @@ export default function AddProduct() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between text-sm">
+                    <span>Magasin :</span>
+                    <span className="font-medium">{currentStore.name}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
                     <span>Nom :</span>
                     <span className="font-medium">{productName || "Non défini"}</span>
                   </div>
@@ -841,7 +1044,7 @@ export default function AddProduct() {
                   <div className="flex justify-between text-sm">
                     <span>Catégorie :</span>
                     <span className="font-medium">
-                      {categories.find((c) => c.value === category)?.label || "Non définie"}
+                      {categories.find((c) => c.name === category)?.name || "Non définie"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -855,6 +1058,10 @@ export default function AddProduct() {
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
+                    <span>Stock :</span>
+                    <span className="font-medium">{stockQuantity || "0"}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
                     <span>Fichiers :</span>
                     <span className="font-medium">{uploadedFiles.length}</span>
                   </div>
@@ -865,5 +1072,5 @@ export default function AddProduct() {
         </div>
       </main>
     </div>
-  ) 
+  )
 }
