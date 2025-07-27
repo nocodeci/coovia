@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payment_gateways', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary(); // ✅ UUID au lieu de bigint
             $table->string('name');
             $table->string('type');
             $table->string('country');

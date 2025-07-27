@@ -9,13 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('customers', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('store_id')->constrained()->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->uuid('store_id');
+
+            
+            $table->foreign('store_id')->references('id')->on('stores')->onDelete('cascade');
+
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email');
             $table->string('phone')->nullable();
             $table->json('addresses')->nullable();
+
             $table->timestamps();
         });
     }

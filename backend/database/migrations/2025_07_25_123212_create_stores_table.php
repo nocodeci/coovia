@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stores', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary(); // UUID si tu veux garder la cohérence
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description');
@@ -20,7 +20,11 @@ return new class extends Migration
             $table->json('address');
             $table->json('contact');
             $table->json('settings');
-            $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
+
+            // ✅ correction ici : UUID au lieu de foreignId()
+            $table->uuid('owner_id');
+            $table->foreign('owner_id')->references('id')->on('users')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

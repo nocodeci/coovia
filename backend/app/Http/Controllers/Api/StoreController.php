@@ -7,63 +7,226 @@ use App\Http\Requests\StoreRequest;
 use App\Http\Resources\StoreResource;
 use App\Models\Store;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class StoreController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    /**
+     * Lister toutes les boutiques de l'utilisateur connecté
+     */
+    public function index(Request $request)
     {
-        $stores = Store::with(['owner'])
-            ->where('owner_id', $request->user()->id)
-            ->paginate(10);
+        try {
+            $user = $request->user();
 
-        return StoreResource::collection($stores);
+            $stores = Store::where('owner_id', $user->id)
+                ->when($request->search, function ($query, $search) {
+                    return $query->where('name', 'like', "%{$search}%")
+                                ->orWhere('description', 'like', "%{$search}%");
+                })
+                ->when($request->status, function ($query, $status) {
+                    return $query->where('status', $status);
+                })
+                ->when($request->category, function ($query, $category) {
+                    return $query->where('category', $category);
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->per_page ?? 15);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Boutiques récupérées avec succès',
+                'data' => StoreResource::collection($stores),
+                'meta' => [
+                    'current_page' => $stores->currentPage(),
+                    'last_page' => $stores->lastPage(),
+                    'per_page' => $stores->perPage(),
+                    'total' => $stores->total(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération des boutiques', [
+                'error' => $e->getMessage(),
+                'user_id' => $request->user()->id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des boutiques',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function store(StoreRequest $request): JsonResponse
+    /**
+     * Créer une nouvelle boutique
+     */
+    public function store(StoreRequest $request)
     {
-        $store = Store::create([
-            ...$request->validated(),
-            'owner_id' => $request->user()->id,
-            'slug' => \Str::slug($request->name),
-        ]);
+        try {
+            Log::info('Création d\'une nouvelle boutique', $request->validated());
 
-        return response()->json([
-            'message' => 'Store created successfully',
-            'store' => new StoreResource($store),
-        ], 201);
+            $user = $request->user();
+
+            $store = Store::create([
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'description' => $request->description,
+                'category' => $request->category,
+                'address' => $request->address ?? [],
+                'contact' => $request->contact ?? [],
+                'settings' => array_merge([
+                    'currency' => 'XOF',
+                    'language' => 'fr',
+                    'timezone' => 'Africa/Abidjan',
+                    'tax_rate' => 18
+                ], $request->settings ?? []),
+                'status' => 'active',
+                'owner_id' => $user->id,
+            ]);
+
+            Log::info('Boutique créée avec succès', ['store_id' => $store->id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Boutique créée avec succès',
+                'data' => new StoreResource($store)
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la création de la boutique', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $request->user()->id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création de la boutique',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function show(Store $store): JsonResponse
+    /**
+     * Afficher une boutique spécifique
+     */
+    public function show(Request $request, Store $store)
     {
-        $this->authorize('view', $store);
+        try {
+            // Vérifier que l'utilisateur est propriétaire de la boutique
+            if ($store->owner_id !== $request->user()->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Accès non autorisé à cette boutique',
+                    'error' => 'unauthorized'
+                ], 403);
+            }
 
-        return response()->json([
-            'store' => new StoreResource($store->load(['owner', 'products', 'orders', 'customers'])),
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Boutique récupérée avec succès',
+                'data' => new StoreResource($store)
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération de la boutique', [
+                'error' => $e->getMessage(),
+                'store_id' => $store->id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de la boutique',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function update(StoreRequest $request, Store $store): JsonResponse
+    /**
+     * Mettre à jour une boutique
+     */
+    public function update(StoreRequest $request, Store $store)
     {
-        $this->authorize('update', $store);
+        try {
+            // Vérifier que l'utilisateur est propriétaire de la boutique
+            if ($store->owner_id !== $request->user()->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Accès non autorisé à cette boutique',
+                    'error' => 'unauthorized'
+                ], 403);
+            }
 
-        $store->update($request->validated());
+            $store->update([
+                'name' => $request->name ?? $store->name,
+                'slug' => $request->name ? Str::slug($request->name) : $store->slug,
+                'description' => $request->description ?? $store->description,
+                'category' => $request->category ?? $store->category,
+                'address' => $request->address ?? $store->address,
+                'contact' => $request->contact ?? $store->contact,
+                'settings' => array_merge($store->settings ?? [], $request->settings ?? []),
+            ]);
 
-        return response()->json([
-            'message' => 'Store updated successfully',
-            'store' => new StoreResource($store),
-        ]);
+            Log::info('Boutique mise à jour avec succès', ['store_id' => $store->id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Boutique mise à jour avec succès',
+                'data' => new StoreResource($store->fresh())
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour de la boutique', [
+                'error' => $e->getMessage(),
+                'store_id' => $store->id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour de la boutique',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function destroy(Store $store): JsonResponse
+    /**
+     * Supprimer une boutique
+     */
+    public function destroy(Request $request, Store $store)
     {
-        $this->authorize('delete', $store);
+        try {
+            // Vérifier que l'utilisateur est propriétaire de la boutique
+            if ($store->owner_id !== $request->user()->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Accès non autorisé à cette boutique',
+                    'error' => 'unauthorized'
+                ], 403);
+            }
 
-        $store->delete();
+            $store->delete();
 
-        return response()->json([
-            'message' => 'Store deleted successfully',
-        ]);
+            Log::info('Boutique supprimée avec succès', ['store_id' => $store->id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Boutique supprimée avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression de la boutique', [
+                'error' => $e->getMessage(),
+                'store_id' => $store->id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression de la boutique',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
