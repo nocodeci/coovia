@@ -9,8 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payment_methods', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('payment_gateway_id')->constrained()->onDelete('cascade');
+            $table->uuid('id')->primary(); // UUID au lieu de bigint
+            $table->uuid('payment_gateway_id'); // UUID FK
+            $table->foreign('payment_gateway_id')->references('id')->on('payment_gateways')->onDelete('cascade');
+
             $table->string('name');
             $table->string('type');
             $table->string('country');

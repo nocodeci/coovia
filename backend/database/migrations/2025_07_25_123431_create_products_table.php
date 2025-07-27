@@ -9,8 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('store_id')->constrained()->onDelete('cascade');
+            $table->uuid('id')->primary(); // UUID pour rester cohérent
+            $table->uuid('store_id'); // UUID aussi pour la FK
+            $table->foreign('store_id')->references('id')->on('stores')->onDelete('cascade');
+
             $table->string('name');
             $table->text('description');
             $table->decimal('price', 10, 2);
