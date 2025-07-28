@@ -1,88 +1,111 @@
 "use client"
 
-import type * as React from "react"
-import { cn } from "@/lib/utils"
+import { useState } from "react"
+import { useNavigate } from "@tanstack/react-router"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useAuth } from "@/hooks/useAuth"
-import { useNavigate } from "@tanstack/react-router"
-import { RiLoader4Line } from "@remixicon/react"
-import { useState } from "react"
 
-interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
+const loginSchema = z.object({
+  email: z.string().email("Format d'email invalide"),
+  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+})
 
-export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+type LoginFormData = z.infer<typeof loginSchema>
 
+export function UserAuthForm() {
+  const [showPassword, setShowPassword] = useState(false)
   const { login, isLoading } = useAuth()
   const navigate = useNavigate()
 
-  async function onSubmit(event: React.SyntheticEvent) {
-    event.preventDefault()
-    setErrors({})
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
 
-    // Validation simple
-    const newErrors: { email?: string; password?: string } = {}
-    if (!email) newErrors.email = "L'email est requis"
-    if (!password) newErrors.password = "Le mot de passe est requis"
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
-    }
-
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(email, password)
+      await login(data)
+      // Si MFA n'est pas requis, la redirection se fera automatiquement
+      // Sinon, l'utilisateur sera redirigé vers la page MFA
       navigate({ to: "/" })
     } catch (error) {
-      console.error("Login failed:", error)
+      // L'erreur est déjà gérée dans le hook useAuth avec toast
+      console.error("Login error:", error)
     }
   }
 
   return (
-    <div className={cn("grid gap-6", className)} {...props}>
-      <form onSubmit={onSubmit}>
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              placeholder="nom@exemple.com"
-              type="email"
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect="off"
-              disabled={isLoading}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={errors.email ? "border-red-500" : ""}
-            />
-            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Mot de passe</Label>
-            <Input
-              id="password"
-              placeholder="Votre mot de passe"
-              type="password"
-              autoCapitalize="none"
-              autoComplete="current-password"
-              disabled={isLoading}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={errors.password ? "border-red-500" : ""}
-            />
-            {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
-          </div>
-          <Button disabled={isLoading} type="submit">
-            {isLoading && <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />}
+    <div className="grid gap-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="nom@exemple.com"
+                    autoComplete="email"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mot de passe</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Votre mot de passe"
+                      autoComplete="current-password"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Se connecter
           </Button>
-        </div>
-      </form>
+        </form>
+      </Form>
     </div>
   )
 }

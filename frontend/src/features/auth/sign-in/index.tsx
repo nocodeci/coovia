@@ -1,48 +1,75 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import AuthLayout from '../auth-layout'
-import { UserAuthForm } from './components/user-auth-form'
+"use client"
+
+import { useEffect } from "react"
+import { Link, useNavigate } from "@tanstack/react-router"
+import { UserAuthForm } from "./components/user-auth-form"
+import { MfaForm } from "./components/mfa-form"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function SignIn() {
+  const { isAuthenticated, mfaRequired } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: "/" })
+    }
+  }, [isAuthenticated, navigate])
+
   return (
-    <AuthLayout>
-      <Card className='gap-4'>
-        <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>Login</CardTitle>
-          <CardDescription>
-            Enter your email and password below to <br />
-            log into your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <UserAuthForm />
-        </CardContent>
-        <CardFooter>
-          <p className='text-muted-foreground px-8 text-center text-sm'>
-            By clicking login, you agree to our{' '}
-            <a
-              href='/terms'
-              className='hover:text-primary underline underline-offset-4'
-            >
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a
-              href='/privacy'
-              className='hover:text-primary underline underline-offset-4'
-            >
-              Privacy Policy
-            </a>
-            .
-          </p>
-        </CardFooter>
-      </Card>
-    </AuthLayout>
+    <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
+        <div className="absolute inset-0 bg-zinc-900" />
+        <div className="relative z-20 flex items-center text-lg font-medium">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mr-2 h-6 w-6"
+          >
+            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+          </svg>
+          Coovia
+        </div>
+        <div className="relative z-20 mt-auto">
+          <blockquote className="space-y-2">
+            <p className="text-lg">
+              "Cette plateforme a transformé la façon dont nous gérons nos boutiques en ligne. Simple, efficace et
+              sécurisée."
+            </p>
+            <footer className="text-sm">Sofia Davis</footer>
+          </blockquote>
+        </div>
+      </div>
+      <div className="lg:p-8">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+          <div className="flex flex-col space-y-2 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {mfaRequired ? "Authentification à deux facteurs" : "Connexion à votre compte"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {mfaRequired
+                ? "Entrez votre code d'authentification à deux facteurs"
+                : "Entrez votre email et mot de passe ci-dessous"}
+            </p>
+          </div>
+
+          {mfaRequired ? <MfaForm /> : <UserAuthForm />}
+
+          {!mfaRequired && (
+            <p className="px-8 text-center text-sm text-muted-foreground">
+              Pas encore de compte ?{" "}
+              <Link to="/sign-up" className="underline underline-offset-4 hover:text-primary">
+                Créer un compte
+              </Link>
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

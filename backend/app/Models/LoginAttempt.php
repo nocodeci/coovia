@@ -18,41 +18,42 @@ class LoginAttempt extends Model
         'failure_reason',
         'mfa_required',
         'mfa_successful',
-        'location',
-        'device_info',
     ];
 
     protected $casts = [
         'successful' => 'boolean',
         'mfa_required' => 'boolean',
         'mfa_successful' => 'boolean',
-        'location' => 'array',
-        'device_info' => 'array',
     ];
 
-    // Relations
+    /**
+     * Relation avec User
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Scopes
+    /**
+     * Scope pour les tentatives réussies
+     */
     public function scopeSuccessful($query)
     {
         return $query->where('successful', true);
     }
 
+    /**
+     * Scope pour les tentatives échouées
+     */
     public function scopeFailed($query)
     {
         return $query->where('successful', false);
     }
 
-    public function scopeRecent($query, $minutes = 60)
-    {
-        return $query->where('created_at', '>', now()->subMinutes($minutes));
-    }
-
-    public function scopeByIp($query, $ip)
+    /**
+     * Scope par IP
+     */
+    public function scopeFromIp($query, string $ip)
     {
         return $query->where('ip_address', $ip);
     }
