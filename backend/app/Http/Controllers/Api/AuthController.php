@@ -40,21 +40,28 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'phone' => $request->phone,
+                'email_verified_at' => now(), // Marquer comme vérifié automatiquement
+                'role' => 'user',
+                'is_active' => true,
             ]);
 
-            // Envoyer email de vérification
-            $user->sendEmailVerificationNotification();
+            // Créer un token d'authentification avec Sanctum
+            $token = $user->createToken('auth_token')->plainTextToken;
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Inscription réussie. Vérifiez votre email pour activer votre compte.',
+                'success' => true,
+                'message' => 'Inscription réussie',
                 'user' => new UserResource($user),
+                'token' => $token,
+                'token_type' => 'Bearer'
             ], 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
+                'success' => false,
                 'message' => 'Erreur lors de l\'inscription',
                 'error' => $e->getMessage()
             ], 500);
@@ -76,6 +83,7 @@ class AuthController extends Controller
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
             return response()->json([
+                'success' => false,
                 'message' => "Trop de tentatives. Réessayez dans {$seconds} secondes."
             ], 429);
         }
@@ -88,6 +96,7 @@ class AuthController extends Controller
         if (!$user || $user->isLocked()) {
             RateLimiter::hit($key, 300); // 5 minutes
             return response()->json([
+                'success' => false,
                 'message' => 'Compte verrouillé ou identifiants incorrects'
             ], 401);
         }
@@ -99,13 +108,15 @@ class AuthController extends Controller
             $this->logLoginAttempt($user, $email, $ip, $userAgent, false, 'Mot de passe incorrect');
 
             return response()->json([
+                'success' => false,
                 'message' => 'Identifiants incorrects'
             ], 401);
         }
 
-        if (!$user->email_verified_at) {
+        if (!$user->is_active) {
             return response()->json([
-                'message' => 'Veuillez vérifier votre email avant de vous connecter'
+                'success' => false,
+                'message' => 'Compte désactivé'
             ], 403);
         }
 
@@ -116,6 +127,7 @@ class AuthController extends Controller
             $this->logLoginAttempt($user, $email, $ip, $userAgent, false, 'MFA requis', true);
 
             return response()->json([
+                'success' => true,
                 'message' => 'Code MFA requis',
                 'mfa_required' => true,
                 'mfa_token' => $mfaToken,
@@ -132,9 +144,11 @@ class AuthController extends Controller
         $this->logLoginAttempt($user, $email, $ip, $userAgent, true);
 
         return response()->json([
+            'success' => true,
             'message' => 'Connexion réussie',
             'user' => new UserResource($user),
             'token' => $token,
+            'token_type' => 'Bearer'
         ]);
     }
 
@@ -151,6 +165,7 @@ class AuthController extends Controller
 
         if (!$user) {
             return response()->json([
+                'success' => false,
                 'message' => 'Token MFA invalide ou expiré'
             ], 401);
         }
@@ -167,6 +182,7 @@ class AuthController extends Controller
             $this->logLoginAttempt($user, $user->email, request()->ip(), request()->userAgent(), false, 'Code MFA incorrect', true, false);
 
             return response()->json([
+                'success' => false,
                 'message' => 'Code de vérification invalide'
             ], 401);
         }
@@ -178,9 +194,11 @@ class AuthController extends Controller
         $this->logLoginAttempt($user, $user->email, request()->ip(), request()->userAgent(), true, null, true, true);
 
         return response()->json([
+            'success' => true,
             'message' => 'Connexion réussie',
             'user' => new UserResource($user),
             'token' => $token,
+            'token_type' => 'Bearer'
         ]);
     }
 
@@ -193,6 +211,7 @@ class AuthController extends Controller
 
         if ($user->mfa_enabled) {
             return response()->json([
+                'success' => false,
                 'message' => 'MFA déjà activé'
             ], 400);
         }
@@ -201,6 +220,7 @@ class AuthController extends Controller
         $qrCodeUrl = $this->mfaService->generateQrCode($user, $secret);
 
         return response()->json([
+            'success' => true,
             'secret' => $secret,
             'qr_code_url' => $qrCodeUrl,
             'message' => 'Scannez le QR code avec votre application d\'authentification'
@@ -219,6 +239,7 @@ class AuthController extends Controller
             $backupCodes = $this->mfaService->enableMfa($user, $code);
 
             return response()->json([
+                'success' => true,
                 'message' => 'MFA activé avec succès',
                 'backup_codes' => $backupCodes,
                 'warning' => 'Sauvegardez ces codes de récupération dans un endroit sûr'
@@ -226,6 +247,7 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'message' => $e->getMessage()
             ], 400);
         }
@@ -246,11 +268,13 @@ class AuthController extends Controller
             $this->mfaService->disableMfa($user, $request->password);
 
             return response()->json([
+                'success' => true,
                 'message' => 'MFA désactivé avec succès'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'message' => $e->getMessage()
             ], 400);
         }
@@ -265,6 +289,7 @@ class AuthController extends Controller
 
         if (!$user->mfa_enabled) {
             return response()->json([
+                'success' => false,
                 'message' => 'MFA n\'est pas activé'
             ], 400);
         }
@@ -272,6 +297,7 @@ class AuthController extends Controller
         $backupCodes = $user->generateBackupCodes();
 
         return response()->json([
+            'success' => true,
             'backup_codes' => $backupCodes,
             'message' => 'Nouveaux codes de récupération générés'
         ]);
@@ -282,7 +308,10 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        return new UserResource($request->user());
+        return response()->json([
+            'success' => true,
+            'user' => new UserResource($request->user())
+        ]);
     }
 
     /**
@@ -293,6 +322,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
+            'success' => true,
             'message' => 'Déconnexion réussie'
         ]);
     }
@@ -305,6 +335,7 @@ class AuthController extends Controller
         $request->user()->tokens()->delete();
 
         return response()->json([
+            'success' => true,
             'message' => 'Déconnexion de tous les appareils réussie'
         ]);
     }
@@ -314,15 +345,20 @@ class AuthController extends Controller
      */
     private function logLoginAttempt($user, $email, $ip, $userAgent, $successful, $failureReason = null, $mfaRequired = false, $mfaSuccessful = null)
     {
-        LoginAttempt::create([
-            'user_id' => $user ? $user->id : null,
-            'email' => $email,
-            'ip_address' => $ip,
-            'user_agent' => $userAgent,
-            'successful' => $successful,
-            'failure_reason' => $failureReason,
-            'mfa_required' => $mfaRequired,
-            'mfa_successful' => $mfaSuccessful,
-        ]);
+        try {
+            LoginAttempt::create([
+                'user_id' => $user ? $user->id : null,
+                'email' => $email,
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
+                'successful' => $successful,
+                'failure_reason' => $failureReason,
+                'mfa_required' => $mfaRequired,
+                'mfa_successful' => $mfaSuccessful,
+            ]);
+        } catch (\Exception $e) {
+            // Log silencieusement l'erreur sans interrompre le processus
+            \Log::error('Erreur lors de l\'enregistrement de la tentative de connexion: ' . $e->getMessage());
+        }
     }
 }
