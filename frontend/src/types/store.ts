@@ -2,6 +2,7 @@ export interface Store {
   id: string
   name: string
   description: string
+  logo?: string
   status: "active" | "pending" | "suspended" | "inactive"
   plan: "starter" | "professional" | "enterprise"
   createdAt: string

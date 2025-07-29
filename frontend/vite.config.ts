@@ -23,4 +23,13 @@ export default defineConfig({
       '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
     },
   },
+  server: {
+    watch: {
+      ignored: [
+        '**/routeTree.gen.ts',
+        '**/node_modules/**',
+        '**/.git/**',
+      ],
+    },
+  },
 })

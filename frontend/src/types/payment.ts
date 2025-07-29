@@ -27,6 +27,7 @@ export interface PaymentGateway {
 
 export interface PaymentTransaction {
   id: string
+  storeId: string
   clientName: string
   status: "Initié" | "En Attente" | "Succès" | "Échec"
   location: string

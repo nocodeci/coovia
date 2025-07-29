@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { ChevronsUpDown, Plus } from 'lucide-react'
+import { ChevronsUpDown, Store, Plus } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { useStore } from '@/context/store-context'
 
 export function TeamSwitcher({
   teams,
@@ -26,7 +28,45 @@ export function TeamSwitcher({
   }[]
 }) {
   const { isMobile } = useSidebar()
-  const [activeTeam, setActiveTeam] = React.useState(teams[0])
+  const navigate = useNavigate()
+  const { stores, currentStore } = useStore()
+  const [activeStore, setActiveStore] = React.useState(currentStore || stores[0])
+
+  // Mettre à jour la boutique active quand currentStore change
+  React.useEffect(() => {
+    if (currentStore) {
+      setActiveStore(currentStore)
+    }
+  }, [currentStore])
+
+  const handleStoreSelect = (store: any) => {
+    setActiveStore(store)
+    navigate({ to: `/${store.id}/dashboard` })
+  }
+
+  const handleBackToStoreSelection = () => {
+    navigate({ to: '/store-selection' })
+  }
+
+  if (!activeStore) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size='lg' onClick={handleBackToStoreSelection}>
+            <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
+              <Store className='size-4' />
+            </div>
+            <div className='grid flex-1 text-left text-sm leading-tight'>
+              <span className='truncate font-semibold'>
+                Sélectionner une boutique
+              </span>
+              <span className='truncate text-xs'>Cliquez pour choisir</span>
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
 
   return (
     <SidebarMenu>
@@ -38,13 +78,13 @@ export function TeamSwitcher({
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
               <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
-                <activeTeam.logo className='size-4' />
+                <Store className='size-4' />
               </div>
               <div className='grid flex-1 text-left text-sm leading-tight'>
                 <span className='truncate font-semibold'>
-                  {activeTeam.name}
+                  {activeStore.name}
                 </span>
-                <span className='truncate text-xs'>{activeTeam.plan}</span>
+                <span className='truncate text-xs'>{activeStore.status === 'active' ? 'Actif' : 'Inactif'}</span>
               </div>
               <ChevronsUpDown className='ml-auto' />
             </SidebarMenuButton>
@@ -56,27 +96,29 @@ export function TeamSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className='text-muted-foreground text-xs'>
-              Teams
+              Vos boutiques
             </DropdownMenuLabel>
-            {teams.map((team, index) => (
+            {stores.map((store) => (
               <DropdownMenuItem
-                key={team.name}
-                onClick={() => setActiveTeam(team)}
+                key={store.id}
+                onClick={() => handleStoreSelect(store)}
                 className='gap-2 p-2'
               >
                 <div className='flex size-6 items-center justify-center rounded-sm border'>
-                  <team.logo className='size-4 shrink-0' />
+                  <Store className='size-4 shrink-0' />
                 </div>
-                {team.name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                {store.name}
+                {store.id === activeStore.id && (
+                  <DropdownMenuShortcut>✓</DropdownMenuShortcut>
+                )}
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className='gap-2 p-2'>
+            <DropdownMenuItem className='gap-2 p-2' onClick={handleBackToStoreSelection}>
               <div className='bg-background flex size-6 items-center justify-center rounded-md border'>
                 <Plus className='size-4' />
               </div>
-              <div className='text-muted-foreground font-medium'>Add team</div>
+              <div className='text-muted-foreground font-medium'>Changer de boutique</div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
