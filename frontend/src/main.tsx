@@ -19,8 +19,8 @@ import "./index.css"
 const router = createRouter({
   routeTree,
   context: {
-    queryClient: new QueryClient(),
-  },
+    queryClient: new QueryClient
+  }
 })
 
 // Register the router instance for type safety

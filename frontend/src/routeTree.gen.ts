@@ -42,6 +42,8 @@ import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
+import { Route as AuthenticatedDashboardStoreIdRouteImport } from './routes/_authenticated/dashboard/$storeId'
+import { Route as AuthenticatedAppsSelectStoreRouteImport } from './routes/_authenticated/apps/select-store'
 import { Route as AuthenticatedProduitsAddproduitIndexRouteImport } from './routes/_authenticated/produits/addproduit/index'
 import { Route as AuthenticatedMarketingAjouterIndexRouteImport } from './routes/_authenticated/marketing/ajouter/index'
 
@@ -219,6 +221,18 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
+const AuthenticatedDashboardStoreIdRoute =
+  AuthenticatedDashboardStoreIdRouteImport.update({
+    id: '/dashboard/$storeId',
+    path: '/dashboard/$storeId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppsSelectStoreRoute =
+  AuthenticatedAppsSelectStoreRouteImport.update({
+    id: '/apps/select-store',
+    path: '/apps/select-store',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProduitsAddproduitIndexRoute =
   AuthenticatedProduitsAddproduitIndexRouteImport.update({
     id: '/produits/addproduit/',
@@ -247,6 +261,8 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
+  '/apps/select-store': typeof AuthenticatedAppsSelectStoreRoute
+  '/dashboard/$storeId': typeof AuthenticatedDashboardStoreIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -280,6 +296,8 @@ export interface FileRoutesByTo {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
+  '/apps/select-store': typeof AuthenticatedAppsSelectStoreRoute
+  '/dashboard/$storeId': typeof AuthenticatedDashboardStoreIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -318,6 +336,8 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/apps/select-store': typeof AuthenticatedAppsSelectStoreRoute
+  '/_authenticated/dashboard/$storeId': typeof AuthenticatedDashboardStoreIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -355,6 +375,8 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/'
+    | '/apps/select-store'
+    | '/dashboard/$storeId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -388,6 +410,8 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/'
+    | '/apps/select-store'
+    | '/dashboard/$storeId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -425,6 +449,8 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/'
+    | '/_authenticated/apps/select-store'
+    | '/_authenticated/dashboard/$storeId'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
@@ -694,6 +720,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
+    '/_authenticated/dashboard/$storeId': {
+      id: '/_authenticated/dashboard/$storeId'
+      path: '/dashboard/$storeId'
+      fullPath: '/dashboard/$storeId'
+      preLoaderRoute: typeof AuthenticatedDashboardStoreIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/apps/select-store': {
+      id: '/_authenticated/apps/select-store'
+      path: '/apps/select-store'
+      fullPath: '/apps/select-store'
+      preLoaderRoute: typeof AuthenticatedAppsSelectStoreRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/produits/addproduit/': {
       id: '/_authenticated/produits/addproduit/'
       path: '/produits/addproduit'
@@ -737,6 +777,8 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAppsSelectStoreRoute: typeof AuthenticatedAppsSelectStoreRoute
+  AuthenticatedDashboardStoreIdRoute: typeof AuthenticatedDashboardStoreIdRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedClientsIndexRoute: typeof AuthenticatedClientsIndexRoute
@@ -753,6 +795,8 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAppsSelectStoreRoute: AuthenticatedAppsSelectStoreRoute,
+  AuthenticatedDashboardStoreIdRoute: AuthenticatedDashboardStoreIdRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedClientsIndexRoute: AuthenticatedClientsIndexRoute,

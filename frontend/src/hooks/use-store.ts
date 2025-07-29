@@ -1,140 +1,126 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { apiClient } from "@/lib/api"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { apiClient } from "@/services/api"
 import { toast } from "sonner"
-import type { Store } from "@/types/store"
+import type { CreateStoreData, UpdateStoreData } from "@/types/store"
 
+// Hook pour récupérer toutes les boutiques
 export function useStores() {
-  const [stores, setStores] = useState<Store[]>([])
-  const [currentStore, setCurrentStore] = useState<Store | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  return useQuery({
+    queryKey: ["stores"],
+    queryFn: async () => {
+      const stores = await apiClient.getStores()
+      return stores
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
 
-  const fetchStores = async () => {
-    setIsLoading(true)
-    setError(null)
+// Hook pour récupérer une boutique spécifique
+export function useStore(storeId: string | undefined) {
+  return useQuery({
+    queryKey: ["store", storeId],
+    queryFn: async () => {
+      if (!storeId) throw new Error("Store ID is required")
+      const store = await apiClient.getStore(storeId)
+      return store
+    },
+    enabled: !!storeId,
+  })
+}
 
-    try {
-      const response = await apiClient.getStores()
-      setStores(response.data)
+// Hook pour récupérer le dashboard d'une boutique
+export function useStoreDashboard(storeId: string | undefined) {
+  return useQuery({
+    queryKey: ["store-dashboard", storeId],
+    queryFn: async () => {
+      if (!storeId) throw new Error("Store ID is required")
+      const dashboard = await apiClient.getStoreDashboard(storeId)
+      return dashboard
+    },
+    enabled: !!storeId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
 
-      // Sélectionner automatiquement le premier magasin si aucun n'est sélectionné
-      if (response.data.length > 0 && !currentStore) {
-        const savedStoreId = localStorage.getItem("current_store_id")
-        const storeToSelect = savedStoreId
-          ? response.data.find((store) => store.id === savedStoreId) || response.data[0]
-          : response.data[0]
+// Hook pour créer une boutique
+export function useCreateStore() {
+  const queryClient = useQueryClient()
 
-        setCurrentStore(storeToSelect)
-        localStorage.setItem("current_store_id", storeToSelect.id)
-      }
-    } catch (err: any) {
-      setError(err.message || "Une erreur est survenue lors du chargement des magasins")
-      toast.error("Erreur", {
-        description: "Impossible de charger les magasins",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  return useMutation({
+    mutationFn: async (data: CreateStoreData) => {
+      const store = await apiClient.createStore(data)
+      return store
+    },
+    onSuccess: (newStore) => {
+      // Invalider et refetch la liste des boutiques
+      queryClient.invalidateQueries({ queryKey: ["stores"] })
+      toast.success("Boutique créée avec succès!")
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Erreur lors de la création de la boutique")
+    },
+  })
+}
 
-  const createStore = async (storeData: Omit<Store, "id" | "created_at" | "updated_at">) => {
-    setIsLoading(true)
-    try {
-      const response = await apiClient.createStore(storeData)
-      setStores((prev) => [...prev, response.data])
-      toast.success("Magasin créé", {
-        description: `Le magasin ${response.data.name} a été créé avec succès`,
-      })
-      return response.data
-    } catch (err: any) {
-      toast.error("Erreur", {
-        description: err.message || "Impossible de créer le magasin",
-      })
-      throw err
-    } finally {
-      setIsLoading(false)
-    }
-  }
+// Hook pour mettre à jour une boutique
+export function useUpdateStore() {
+  const queryClient = useQueryClient()
 
-  const updateStore = async (storeId: string, storeData: Partial<Store>) => {
-    setIsLoading(true)
-    try {
-      const response = await apiClient.updateStore(storeId, storeData)
-      setStores((prev) => prev.map((store) => (store.id === storeId ? response.data : store)))
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateStoreData }) => {
+      const store = await apiClient.updateStore(id, data)
+      return store
+    },
+    onSuccess: (updatedStore, { id }) => {
+      // Mettre à jour le cache
+      queryClient.setQueryData(["store", id], updatedStore)
+      queryClient.invalidateQueries({ queryKey: ["stores"] })
+      toast.success("Boutique mise à jour avec succès!")
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Erreur lors de la mise à jour de la boutique")
+    },
+  })
+}
 
-      // Mettre à jour le magasin courant si c'est celui qui a été modifié
-      if (currentStore?.id === storeId) {
-        setCurrentStore(response.data)
-      }
+// Hook pour supprimer une boutique
+export function useDeleteStore() {
+  const queryClient = useQueryClient()
 
-      toast.success("Magasin mis à jour", {
-        description: `Le magasin ${response.data.name} a été mis à jour avec succès`,
-      })
-      return response.data
-    } catch (err: any) {
-      toast.error("Erreur", {
-        description: err.message || "Impossible de mettre à jour le magasin",
-      })
-      throw err
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.deleteStore(id)
+      return id
+    },
+    onSuccess: (deletedId) => {
+      // Supprimer du cache
+      queryClient.removeQueries({ queryKey: ["store", deletedId] })
+      queryClient.invalidateQueries({ queryKey: ["stores"] })
+      toast.success("Boutique supprimée avec succès!")
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Erreur lors de la suppression de la boutique")
+    },
+  })
+}
 
-  const deleteStore = async (storeId: string) => {
-    setIsLoading(true)
-    try {
-      await apiClient.deleteStore(storeId)
-      setStores((prev) => prev.filter((store) => store.id !== storeId))
+// Hook pour changer le statut d'une boutique
+export function useToggleStoreStatus() {
+  const queryClient = useQueryClient()
 
-      // Si le magasin supprimé était le magasin courant, sélectionner un autre
-      if (currentStore?.id === storeId) {
-        const remainingStores = stores.filter((store) => store.id !== storeId)
-        if (remainingStores.length > 0) {
-          setCurrentStore(remainingStores[0])
-          localStorage.setItem("current_store_id", remainingStores[0].id)
-        } else {
-          setCurrentStore(null)
-          localStorage.removeItem("current_store_id")
-        }
-      }
-
-      toast.success("Magasin supprimé", {
-        description: "Le magasin a été supprimé avec succès",
-      })
-    } catch (err: any) {
-      toast.error("Erreur", {
-        description: err.message || "Impossible de supprimer le magasin",
-      })
-      throw err
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const switchStore = (store: Store) => {
-    setCurrentStore(store)
-    localStorage.setItem("current_store_id", store.id)
-    toast.success("Magasin sélectionné", {
-      description: `Vous travaillez maintenant sur ${store.name}`,
-    })
-  }
-
-  useEffect(() => {
-    fetchStores()
-  }, [])
-
-  return {
-    stores,
-    currentStore,
-    isLoading,
-    error,
-    fetchStores,
-    createStore,
-    updateStore,
-    deleteStore,
-    switchStore,
-  }
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const store = await apiClient.toggleStoreStatus(id)
+      return store
+    },
+    onSuccess: (updatedStore) => {
+      // Mettre à jour le cache
+      queryClient.setQueryData(["store", updatedStore.id.toString()], updatedStore)
+      queryClient.invalidateQueries({ queryKey: ["stores"] })
+      toast.success("Statut de la boutique mis à jour!")
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Erreur lors du changement de statut")
+    },
+  })
 }

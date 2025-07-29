@@ -1,8 +1,9 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,106 +13,102 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
+import type { Store } from "@/types/store"
+
+const createStoreSchema = z.object({
+  name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+  description: z.string().min(10, "La description doit contenir au moins 10 caractères"),
+  plan: z.enum(["starter", "professional", "enterprise"]),
+  currency: z.string().default("XOF"),
+  language: z.string().default("fr"),
+  timezone: z.string().default("Africa/Abidjan"),
+})
+
+type CreateStoreFormData = z.infer<typeof createStoreSchema>
 
 interface CreateStoreDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onStoreCreated: (store: any) => void
+  onStoreCreated: (store: Store) => void
 }
 
-const categories = [
-  "Technologie",
-  "Mode",
-  "Maison & Jardin",
-  "Sports & Loisirs",
-  "Beauté & Santé",
-  "Alimentation",
-  "Livres & Médias",
-  "Automobile",
-  "Bijoux & Accessoires",
-  "Autre",
-]
-
 export function CreateStoreDialog({ open, onOpenChange, onStoreCreated }: CreateStoreDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    category: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-  })
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const form = useForm<CreateStoreFormData>({
+    resolver: zodResolver(createStoreSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      plan: "starter",
+      currency: "XOF",
+      language: "fr",
+      timezone: "Africa/Abidjan",
+    },
+  })
+
+  const onSubmit = async (data: CreateStoreFormData) => {
     setIsLoading(true)
 
     try {
-      // Simulation de création de boutique
+      // Simuler la création d'une boutique
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      const newStore = {
-        id: `store-${Date.now()}`,
-        name: formData.name,
-        slug: formData.name.toLowerCase().replace(/\s+/g, "-"),
-        description: formData.description,
-        ownerId: "user-1",
-        ownerName: "Jean Dupont",
-        category: formData.category,
-        status: "pending" as const,
+      const newStore: Store = {
+        id: `store_${Date.now()}`,
+        name: data.name,
+        description: data.description,
+        status: "active",
+        plan: data.plan,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         settings: {
-          currency: "FCFA",
-          language: "fr",
-          timezone: "Africa/Abidjan",
-          allowReviews: true,
-          requireApproval: false,
-        },
-        contact: {
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          country: "Côte d'Ivoire",
+          currency: data.currency,
+          language: data.language,
+          timezone: data.timezone,
+          notifications: {
+            email: true,
+            sms: false,
+            push: true,
+          },
+          features: {
+            inventory: data.plan !== "starter",
+            analytics: data.plan === "enterprise",
+            multiChannel: data.plan === "enterprise",
+            customDomain: data.plan !== "starter",
+          },
         },
         stats: {
           totalProducts: 0,
           totalOrders: 0,
           totalRevenue: 0,
-          rating: 0,
-          reviewCount: 0,
+          totalCustomers: 0,
+          conversionRate: 0,
+          averageOrderValue: 0,
+        },
+        contact: {
+          email: "",
+          phone: "",
+          address: {
+            street: "",
+            city: "",
+            state: "",
+            country: "Côte d'Ivoire",
+            postalCode: "",
+          },
         },
       }
 
+      toast.success("Boutique créée avec succès!")
       onStoreCreated(newStore)
-      onOpenChange(false)
-
-      toast.success("Boutique créée avec succès!", {
-        description: "Votre boutique a été créée et est en attente d'approbation.",
-      })
-
-      // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        category: "",
-        email: "",
-        phone: "",
-        address: "",
-        city: "",
-      })
+      form.reset()
     } catch (error) {
-      toast.error("Erreur lors de la création", {
-        description: "Une erreur est survenue lors de la création de votre boutique.",
-      })
+      toast.error("Erreur lors de la création de la boutique")
     } finally {
       setIsLoading(false)
     }
@@ -119,7 +116,7 @@ export function CreateStoreDialog({ open, onOpenChange, onStoreCreated }: Create
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Créer une nouvelle boutique</DialogTitle>
           <DialogDescription>
@@ -127,106 +124,70 @@ export function CreateStoreDialog({ open, onOpenChange, onStoreCreated }: Create
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom de la boutique *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="Ma Super Boutique"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category">Catégorie *</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-              placeholder="Décrivez votre boutique et ce que vous vendez..."
-              rows={3}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom de la boutique</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ma Super Boutique" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email de contact *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                placeholder="contact@maboutique.com"
-                required
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Décrivez votre boutique..." className="resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
-                placeholder="+225 01 02 03 04 05"
-              />
-            </div>
-          </div>
+            <FormField
+              control={form.control}
+              name="plan"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Plan</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un plan" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="starter">Starter - Gratuit</SelectItem>
+                      <SelectItem value="professional">Professional - 29€/mois</SelectItem>
+                      <SelectItem value="enterprise">Enterprise - 99€/mois</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>Vous pourrez changer de plan plus tard dans les paramètres.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">Adresse</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
-                placeholder="123 Rue de Commerce"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="city">Ville</Label>
-              <Input
-                id="city"
-                value={formData.city}
-                onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
-                placeholder="Abidjan"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Création..." : "Créer la boutique"}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Création..." : "Créer la boutique"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )

@@ -3,55 +3,15 @@
 import { useState, useEffect } from "react"
 import { apiClient } from "@/lib/api"
 import { toast } from "sonner"
-
-interface Product {
-  id: string
-  store_id: string
-  name: string
-  description: string
-  price: number
-  sale_price?: number | null
-  cost_price?: number | null
-  sku: string
-  category: string
-  subcategory?: string
-  stock_quantity: number
-  min_stock_level: number
-  status: "active" | "inactive" | "draft"
-  images: string[]
-  files: Array<{
-    name: string
-    url: string
-    size: number
-    type: string
-  }>
-  attributes: Record<string, any>
-  seo: {
-    meta_title?: string
-    meta_description?: string
-  }
-  created_at: string
-  updated_at: string
-}
-
-interface ProductsFilter {
-  search?: string
-  category?: string
-  status?: string
-  min_price?: number
-  max_price?: number
-  in_stock?: boolean
-  sort_by?: string
-  sort_direction?: "asc" | "desc"
-}
+import type { Product, ProductFilters } from "@/types/store"
 
 export function useProducts(storeId: string) {
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [filters, setFilters] = useState<ProductsFilter>({})
+  const [filters, setFilters] = useState<ProductFilters>({})
 
-  const fetchProducts = async (filters: ProductsFilter = {}) => {
+  const fetchProducts = async (newFilters: ProductFilters = {}) => {
     if (!storeId) return
 
     setIsLoading(true)
@@ -60,19 +20,22 @@ export function useProducts(storeId: string) {
     try {
       const params: Record<string, string> = {}
 
-      if (filters.search) params.search = filters.search
-      if (filters.category) params.category = filters.category
-      if (filters.status) params.status = filters.status
-      if (filters.min_price) params.min_price = filters.min_price.toString()
-      if (filters.max_price) params.max_price = filters.max_price.toString()
-      if (filters.in_stock !== undefined) params.in_stock = filters.in_stock.toString()
-      if (filters.sort_by) params.sort_by = filters.sort_by
-      if (filters.sort_direction) params.sort_direction = filters.sort_direction
+      if (newFilters.search) params.search = newFilters.search
+      if (newFilters.category) params.category = newFilters.category
+      if (newFilters.status) params.status = newFilters.status
+      if (newFilters.min_price) params.min_price = newFilters.min_price.toString()
+      if (newFilters.max_price) params.max_price = newFilters.max_price.toString()
+      if (newFilters.in_stock !== undefined) params.in_stock = newFilters.in_stock.toString()
+      if (newFilters.is_featured !== undefined) params.is_featured = newFilters.is_featured.toString()
+      if (newFilters.type) params.type = newFilters.type
+      if (newFilters.sort_by) params.sort_by = newFilters.sort_by
+      if (newFilters.sort_direction) params.sort_direction = newFilters.sort_direction
 
       const response = await apiClient.getProducts(storeId, params)
       setProducts(response.data)
     } catch (err: any) {
-      setError(err.message || "Une erreur est survenue lors du chargement des produits")
+      const errorMessage = err.message || "Une erreur est survenue lors du chargement des produits"
+      setError(errorMessage)
       toast.error("Erreur", {
         description: "Impossible de charger les produits",
       })
@@ -167,7 +130,7 @@ export function useProducts(storeId: string) {
     }
   }
 
-  const applyFilters = (newFilters: ProductsFilter) => {
+  const applyFilters = (newFilters: ProductFilters) => {
     const updatedFilters = { ...filters, ...newFilters }
     setFilters(updatedFilters)
     fetchProducts(updatedFilters)

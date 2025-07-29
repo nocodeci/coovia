@@ -3,8 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Contracts\Validation\Validator;
 
 class StoreRequest extends FormRequest
 {
@@ -18,29 +16,34 @@ class StoreRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        $storeId = $this->route('store') ? $this->route('store')->id : null;
+        $storeId = $this->route('store') ?? $this->route('id');
 
         return [
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'category' => 'nullable|string|max:100',
+            'description' => 'required|string|max:1000',
+            'category' => 'required|string|max:100',
+            'logo' => 'nullable|url|max:500',
+            'banner' => 'nullable|url|max:500',
+            'contact' => 'nullable|array',
+            'contact.email' => 'nullable|email|max:255',
+            'contact.phone' => 'nullable|string|max:20',
+            'contact.website' => 'nullable|url|max:255',
             'address' => 'nullable|array',
             'address.street' => 'nullable|string|max:255',
             'address.city' => 'nullable|string|max:100',
+            'address.state' => 'nullable|string|max:100',
             'address.country' => 'nullable|string|max:100',
             'address.postal_code' => 'nullable|string|max:20',
-            'contact' => 'nullable|array',
-            'contact.phone' => 'nullable|string|max:20',
-            'contact.email' => 'nullable|email|max:255',
-            'contact.whatsapp' => 'nullable|string|max:20',
             'settings' => 'nullable|array',
             'settings.currency' => 'nullable|string|max:10',
             'settings.language' => 'nullable|string|max:10',
             'settings.timezone' => 'nullable|string|max:50',
-            'settings.tax_rate' => 'nullable|numeric|min:0|max:100',
+            'settings.tax_rate' => 'nullable|numeric|min:0|max:100'
         ];
     }
 
@@ -51,38 +54,14 @@ class StoreRequest extends FormRequest
     {
         return [
             'name.required' => 'Le nom de la boutique est obligatoire.',
-            'name.string' => 'Le nom doit être une chaîne de caractères.',
-            'name.max' => 'Le nom ne peut pas dépasser 255 caractères.',
-
-            'description.string' => 'La description doit être une chaîne de caractères.',
+            'name.max' => 'Le nom de la boutique ne peut pas dépasser 255 caractères.',
+            'description.required' => 'La description est obligatoire.',
             'description.max' => 'La description ne peut pas dépasser 1000 caractères.',
-
-            'category.string' => 'La catégorie doit être une chaîne de caractères.',
-            'category.max' => 'La catégorie ne peut pas dépasser 100 caractères.',
-
-            'address.array' => 'L\'adresse doit être un objet.',
-            'contact.array' => 'Les informations de contact doivent être un objet.',
-            'settings.array' => 'Les paramètres doivent être un objet.',
-
-            'contact.email.email' => 'L\'email de contact doit être une adresse email valide.',
-            'settings.tax_rate.numeric' => 'Le taux de taxe doit être un nombre.',
-            'settings.tax_rate.min' => 'Le taux de taxe ne peut pas être négatif.',
-            'settings.tax_rate.max' => 'Le taux de taxe ne peut pas dépasser 100%.',
+            'category.required' => 'La catégorie est obligatoire.',
+            'contact.email.email' => 'L\'adresse email doit être valide.',
+            'contact.website.url' => 'Le site web doit être une URL valide.',
+            'logo.url' => 'Le logo doit être une URL valide.',
+            'banner.url' => 'La bannière doit être une URL valide.',
         ];
-    }
-
-    /**
-     * Handle a failed validation attempt.
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(
-            response()->json([
-                'success' => false,
-                'message' => 'Erreurs de validation',
-                'errors' => $validator->errors(),
-                'data' => null
-            ], 422)
-        );
     }
 }

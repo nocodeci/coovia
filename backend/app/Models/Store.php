@@ -11,40 +11,32 @@ class Store extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'slug',
         'description',
+        'category',
+        'status',
+        'is_active',
         'logo',
         'banner',
-        'status',
-        'category',
-        'address',
         'contact',
+        'address',
         'settings',
-        'owner_id',
+        'owner_id'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'address' => 'array',
         'contact' => 'array',
+        'address' => 'array',
         'settings' => 'array',
+        'is_active' => 'boolean',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 
     /**
-     * Get the user that owns the store.
+     * Relation avec l'utilisateur propriétaire
      */
     public function owner(): BelongsTo
     {
@@ -52,7 +44,7 @@ class Store extends Model
     }
 
     /**
-     * Get the products for the store.
+     * Relation avec les produits (à créer plus tard)
      */
     public function products(): HasMany
     {
@@ -60,7 +52,7 @@ class Store extends Model
     }
 
     /**
-     * Get the orders for the store.
+     * Relation avec les commandes (à créer plus tard)
      */
     public function orders(): HasMany
     {
@@ -68,51 +60,18 @@ class Store extends Model
     }
 
     /**
-     * Get the customers for the store.
-     */
-    public function customers(): HasMany
-    {
-        return $this->hasMany(Customer::class);
-    }
-
-    /**
-     * Scope to get only active stores.
+     * Scope pour les boutiques actives
      */
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('is_active', true)->where('status', 'active');
     }
 
     /**
-     * Get the store's full address as a string.
+     * Scope pour les boutiques d'un utilisateur
      */
-    public function getFullAddressAttribute(): string
+    public function scopeForUser($query, $userId)
     {
-        if (!$this->address) {
-            return '';
-        }
-
-        $parts = [];
-        if (isset($this->address['street'])) $parts[] = $this->address['street'];
-        if (isset($this->address['city'])) $parts[] = $this->address['city'];
-        if (isset($this->address['country'])) $parts[] = $this->address['country'];
-
-        return implode(', ', $parts);
-    }
-
-    /**
-     * Get the store's primary contact email.
-     */
-    public function getContactEmailAttribute(): ?string
-    {
-        return $this->contact['email'] ?? null;
-    }
-
-    /**
-     * Get the store's primary contact phone.
-     */
-    public function getContactPhoneAttribute(): ?string
-    {
-        return $this->contact['phone'] ?? null;
+        return $query->where('owner_id', $userId);
     }
 }
