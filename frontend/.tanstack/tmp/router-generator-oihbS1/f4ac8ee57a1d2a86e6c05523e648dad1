@@ -43,14 +43,10 @@ import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
-import { Route as AuthenticatedStoreIdTasksRouteImport } from './routes/_authenticated/$storeId.tasks'
-import { Route as AuthenticatedStoreIdSettingsRouteImport } from './routes/_authenticated/$storeId.settings'
-import { Route as AuthenticatedStoreIdProduitsRouteImport } from './routes/_authenticated/$storeId.produits'
-import { Route as AuthenticatedStoreIdDashboardRouteImport } from './routes/_authenticated/$storeId.dashboard'
-import { Route as AuthenticatedStoreIdClientsRouteImport } from './routes/_authenticated/$storeId.clients'
-import { Route as AuthenticatedStoreIdAppsRouteImport } from './routes/_authenticated/$storeId.apps'
+import { Route as AuthenticatedDashboardStoreIdRouteImport } from './routes/_authenticated/dashboard.$storeId'
 import { Route as AuthenticatedProduitsAddproduitIndexRouteImport } from './routes/_authenticated/produits/addproduit/index'
 import { Route as AuthenticatedMarketingAjouterIndexRouteImport } from './routes/_authenticated/marketing/ajouter/index'
+import { Route as AuthenticatedStoresStoreIdDashboardRouteImport } from './routes/_authenticated/stores.$storeId.dashboard'
 
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
   id: '/clerk',
@@ -232,40 +228,10 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedStoreIdTasksRoute =
-  AuthenticatedStoreIdTasksRouteImport.update({
-    id: '/$storeId/tasks',
-    path: '/$storeId/tasks',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedStoreIdSettingsRoute =
-  AuthenticatedStoreIdSettingsRouteImport.update({
-    id: '/$storeId/settings',
-    path: '/$storeId/settings',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedStoreIdProduitsRoute =
-  AuthenticatedStoreIdProduitsRouteImport.update({
-    id: '/$storeId/produits',
-    path: '/$storeId/produits',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedStoreIdDashboardRoute =
-  AuthenticatedStoreIdDashboardRouteImport.update({
-    id: '/$storeId/dashboard',
-    path: '/$storeId/dashboard',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedStoreIdClientsRoute =
-  AuthenticatedStoreIdClientsRouteImport.update({
-    id: '/$storeId/clients',
-    path: '/$storeId/clients',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedStoreIdAppsRoute =
-  AuthenticatedStoreIdAppsRouteImport.update({
-    id: '/$storeId/apps',
-    path: '/$storeId/apps',
+const AuthenticatedDashboardStoreIdRoute =
+  AuthenticatedDashboardStoreIdRouteImport.update({
+    id: '/dashboard/$storeId',
+    path: '/dashboard/$storeId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProduitsAddproduitIndexRoute =
@@ -278,6 +244,12 @@ const AuthenticatedMarketingAjouterIndexRoute =
   AuthenticatedMarketingAjouterIndexRouteImport.update({
     id: '/marketing/ajouter/',
     path: '/marketing/ajouter/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStoresStoreIdDashboardRoute =
+  AuthenticatedStoresStoreIdDashboardRouteImport.update({
+    id: '/stores/$storeId/dashboard',
+    path: '/stores/$storeId/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -297,12 +269,7 @@ export interface FileRoutesByFullPath {
   '/503': typeof errors503Route
   '/store-selection': typeof AuthenticatedStoreSelectionRoute
   '/': typeof AuthenticatedIndexRoute
-  '/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
-  '/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
-  '/$storeId/dashboard': typeof AuthenticatedStoreIdDashboardRoute
-  '/$storeId/produits': typeof AuthenticatedStoreIdProduitsRoute
-  '/$storeId/settings': typeof AuthenticatedStoreIdSettingsRoute
-  '/$storeId/tasks': typeof AuthenticatedStoreIdTasksRoute
+  '/dashboard/$storeId': typeof AuthenticatedDashboardStoreIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -320,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/stores': typeof AuthenticatedStoresIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/stores/$storeId/dashboard': typeof AuthenticatedStoresStoreIdDashboardRoute
   '/marketing/ajouter': typeof AuthenticatedMarketingAjouterIndexRoute
   '/produits/addproduit': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
@@ -337,12 +305,7 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/store-selection': typeof AuthenticatedStoreSelectionRoute
   '/': typeof AuthenticatedIndexRoute
-  '/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
-  '/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
-  '/$storeId/dashboard': typeof AuthenticatedStoreIdDashboardRoute
-  '/$storeId/produits': typeof AuthenticatedStoreIdProduitsRoute
-  '/$storeId/settings': typeof AuthenticatedStoreIdSettingsRoute
-  '/$storeId/tasks': typeof AuthenticatedStoreIdTasksRoute
+  '/dashboard/$storeId': typeof AuthenticatedDashboardStoreIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -360,6 +323,7 @@ export interface FileRoutesByTo {
   '/stores': typeof AuthenticatedStoresIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/stores/$storeId/dashboard': typeof AuthenticatedStoresStoreIdDashboardRoute
   '/marketing/ajouter': typeof AuthenticatedMarketingAjouterIndexRoute
   '/produits/addproduit': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
@@ -382,12 +346,7 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_authenticated/store-selection': typeof AuthenticatedStoreSelectionRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/_authenticated/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
-  '/_authenticated/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
-  '/_authenticated/$storeId/dashboard': typeof AuthenticatedStoreIdDashboardRoute
-  '/_authenticated/$storeId/produits': typeof AuthenticatedStoreIdProduitsRoute
-  '/_authenticated/$storeId/settings': typeof AuthenticatedStoreIdSettingsRoute
-  '/_authenticated/$storeId/tasks': typeof AuthenticatedStoreIdTasksRoute
+  '/_authenticated/dashboard/$storeId': typeof AuthenticatedDashboardStoreIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -405,6 +364,7 @@ export interface FileRoutesById {
   '/_authenticated/stores/': typeof AuthenticatedStoresIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/stores/$storeId/dashboard': typeof AuthenticatedStoresStoreIdDashboardRoute
   '/_authenticated/marketing/ajouter/': typeof AuthenticatedMarketingAjouterIndexRoute
   '/_authenticated/produits/addproduit/': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
@@ -426,12 +386,7 @@ export interface FileRouteTypes {
     | '/503'
     | '/store-selection'
     | '/'
-    | '/$storeId/apps'
-    | '/$storeId/clients'
-    | '/$storeId/dashboard'
-    | '/$storeId/produits'
-    | '/$storeId/settings'
-    | '/$storeId/tasks'
+    | '/dashboard/$storeId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -449,6 +404,7 @@ export interface FileRouteTypes {
     | '/stores'
     | '/tasks'
     | '/users'
+    | '/stores/$storeId/dashboard'
     | '/marketing/ajouter'
     | '/produits/addproduit'
   fileRoutesByTo: FileRoutesByTo
@@ -466,12 +422,7 @@ export interface FileRouteTypes {
     | '/503'
     | '/store-selection'
     | '/'
-    | '/$storeId/apps'
-    | '/$storeId/clients'
-    | '/$storeId/dashboard'
-    | '/$storeId/produits'
-    | '/$storeId/settings'
-    | '/$storeId/tasks'
+    | '/dashboard/$storeId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -489,6 +440,7 @@ export interface FileRouteTypes {
     | '/stores'
     | '/tasks'
     | '/users'
+    | '/stores/$storeId/dashboard'
     | '/marketing/ajouter'
     | '/produits/addproduit'
   id:
@@ -510,12 +462,7 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/_authenticated/store-selection'
     | '/_authenticated/'
-    | '/_authenticated/$storeId/apps'
-    | '/_authenticated/$storeId/clients'
-    | '/_authenticated/$storeId/dashboard'
-    | '/_authenticated/$storeId/produits'
-    | '/_authenticated/$storeId/settings'
-    | '/_authenticated/$storeId/tasks'
+    | '/_authenticated/dashboard/$storeId'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
@@ -533,6 +480,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stores/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/_authenticated/stores/$storeId/dashboard'
     | '/_authenticated/marketing/ajouter/'
     | '/_authenticated/produits/addproduit/'
   fileRoutesById: FileRoutesById
@@ -792,46 +740,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
-    '/_authenticated/$storeId/tasks': {
-      id: '/_authenticated/$storeId/tasks'
-      path: '/$storeId/tasks'
-      fullPath: '/$storeId/tasks'
-      preLoaderRoute: typeof AuthenticatedStoreIdTasksRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/$storeId/settings': {
-      id: '/_authenticated/$storeId/settings'
-      path: '/$storeId/settings'
-      fullPath: '/$storeId/settings'
-      preLoaderRoute: typeof AuthenticatedStoreIdSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/$storeId/produits': {
-      id: '/_authenticated/$storeId/produits'
-      path: '/$storeId/produits'
-      fullPath: '/$storeId/produits'
-      preLoaderRoute: typeof AuthenticatedStoreIdProduitsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/$storeId/dashboard': {
-      id: '/_authenticated/$storeId/dashboard'
-      path: '/$storeId/dashboard'
-      fullPath: '/$storeId/dashboard'
-      preLoaderRoute: typeof AuthenticatedStoreIdDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/$storeId/clients': {
-      id: '/_authenticated/$storeId/clients'
-      path: '/$storeId/clients'
-      fullPath: '/$storeId/clients'
-      preLoaderRoute: typeof AuthenticatedStoreIdClientsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/$storeId/apps': {
-      id: '/_authenticated/$storeId/apps'
-      path: '/$storeId/apps'
-      fullPath: '/$storeId/apps'
-      preLoaderRoute: typeof AuthenticatedStoreIdAppsRouteImport
+    '/_authenticated/dashboard/$storeId': {
+      id: '/_authenticated/dashboard/$storeId'
+      path: '/dashboard/$storeId'
+      fullPath: '/dashboard/$storeId'
+      preLoaderRoute: typeof AuthenticatedDashboardStoreIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/produits/addproduit/': {
@@ -846,6 +759,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing/ajouter'
       fullPath: '/marketing/ajouter'
       preLoaderRoute: typeof AuthenticatedMarketingAjouterIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stores/$storeId/dashboard': {
+      id: '/_authenticated/stores/$storeId/dashboard'
+      path: '/stores/$storeId/dashboard'
+      fullPath: '/stores/$storeId/dashboard'
+      preLoaderRoute: typeof AuthenticatedStoresStoreIdDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -878,12 +798,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedStoreSelectionRoute: typeof AuthenticatedStoreSelectionRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedStoreIdAppsRoute: typeof AuthenticatedStoreIdAppsRoute
-  AuthenticatedStoreIdClientsRoute: typeof AuthenticatedStoreIdClientsRoute
-  AuthenticatedStoreIdDashboardRoute: typeof AuthenticatedStoreIdDashboardRoute
-  AuthenticatedStoreIdProduitsRoute: typeof AuthenticatedStoreIdProduitsRoute
-  AuthenticatedStoreIdSettingsRoute: typeof AuthenticatedStoreIdSettingsRoute
-  AuthenticatedStoreIdTasksRoute: typeof AuthenticatedStoreIdTasksRoute
+  AuthenticatedDashboardStoreIdRoute: typeof AuthenticatedDashboardStoreIdRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedClientsIndexRoute: typeof AuthenticatedClientsIndexRoute
@@ -893,6 +808,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStoresIndexRoute: typeof AuthenticatedStoresIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedStoresStoreIdDashboardRoute: typeof AuthenticatedStoresStoreIdDashboardRoute
   AuthenticatedMarketingAjouterIndexRoute: typeof AuthenticatedMarketingAjouterIndexRoute
   AuthenticatedProduitsAddproduitIndexRoute: typeof AuthenticatedProduitsAddproduitIndexRoute
 }
@@ -901,12 +817,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedStoreSelectionRoute: AuthenticatedStoreSelectionRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedStoreIdAppsRoute: AuthenticatedStoreIdAppsRoute,
-  AuthenticatedStoreIdClientsRoute: AuthenticatedStoreIdClientsRoute,
-  AuthenticatedStoreIdDashboardRoute: AuthenticatedStoreIdDashboardRoute,
-  AuthenticatedStoreIdProduitsRoute: AuthenticatedStoreIdProduitsRoute,
-  AuthenticatedStoreIdSettingsRoute: AuthenticatedStoreIdSettingsRoute,
-  AuthenticatedStoreIdTasksRoute: AuthenticatedStoreIdTasksRoute,
+  AuthenticatedDashboardStoreIdRoute: AuthenticatedDashboardStoreIdRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedClientsIndexRoute: AuthenticatedClientsIndexRoute,
@@ -916,6 +827,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStoresIndexRoute: AuthenticatedStoresIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedStoresStoreIdDashboardRoute:
+    AuthenticatedStoresStoreIdDashboardRoute,
   AuthenticatedMarketingAjouterIndexRoute:
     AuthenticatedMarketingAjouterIndexRoute,
   AuthenticatedProduitsAddproduitIndexRoute:

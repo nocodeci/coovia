@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { MoreHorizontal, Edit, Trash2, Copy, Eye } from "lucide-react"
 import { useProducts } from "@/hooks/useProduct"
-import { useStores } from "@/hooks/use-store"
+import { useStore } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -31,7 +31,7 @@ interface ProductsTableProps {
 }
 
 export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTableProps) {
-  const { currentStore } = useStores()
+  const { currentStore } = useStore()
   const { products, isLoading, deleteProduct, fetchProducts } = useProducts(currentStore?.id || "")
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)

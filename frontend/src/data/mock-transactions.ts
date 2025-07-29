@@ -5,6 +5,7 @@ export const mockTransactions: PaymentTransaction[] = [
   // Transactions existantes (Janvier 2024 - Juin 2025) - Mises à jour pour refléter une période plus longue
   {
     id: "PAY001",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Jean Dupont",
     status: "Succès",
     location: "Dakar, SN",
@@ -17,6 +18,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY002",
+    storeId: "store-2", // TechStore CI
     clientName: "Marie Martin",
     status: "En Attente",
     location: "Abidjan, CI",
@@ -29,6 +31,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY003",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Pierre Durand",
     status: "Échec",
     location: "Kampala, UG",
@@ -41,6 +44,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY004",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Sophie Bernard",
     status: "Initié",
     location: "Lomé, TG",
@@ -53,6 +57,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY005",
+    storeId: "store-2", // TechStore CI
     clientName: "Antoine Moreau",
     status: "Succès",
     location: "Lagos, NG",
@@ -65,6 +70,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY006",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Camille Leroy",
     status: "En Attente",
     location: "Accra, GH",
@@ -77,6 +83,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY007",
+    storeId: "store-2", // TechStore CI
     clientName: "Amadou Diallo",
     status: "Succès",
     location: "Cotonou, BJ",
@@ -89,6 +96,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY008",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Fatou Sow",
     status: "En Attente",
     location: "Ouagadougou, BF",
@@ -101,6 +109,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY009",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Kwame Asante",
     status: "Succès",
     location: "Accra, GH",
@@ -113,6 +122,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY010",
+    storeId: "store-2", // TechStore CI
     clientName: "Amina Hassan",
     status: "Succès",
     location: "Nairobi, KE",
@@ -127,6 +137,7 @@ export const mockTransactions: PaymentTransaction[] = [
   // Transactions récentes pour juillet 2025
   {
     id: "PAY011",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Idrissa Kone",
     status: "Succès",
     location: "Bamako, ML",
@@ -139,6 +150,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY012",
+    storeId: "store-2", // TechStore CI
     clientName: "Zara Traore",
     status: "En Attente",
     location: "Ouagadougou, BF",
@@ -151,6 +163,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY013",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Kofi Annan",
     status: "Succès",
     location: "Kumasi, GH",
@@ -163,6 +176,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY014",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Fatima Zahra",
     status: "Échec",
     location: "Dakar, SN",
@@ -175,6 +189,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY015",
+    storeId: "store-2", // TechStore CI
     clientName: "Emeka Obi",
     status: "Succès",
     location: "Abuja, NG",
@@ -187,6 +202,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY016",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Chika Okoro",
     status: "Initié",
     location: "Kampala, UG",
@@ -199,6 +215,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY017",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Moussa Sylla",
     status: "Succès",
     location: "Abidjan, CI",
@@ -211,6 +228,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY018",
+    storeId: "store-2", // TechStore CI
     clientName: "Adja Diallo",
     status: "En Attente",
     location: "Lomé, TG",
@@ -223,6 +241,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY019",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "David Kimani",
     status: "Succès",
     location: "Nairobi, KE",
@@ -235,6 +254,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY020",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Nafisa Sani",
     status: "Échec",
     location: "Cotonou, BJ",
@@ -247,6 +267,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY021",
+    storeId: "store-2", // TechStore CI
     clientName: "Oumar Thiam",
     status: "Succès",
     location: "Conakry, GN",
@@ -259,6 +280,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY022",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Esther Kojo",
     status: "Initié",
     location: "Accra, GH",
@@ -271,6 +293,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY023",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Ahmed Bello",
     status: "Succès",
     location: "Kano, NG",
@@ -283,6 +306,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY024",
+    storeId: "store-2", // TechStore CI
     clientName: "Mercy Adisa",
     status: "En Attente",
     location: "Kampala, UG",
@@ -295,6 +319,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY025",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Amadou Diallo",
     status: "Succès",
     location: "Bamako, ML",
@@ -307,6 +332,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY026",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Sandra Boateng",
     status: "Échec",
     location: "Takoradi, GH",
@@ -319,6 +345,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY027",
+    storeId: "store-2", // TechStore CI
     clientName: "Musa Usman",
     status: "Succès",
     location: "Abuja, NG",
@@ -331,6 +358,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY028",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Fanta Cissé",
     status: "Initié",
     location: "Conakry, GN",
@@ -343,6 +371,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY029",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Junior Nkwem",
     status: "Succès",
     location: "Douala, CM",
@@ -355,6 +384,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY030",
+    storeId: "store-2", // TechStore CI
     clientName: "Zola Mapisa",
     status: "En Attente",
     location: "Dar es Salaam, TZ",
@@ -367,6 +397,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY031",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Mame Diarra",
     status: "Succès",
     location: "Dakar, SN",
@@ -379,6 +410,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY032",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Kwasi Nkrumah",
     status: "Échec",
     location: "Kisumu, KE",
@@ -391,6 +423,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY033",
+    storeId: "store-2", // TechStore CI
     clientName: "Bintou Touré",
     status: "Succès",
     location: "Abidjan, CI",
@@ -403,6 +436,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY034",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Samuel Agyemang",
     status: "Initié",
     location: "Cape Coast, GH",
@@ -415,6 +449,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY035",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Hadiza Abubakar",
     status: "Succès",
     location: "Kaduna, NG",
@@ -427,6 +462,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY036",
+    storeId: "store-2", // TechStore CI
     clientName: "Grace Wambui",
     status: "En Attente",
     location: "Eldoret, KE",
@@ -439,6 +475,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY037",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Kwame Nkrumah",
     status: "Succès",
     location: "Kumasi, GH",
@@ -451,6 +488,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY038",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Moussa Sane",
     status: "Échec",
     location: "Saint-Louis, SN",
@@ -463,6 +501,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY039",
+    storeId: "store-2", // TechStore CI
     clientName: "Wangari Maathai",
     status: "Succès",
     location: "Mombasa, KE",
@@ -475,6 +514,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY040",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Bafode Diarra",
     status: "Initié",
     location: "Sikasso, ML",
@@ -487,6 +527,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY041",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Nadia Kone",
     status: "Succès",
     location: "Abidjan, CI",
@@ -499,6 +540,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY042",
+    storeId: "store-2", // TechStore CI
     clientName: "Oluwafemi Adebayo",
     status: "En Attente",
     location: "Lagos, NG",
@@ -511,6 +553,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY043",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Aminata Camara",
     status: "Échec",
     location: "Conakry, GN",
@@ -523,6 +566,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY044",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Kwame Nkrumah",
     status: "Succès",
     location: "Accra, GH",
@@ -535,6 +579,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY045",
+    storeId: "store-2", // TechStore CI
     clientName: "Amina Abdullahi",
     status: "Initié",
     location: "Nairobi, KE",
@@ -547,6 +592,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY046",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Sékou Traoré",
     status: "Succès",
     location: "Bamako, ML",
@@ -559,6 +605,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY047",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Fatou Diatta",
     status: "En Attente",
     location: "Dakar, SN",
@@ -571,6 +618,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY048",
+    storeId: "store-2", // TechStore CI
     clientName: "Chukwudi Eze",
     status: "Succès",
     location: "Port Harcourt, NG",
@@ -583,6 +631,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY049",
+    storeId: "store-3", // Artisanat Baoulé
     clientName: "Aissatou Diallo",
     status: "Échec",
     location: "Ouagadougou, BF",
@@ -595,6 +644,7 @@ export const mockTransactions: PaymentTransaction[] = [
   },
   {
     id: "PAY050",
+    storeId: "store-1", // Boutique Mode Africaine
     clientName: "Jide Adeyemi",
     status: "Succès",
     location: "Accra, GH",

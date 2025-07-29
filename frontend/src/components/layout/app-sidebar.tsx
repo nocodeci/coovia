@@ -3,9 +3,15 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } fr
 import { NavGroup } from "@/components/layout/nav-group"
 import { NavUser } from "@/components/layout/nav-user"
 import { TeamSwitcher } from "@/components/layout/team-switcher"
-import { sidebarData } from "./data/sidebar-data"
+import { getSidebarData } from "./data/sidebar-data"
+import { useStore } from "@/context/store-context"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { currentStore } = useStore()
+  
+  // Utiliser les données dynamiques du sidebar avec le storeId de la boutique actuelle
+  const sidebarData = getSidebarData(currentStore?.id)
+
   return (
     <Sidebar collapsible="icon" variant="floating" {...props}>
       <SidebarHeader>

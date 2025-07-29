@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\DashboardController;
 //use App\Http\Controllers\Api\StatsController;
 
 /*
@@ -202,6 +203,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('stores', StoreController::class);
     Route::get('stores/{store}/products', [ProductController::class, 'index']);
     Route::post('stores/{store}/products', [ProductController::class, 'store']);
+
+    // Dashboard
+    Route::prefix('dashboard')->group(function () {
+        Route::get('stores/{store}/stats', [DashboardController::class, 'storeStats']);
+        Route::get('stores/{store}/recent-orders', [DashboardController::class, 'recentOrders']);
+        Route::get('stores/{store}/sales-chart', [DashboardController::class, 'salesChart']);
+    });
 
     // Gestion des produits
     Route::apiResource('products', ProductController::class)->except(['index', 'store']);

@@ -1,140 +1,96 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { apiClient } from "@/lib/api"
-import { toast } from "sonner"
 import type { Store } from "@/types/store"
+import apiService from "@/lib/api"
 
-export function useStores() {
+export function useStore() {
   const [stores, setStores] = useState<Store[]>([])
   const [currentStore, setCurrentStore] = useState<Store | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchStores = async () => {
-    setIsLoading(true)
-    setError(null)
-
+  const loadStores = async () => {
     try {
-      const response = await apiClient.getStores()
-      setStores(response.data)
+      setIsLoading(true)
+      setError(null)
+      console.log("🔄 Chargement des boutiques depuis l'API...")
+      
+      const response = await apiService.getStores()
+      console.log("📡 Réponse API stores:", response)
+      
+      if (response.success && response.data) {
+        // Transformer les données de l'API pour correspondre au type Store
+        const transformedStores: Store[] = response.data.map((store: any) => ({
+          id: store.id.toString(),
+          name: store.name,
+          description: store.description,
+          logo: store.logo,
+          status: store.status,
+          plan: store.settings?.plan || 'starter',
+          createdAt: store.created_at,
+          updatedAt: store.updated_at,
+          settings: {
+            currency: store.settings?.currency || 'XOF',
+            language: store.settings?.language || 'fr',
+            timezone: store.settings?.timezone || 'Africa/Abidjan',
+            notifications: {
+              email: store.settings?.notifications?.email || true,
+              sms: store.settings?.notifications?.sms || false,
+              push: store.settings?.notifications?.push || true,
+            },
+            features: {
+              inventory: store.settings?.features?.inventory || true,
+              analytics: store.settings?.features?.analytics || true,
+              multiChannel: store.settings?.features?.multiChannel || false,
+              customDomain: store.settings?.features?.customDomain || false,
+            },
+          },
+          stats: {
+            totalProducts: store.stats?.totalProducts || 0,
+            totalOrders: store.stats?.totalOrders || 0,
+            totalRevenue: store.stats?.totalRevenue || 0,
+            totalCustomers: store.stats?.totalCustomers || 0,
+            conversionRate: store.stats?.conversionRate || 0,
+            averageOrderValue: store.stats?.averageOrderValue || 0,
+          },
+          contact: {
+            email: store.contact?.email || '',
+            phone: store.contact?.phone || '',
+            address: {
+              street: store.address?.street || '',
+              city: store.address?.city || '',
+              state: store.address?.state || '',
+              country: store.address?.country || '',
+              postalCode: store.address?.postal_code || '',
+            },
+          },
+        }))
 
-      // Sélectionner automatiquement le premier magasin si aucun n'est sélectionné
-      if (response.data.length > 0 && !currentStore) {
-        const savedStoreId = localStorage.getItem("current_store_id")
-        const storeToSelect = savedStoreId
-          ? response.data.find((store) => store.id === savedStoreId) || response.data[0]
-          : response.data[0]
-
-        setCurrentStore(storeToSelect)
-        localStorage.setItem("current_store_id", storeToSelect.id)
+        console.log("✅ Boutiques transformées:", transformedStores)
+        setStores(transformedStores)
+      } else {
+        console.error("❌ Erreur API stores:", response.message)
+        setError(response.message || 'Erreur lors du chargement des boutiques')
       }
     } catch (err: any) {
-      setError(err.message || "Une erreur est survenue lors du chargement des magasins")
-      toast.error("Erreur", {
-        description: "Impossible de charger les magasins",
-      })
+      console.error("🚨 Erreur lors du chargement des boutiques:", err)
+      setError(err.message || "Erreur lors du chargement des boutiques")
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const createStore = async (storeData: Omit<Store, "id" | "created_at" | "updated_at">) => {
-    setIsLoading(true)
-    try {
-      const response = await apiClient.createStore(storeData)
-      setStores((prev) => [...prev, response.data])
-      toast.success("Magasin créé", {
-        description: `Le magasin ${response.data.name} a été créé avec succès`,
-      })
-      return response.data
-    } catch (err: any) {
-      toast.error("Erreur", {
-        description: err.message || "Impossible de créer le magasin",
-      })
-      throw err
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const updateStore = async (storeId: string, storeData: Partial<Store>) => {
-    setIsLoading(true)
-    try {
-      const response = await apiClient.updateStore(storeId, storeData)
-      setStores((prev) => prev.map((store) => (store.id === storeId ? response.data : store)))
-
-      // Mettre à jour le magasin courant si c'est celui qui a été modifié
-      if (currentStore?.id === storeId) {
-        setCurrentStore(response.data)
-      }
-
-      toast.success("Magasin mis à jour", {
-        description: `Le magasin ${response.data.name} a été mis à jour avec succès`,
-      })
-      return response.data
-    } catch (err: any) {
-      toast.error("Erreur", {
-        description: err.message || "Impossible de mettre à jour le magasin",
-      })
-      throw err
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const deleteStore = async (storeId: string) => {
-    setIsLoading(true)
-    try {
-      await apiClient.deleteStore(storeId)
-      setStores((prev) => prev.filter((store) => store.id !== storeId))
-
-      // Si le magasin supprimé était le magasin courant, sélectionner un autre
-      if (currentStore?.id === storeId) {
-        const remainingStores = stores.filter((store) => store.id !== storeId)
-        if (remainingStores.length > 0) {
-          setCurrentStore(remainingStores[0])
-          localStorage.setItem("current_store_id", remainingStores[0].id)
-        } else {
-          setCurrentStore(null)
-          localStorage.removeItem("current_store_id")
-        }
-      }
-
-      toast.success("Magasin supprimé", {
-        description: "Le magasin a été supprimé avec succès",
-      })
-    } catch (err: any) {
-      toast.error("Erreur", {
-        description: err.message || "Impossible de supprimer le magasin",
-      })
-      throw err
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const switchStore = (store: Store) => {
-    setCurrentStore(store)
-    localStorage.setItem("current_store_id", store.id)
-    toast.success("Magasin sélectionné", {
-      description: `Vous travaillez maintenant sur ${store.name}`,
-    })
   }
 
   useEffect(() => {
-    fetchStores()
+    loadStores()
   }, [])
 
   return {
     stores,
     currentStore,
+    setCurrentStore,
     isLoading,
     error,
-    fetchStores,
-    createStore,
-    updateStore,
-    deleteStore,
-    switchStore,
+    loadStores,
   }
 }

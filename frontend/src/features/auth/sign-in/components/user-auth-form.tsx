@@ -34,13 +34,29 @@ export function UserAuthForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data)
-      // Si MFA n'est pas requis, la redirection se fera automatiquement
-      // Sinon, l'utilisateur sera redirigé vers la page MFA
-      navigate({ to: "/" })
+      console.log('🚀 Début de la soumission du formulaire:', data);
+      console.log('📋 Type des données:', typeof data);
+      console.log('📋 Email type:', typeof data.email);
+      console.log('📋 Password type:', typeof data.password);
+      console.log('📋 Email valeur:', data.email);
+      console.log('📋 Password valeur:', data.password ? '***' : 'undefined');
+      
+      await login({ email: data.email, password: data.password })
+      console.log('✅ Connexion réussie, redirection gérée par le hook useAuth')
     } catch (error) {
       // L'erreur est déjà gérée dans le hook useAuth avec toast
       console.error("Login error:", error)
+    }
+  }
+
+  const testConnection = async () => {
+    try {
+      console.log('🧪 Test de connexion avec des identifiants de test');
+      console.log('📋 Données de test:', { email: 'admin@example.com', password: 'password' });
+      await login({ email: 'admin@example.com', password: 'password' });
+      console.log('✅ Test de connexion réussi, redirection gérée par le hook useAuth');
+    } catch (error) {
+      console.error("Test connection error:", error);
     }
   }
 
@@ -103,6 +119,16 @@ export function UserAuthForm() {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Se connecter
+          </Button>
+
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="w-full" 
+            onClick={testConnection}
+            disabled={isLoading}
+          >
+            🧪 Test Connexion (admin@example.com)
           </Button>
         </form>
       </Form>

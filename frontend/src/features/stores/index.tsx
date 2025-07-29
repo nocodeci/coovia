@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useNavigate } from "@tanstack/react-router"
 import {
   Plus,
   StoreIcon,
@@ -27,15 +28,91 @@ import {
 import { Main } from "@/components/layout/main"
 import { SearchProvider } from "@/context/search-context"
 import { CreateStoreDialog } from "./components/create-store-dialog"
-import { mockStores } from "@/data/mock-stores"
 import type { Store } from "@/types/store"
+import apiService from "@/lib/api"
 
 export function StoresManagement() {
-  const [stores, setStores] = useState(mockStores)
+  const [stores, setStores] = useState<Store[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [createStoreOpen, setCreateStoreOpen] = useState(false)
+  const navigate = useNavigate()
 
-  const handleStoreCreated = (newStore: Store) => {
-    setStores((prev) => [...prev, newStore])
+  // Charger les boutiques depuis l'API
+  useEffect(() => {
+    loadStores()
+  }, [])
+
+  const loadStores = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const response = await apiService.getStores()
+      
+      if (response.success && response.data) {
+        // Transformer les données de l'API pour correspondre au type Store
+        const transformedStores: Store[] = response.data.map((store: any) => ({
+          id: store.id,
+          name: store.name,
+          description: store.description,
+          logo: store.logo,
+          status: store.status,
+          plan: store.settings?.plan || 'starter',
+          createdAt: store.created_at,
+          updatedAt: store.updated_at,
+          settings: {
+            currency: store.settings?.currency || 'XOF',
+            language: store.settings?.language || 'fr',
+            timezone: store.settings?.timezone || 'Africa/Abidjan',
+            notifications: {
+              email: store.settings?.notifications?.email || true,
+              sms: store.settings?.notifications?.sms || false,
+              push: store.settings?.notifications?.push || true,
+            },
+            features: {
+              inventory: store.settings?.features?.inventory || true,
+              analytics: store.settings?.features?.analytics || true,
+              multiChannel: store.settings?.features?.multiChannel || false,
+              customDomain: store.settings?.features?.customDomain || false,
+            },
+          },
+          stats: {
+            totalProducts: store.stats?.totalProducts || 0,
+            totalOrders: store.stats?.totalOrders || 0,
+            totalRevenue: store.stats?.totalRevenue || 0,
+            totalCustomers: store.stats?.totalCustomers || 0,
+            conversionRate: store.stats?.conversionRate || 0,
+            averageOrderValue: store.stats?.averageOrderValue || 0,
+          },
+          contact: {
+            email: store.contact?.email || '',
+            phone: store.contact?.phone || '',
+            address: {
+              street: store.address?.street || '',
+              city: store.address?.city || '',
+              state: store.address?.state || '',
+              country: store.address?.country || '',
+              postalCode: store.address?.postal_code || '',
+            },
+          },
+        }))
+
+        setStores(transformedStores)
+      } else {
+        setError(response.message || 'Erreur lors du chargement des boutiques')
+      }
+    } catch (err: any) {
+      setError(err.message || "Erreur lors du chargement des boutiques")
+      console.error("Error loading stores:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleStoreCreated = async (newStore: Store) => {
+    // Recharger la liste des boutiques après création
+    await loadStores()
   }
 
   const handleEditStore = (storeId: string) => {
@@ -47,11 +124,25 @@ export function StoresManagement() {
   }
 
   const handleManageSettings = (storeId: string) => {
-    window.location.href = `/stores/${storeId}/settings`
+    navigate({ to: `/stores/${storeId}/settings` })
   }
 
-  const handleDeleteStore = (storeId: string) => {
-    console.log("Supprimer la boutique:", storeId)
+  const handleDeleteStore = async (storeId: string) => {
+    try {
+      const response = await apiService.deleteStore(storeId)
+      if (response.success) {
+        // Recharger la liste des boutiques après suppression
+        await loadStores()
+      } else {
+        console.error('Erreur lors de la suppression:', response.message)
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la boutique:', error)
+    }
+  }
+
+  const handleManageStore = (storeId: string) => {
+    navigate({ to: `/stores/${storeId}/dashboard` })
   }
 
   const getStatusColor = (status: string) => {
@@ -78,6 +169,39 @@ export function StoresManagement() {
       default:
         return status
     }
+  }
+
+  if (isLoading) {
+    return (
+      <SearchProvider>
+        <Main>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Chargement des boutiques...</p>
+            </div>
+          </div>
+        </Main>
+      </SearchProvider>
+    )
+  }
+
+  if (error) {
+    return (
+      <SearchProvider>
+        <Main>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Erreur</h1>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <Button onClick={loadStores}>
+                Réessayer
+              </Button>
+            </div>
+          </div>
+        </Main>
+      </SearchProvider>
+    )
   }
 
   return (
@@ -213,10 +337,10 @@ export function StoresManagement() {
                     <div>
                       <span className="text-muted-foreground">Note:</span>
                       <div className="font-medium flex items-center gap-1">
-                        {store.stats.rating > 0 ? (
+                        {store.stats.conversionRate > 0 ? (
                           <>
                             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            {store.stats.rating}
+                            {store.stats.conversionRate.toFixed(1)}%
                           </>
                         ) : (
                           "N/A"
@@ -235,7 +359,11 @@ export function StoresManagement() {
                       <Eye className="mr-2 h-4 w-4" />
                       Voir
                     </Button>
-                    <Button size="sm" className="flex-1" onClick={() => (window.location.href = `/?store=${store.id}`)}>
+                    <Button 
+                      size="sm" 
+                      className="flex-1" 
+                      onClick={() => handleManageStore(store.id)}
+                    >
                       Gérer
                     </Button>
                   </div>

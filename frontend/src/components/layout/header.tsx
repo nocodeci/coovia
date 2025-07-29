@@ -2,6 +2,7 @@ import React from 'react'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import { StoreSwitcher } from './store-switcher'
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   fixed?: boolean
@@ -40,6 +41,8 @@ export const Header = ({
     >
       <SidebarTrigger variant='outline' className='scale-125 sm:scale-100' />
       <Separator orientation='vertical' className='h-6' />
+      <StoreSwitcher />
+      <div className="flex-1" />
       {children}
     </header>
   )

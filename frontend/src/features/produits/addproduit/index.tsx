@@ -44,7 +44,7 @@ import { toast } from "sonner"
 import { TopBar } from "./components/top-bar-simple"
 import { useProducts } from "@/hooks/useProduct"
 import { useCategories } from "@/hooks/useCategorie"
-import { useStores } from "@/hooks/use-store"
+import { useStore } from "@/context/store-context"
 
 const productTypes = [
   {
@@ -77,7 +77,7 @@ interface UploadedFile {
 }
 
 export default function AddProduct() {
-  const { stores, currentStore } = useStores()
+  const { stores, currentStore } = useStore()
   const {
     createProduct,
     uploadProductImage,

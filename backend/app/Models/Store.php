@@ -64,7 +64,7 @@ class Store extends Model
      */
     public function orders(): HasMany
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(Orders::class);
     }
 
     /**
@@ -72,7 +72,7 @@ class Store extends Model
      */
     public function customers(): HasMany
     {
-        return $this->hasMany(Customer::class);
+        return $this->hasMany(Customers::class);
     }
 
     /**
@@ -114,5 +114,31 @@ class Store extends Model
     public function getContactPhoneAttribute(): ?string
     {
         return $this->contact['phone'] ?? null;
+    }
+
+    /**
+     * Get the store's statistics.
+     */
+    public function getStatsAttribute(): array
+    {
+        $totalProducts = $this->products()->count();
+        $totalOrders = $this->orders()->count();
+        $totalRevenue = $this->orders()->where('status', 'completed')->sum('total_amount');
+        $totalCustomers = $this->customers()->count();
+        
+        // Calculer le taux de conversion (commandes / visiteurs * 100)
+        $conversionRate = $totalCustomers > 0 ? ($totalOrders / $totalCustomers) * 100 : 0;
+        
+        // Calculer la valeur moyenne des commandes
+        $averageOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
+
+        return [
+            'totalProducts' => $totalProducts,
+            'totalOrders' => $totalOrders,
+            'totalRevenue' => $totalRevenue,
+            'totalCustomers' => $totalCustomers,
+            'conversionRate' => round($conversionRate, 1),
+            'averageOrderValue' => round($averageOrderValue, 0),
+        ];
     }
 }

@@ -41,7 +41,7 @@ const getStoreInitials = (name: string): string => {
 }
 
 export function StoreDisplay({ showName = true, size = "md", className }: StoreDisplayProps) {
-  const { selectedStore, isLoading } = useStore()
+  const { currentStore, isLoading } = useStore()
 
   const sizeClasses = {
     sm: "h-6 w-6 text-xs",
@@ -64,9 +64,9 @@ export function StoreDisplay({ showName = true, size = "md", className }: StoreD
     )
   }
 
-  const storeName = selectedStore?.name || "Ma Boutique"
-  const storeInitials = selectedStore ? getStoreInitials(selectedStore.name) : "MB"
-  const storeColorClass = selectedStore ? getStoreColor(selectedStore.id) : "bg-purple-500"
+  const storeName = currentStore?.name || "Ma Boutique"
+  const storeInitials = currentStore ? getStoreInitials(currentStore.name) : "MB"
+  const storeColorClass = currentStore ? getStoreColor(currentStore.id) : "bg-purple-500"
 
   return (
     <div className={cn("flex items-center gap-3", className)}>
