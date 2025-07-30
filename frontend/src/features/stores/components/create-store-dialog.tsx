@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
+import apiService from "@/lib/api"
 
 interface CreateStoreDialogProps {
   open: boolean
@@ -54,63 +55,56 @@ export function CreateStoreDialog({ open, onOpenChange, onStoreCreated }: Create
     setIsLoading(true)
 
     try {
-      // Simulation de création de boutique
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const newStore = {
-        id: `store-${Date.now()}`,
+      console.log("🔄 Création de la boutique:", formData)
+      
+      const storeData = {
         name: formData.name,
-        slug: formData.name.toLowerCase().replace(/\s+/g, "-"),
         description: formData.description,
-        ownerId: "user-1",
-        ownerName: "Jean Dupont",
         category: formData.category,
-        status: "pending" as const,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        settings: {
-          currency: "FCFA",
-          language: "fr",
-          timezone: "Africa/Abidjan",
-          allowReviews: true,
-          requireApproval: false,
+        address: {
+          street: formData.address,
+          city: formData.city,
+          country: "Côte d'Ivoire",
         },
         contact: {
           email: formData.email,
           phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          country: "Côte d'Ivoire",
         },
-        stats: {
-          totalProducts: 0,
-          totalOrders: 0,
-          totalRevenue: 0,
-          rating: 0,
-          reviewCount: 0,
+        settings: {
+          currency: "XOF",
+          language: "fr",
+          timezone: "Africa/Abidjan",
         },
       }
 
-      onStoreCreated(newStore)
-      onOpenChange(false)
+      const response = await apiService.createStore(storeData)
+      console.log("📡 Réponse API création boutique:", response)
+      
+      if (response.success && response.data) {
+        onStoreCreated(response.data)
+        onOpenChange(false)
 
-      toast.success("Boutique créée avec succès!", {
-        description: "Votre boutique a été créée et est en attente d'approbation.",
-      })
+        toast.success("Boutique créée avec succès!", {
+          description: "Votre boutique a été créée et est maintenant active.",
+        })
 
-      // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        category: "",
-        email: "",
-        phone: "",
-        address: "",
-        city: "",
-      })
-    } catch (error) {
+        // Reset form
+        setFormData({
+          name: "",
+          description: "",
+          category: "",
+          email: "",
+          phone: "",
+          address: "",
+          city: "",
+        })
+      } else {
+        throw new Error(response.message || "Erreur lors de la création de la boutique")
+      }
+    } catch (error: any) {
+      console.error("🚨 Erreur lors de la création de la boutique:", error)
       toast.error("Erreur lors de la création", {
-        description: "Une erreur est survenue lors de la création de votre boutique.",
+        description: error.message || "Une erreur est survenue lors de la création de votre boutique.",
       })
     } finally {
       setIsLoading(false)

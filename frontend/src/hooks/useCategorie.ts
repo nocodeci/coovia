@@ -20,7 +20,7 @@ export function useCategorie() {
       console.log("📡 Réponse API catégories:", response)
       
       if (response.success && response.data) {
-        setCategories(response.data)
+        setCategories(response.data as Category[])
       } else {
         console.error("❌ Erreur API catégories:", response.message)
         setError(response.message || "Une erreur est survenue lors du chargement des catégories")
@@ -47,9 +47,9 @@ export function useCategorie() {
       console.log("📡 Réponse API création catégorie:", response)
       
       if (response.success && response.data) {
-        setCategories((prev) => [...prev, response.data])
+        setCategories((prev) => [...prev, response.data as Category])
         toast.success("Catégorie créée", {
-          description: `La catégorie ${response.data.name} a été créée avec succès`,
+          description: `La catégorie ${(response.data as Category).name} a été créée avec succès`,
         })
         return response.data
       } else {
@@ -74,9 +74,9 @@ export function useCategorie() {
       console.log("📡 Réponse API mise à jour catégorie:", response)
       
       if (response.success && response.data) {
-        setCategories((prev) => prev.map((category) => (category.id === categoryId ? response.data : category)))
+        setCategories((prev) => prev.map((category) => (category.id === categoryId ? response.data as Category : category)))
         toast.success("Catégorie mise à jour", {
-          description: `La catégorie ${response.data.name} a été mise à jour avec succès`,
+          description: `La catégorie ${(response.data as Category).name} a été mise à jour avec succès`,
         })
         return response.data
       } else {

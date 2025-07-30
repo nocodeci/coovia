@@ -13,7 +13,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProductController extends Controller
 {
-    public function index(Request $request, Store $store): AnonymousResourceCollection
+    public function index(Request $request, Store $store): JsonResponse
     {
         $this->authorize('view', $store);
 
@@ -28,9 +28,13 @@ class ProductController extends Controller
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
             })
-            ->paginate(10);
+            ->get();
 
-        return ProductResource::collection($products);
+        return response()->json([
+            'success' => true,
+            'message' => 'Produits récupérés avec succès',
+            'data' => ProductResource::collection($products)
+        ]);
     }
 
     public function store(ProductRequest $request, Store $store): JsonResponse
@@ -40,8 +44,9 @@ class ProductController extends Controller
         $product = $store->products()->create($request->validated());
 
         return response()->json([
-            'message' => 'Product created successfully',
-            'product' => new ProductResource($product),
+            'success' => true,
+            'message' => 'Produit créé avec succès',
+            'data' => new ProductResource($product),
         ], 201);
     }
 

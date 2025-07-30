@@ -7,6 +7,7 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { StoreGuard } from '@/components/layout/store-guard'
 import SkipToMain from '@/components/skip-to-main'
+import { TokenWarning } from '@/components/token-warning'
 
 interface Props {
   children?: React.ReactNode
@@ -33,6 +34,7 @@ export function AuthenticatedLayout({ children }: Props) {
               'has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh'
             )}
           >
+            <TokenWarning />
             <StoreGuard>
               {children ? children : <Outlet />}
             </StoreGuard>

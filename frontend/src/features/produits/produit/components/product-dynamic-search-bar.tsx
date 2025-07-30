@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { useNavigate } from "@tanstack/react-router"
+import { useStore } from "@/context/store-context"
 
 type TabType = "tous" | "actifs" | "brouillons" | "archives"
 
@@ -81,6 +83,8 @@ export function ProductsDynamicSearchBar({
   onBack,
   className = "",
 }: ProductsDynamicSearchBarProps) {
+  const navigate = useNavigate()
+  const { currentStore } = useStore()
   const [isActive, setIsActive] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -280,6 +284,17 @@ export function ProductsDynamicSearchBar({
     return "bg-gray-500/20 text-gray-300 border-gray-400/30"
   }
 
+  const handleAddProduct = () => {
+    if (!currentStore) {
+      // Rediriger vers la sélection de boutique si aucune boutique n'est sélectionnée
+      navigate({ to: "/stores" })
+      return
+    }
+    
+    // Redirige vers la nouvelle route avec le storeId
+    navigate({ to: `/${currentStore.id}/produits/addproduit` })
+  }
+
   const hasActiveFilters = filters.searchTerm || filters.category
 
   return (
@@ -317,6 +332,7 @@ export function ProductsDynamicSearchBar({
               onBack={onBack}
               onToggleSort={onToggleSort}
               sortOrder={sortOrder}
+              onAddProduct={handleAddProduct}
             />
           )}
 
@@ -375,6 +391,7 @@ interface IdleStateProps {
   onBack: () => void
   onToggleSort: () => void
   sortOrder: "asc" | "desc"
+  onAddProduct: () => void
 }
 
 const IdleState = ({
@@ -386,6 +403,7 @@ const IdleState = ({
   onBack,
   onToggleSort,
   sortOrder,
+  onAddProduct,
 }: IdleStateProps) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -443,7 +461,10 @@ const IdleState = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48 bg-gray-800 border-gray-700">
-          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-700">
+          <DropdownMenuItem 
+            className="text-gray-300 hover:text-white hover:bg-gray-700"
+            onClick={onAddProduct}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Nouveau produit
           </DropdownMenuItem>

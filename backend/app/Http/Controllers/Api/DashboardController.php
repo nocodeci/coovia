@@ -22,25 +22,29 @@ class DashboardController extends Controller
 
             // Transactions du mois actuel
             $currentMonthTransactions = DB::table('payment_transactions')
-                ->where('store_id', $storeId)
-                ->where('created_at', '>=', $lastMonth)
+                ->join('orders', 'payment_transactions.order_id', '=', 'orders.id')
+                ->where('orders.store_id', $storeId)
+                ->where('payment_transactions.created_at', '>=', $lastMonth)
+                ->select('payment_transactions.*')
                 ->get();
 
             // Transactions du mois précédent
             $previousMonthTransactions = DB::table('payment_transactions')
-                ->where('store_id', $storeId)
-                ->where('created_at', '>=', $previousMonth)
-                ->where('created_at', '<', $lastMonth)
+                ->join('orders', 'payment_transactions.order_id', '=', 'orders.id')
+                ->where('orders.store_id', $storeId)
+                ->where('payment_transactions.created_at', '>=', $previousMonth)
+                ->where('payment_transactions.created_at', '<', $lastMonth)
+                ->select('payment_transactions.*')
                 ->get();
 
             // Revenus totaux (paiements réussis uniquement)
             $currentMonthRevenue = $currentMonthTransactions
-                ->where('status', 'completed')
-                ->sum('amount');
+                ->where('status', 'Succès')
+                ->sum('value');
             
             $previousMonthRevenue = $previousMonthTransactions
-                ->where('status', 'completed')
-                ->sum('amount');
+                ->where('status', 'Succès')
+                ->sum('value');
             
             $revenueGrowth = $previousMonthRevenue > 0 
                 ? (($currentMonthRevenue - $previousMonthRevenue) / $previousMonthRevenue) * 100 
@@ -54,30 +58,33 @@ class DashboardController extends Controller
                 : 100;
 
             // Ventes réussies
-            $currentMonthSales = $currentMonthTransactions->where('status', 'completed')->count();
-            $previousMonthSales = $previousMonthTransactions->where('status', 'completed')->count();
+            $currentMonthSales = $currentMonthTransactions->where('status', 'Succès')->count();
+            $previousMonthSales = $previousMonthTransactions->where('status', 'Succès')->count();
             $salesGrowth = $previousMonthSales > 0 
                 ? (($currentMonthSales - $previousMonthSales) / $previousMonthSales) * 100 
                 : 100;
 
             // Transactions actives (pending + processing)
             $activeTransactions = DB::table('payment_transactions')
-                ->where('store_id', $storeId)
-                ->whereIn('status', ['pending', 'processing'])
+                ->join('orders', 'payment_transactions.order_id', '=', 'orders.id')
+                ->where('orders.store_id', $storeId)
+                ->whereIn('payment_transactions.status', ['Initié', 'En Attente'])
                 ->count();
 
             // Nouvelles transactions depuis la dernière heure
             $recentTransactions = DB::table('payment_transactions')
-                ->where('store_id', $storeId)
-                ->where('created_at', '>=', $lastHour)
+                ->join('orders', 'payment_transactions.order_id', '=', 'orders.id')
+                ->where('orders.store_id', $storeId)
+                ->where('payment_transactions.created_at', '>=', $lastHour)
                 ->count();
 
             // Données pour le graphique des revenus (30 derniers jours)
             $revenueChartData = DB::table('payment_transactions')
-                ->where('store_id', $storeId)
-                ->where('status', 'completed')
-                ->where('created_at', '>=', $now->copy()->subDays(30))
-                ->selectRaw('DATE(created_at) as date, SUM(amount) as revenus')
+                ->join('orders', 'payment_transactions.order_id', '=', 'orders.id')
+                ->where('orders.store_id', $storeId)
+                ->where('payment_transactions.status', 'Succès')
+                ->where('payment_transactions.created_at', '>=', $now->copy()->subDays(30))
+                ->selectRaw('DATE(payment_transactions.created_at) as date, SUM(payment_transactions.value) as revenus')
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get()
@@ -103,16 +110,16 @@ class DashboardController extends Controller
             $recentSales = DB::table('payment_transactions as pt')
                 ->join('orders as o', 'pt.order_id', '=', 'o.id')
                 ->join('customers as c', 'o.customer_id', '=', 'c.id')
-                ->where('pt.store_id', $storeId)
-                ->where('pt.status', 'completed')
+                ->where('o.store_id', $storeId)
+                ->where('pt.status', 'Succès')
                 ->select([
                     'pt.id',
-                    'pt.amount',
+                    'pt.value as amount',
                     'pt.created_at',
                     'c.first_name',
                     'c.last_name',
                     'c.email',
-                    'o.order_number'
+                    'o.id as order_number'
                 ])
                 ->orderBy('pt.created_at', 'desc')
                 ->limit(10)
@@ -176,11 +183,12 @@ class DashboardController extends Controller
                     $startDate = $now->copy()->subDays(30);
             }
 
-            $chartData = DB::table('payment_transactions')
-                ->where('store_id', $storeId)
-                ->where('status', 'completed')
-                ->where('created_at', '>=', $startDate)
-                ->selectRaw('DATE(created_at) as date, SUM(amount) as revenus')
+            $chartData = DB::table('payment_transactions as pt')
+                ->join('orders as o', 'pt.order_id', '=', 'o.id')
+                ->where('o.store_id', $storeId)
+                ->where('pt.status', 'Succès')
+                ->where('pt.created_at', '>=', $startDate)
+                ->selectRaw('DATE(pt.created_at) as date, SUM(pt.value) as revenus')
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get()

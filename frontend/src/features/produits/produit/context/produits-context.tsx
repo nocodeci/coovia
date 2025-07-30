@@ -161,10 +161,10 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>
 }
 
-export function useProduct(): ProductContextValue {
+export function useProductContext(): ProductContextValue {
   const context = useContext(ProductContext)
   if (!context) {
-    throw new Error("useProduct must be used within a ProductProvider")
+    throw new Error("useProductContext must be used within a ProductProvider")
   }
   return context
 }

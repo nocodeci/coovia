@@ -2,16 +2,24 @@
 
 import { useState } from "react"
 import { Package, ChevronDown, Download, Upload, Settings } from "lucide-react"
-import { useNavigate } from "@tanstack/react-router" // Importation nécessaire pour la navigation
+import { useNavigate } from "@tanstack/react-router"
+import { useStore } from "@/context/store-context"
 
 export function ProductsHeader() {
     const navigate = useNavigate()
+    const { currentStore } = useStore()
     const [showMoreActions, setShowMoreActions] = useState(false)
 
 
     const handleAddProduct = () => {
-        // Redirige vers la nouvelle route
-        navigate({ to: "/produits/addproduit" })
+        if (!currentStore) {
+          // Rediriger vers la sélection de boutique si aucune boutique n'est sélectionnée
+          navigate({ to: "/stores" })
+          return
+        }
+        
+        // Redirige vers la nouvelle route avec le storeId
+        navigate({ to: `/${currentStore.id}/produits/addproduit` })
       }
 
       const handleMoreAction = (action: string) => {

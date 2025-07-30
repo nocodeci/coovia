@@ -114,36 +114,6 @@ Route::prefix('auth')->group(function () {
 });
 
 // Routes de données publiques (pour tester)
-Route::get('/stores', function () {
-    try {
-        $stores = DB::table('stores')
-            ->join('users', 'stores.owner_id', '=', 'users.id')
-            ->select(
-                'stores.id',
-                'stores.name',
-                'stores.description',
-                'stores.is_active',
-                'stores.created_at',
-                'users.name as owner_name',
-                'users.email as owner_email'
-            )
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'stores' => $stores,
-            'count' => $stores->count(),
-            'message' => 'Boutiques récupérées avec succès'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => 'Erreur base de données',
-            'message' => $e->getMessage()
-        ], 500);
-    }
-});
-
 Route::get('/users', function () {
     try {
         $users = DB::table('users')

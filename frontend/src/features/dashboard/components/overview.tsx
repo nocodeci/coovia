@@ -44,7 +44,7 @@ export function Overview() {
         const response = await apiService.getRevenueChart(currentStore.id, timeRange)
         
         if (response.success && response.data) {
-          setChartData(response.data)
+          setChartData(response.data as any[])
         } else {
           setError('Erreur lors du chargement des données du graphique')
         }
