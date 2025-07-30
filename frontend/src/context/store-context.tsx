@@ -39,10 +39,8 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     try {
       setIsLoading(true)
       setError(null)
-      console.log("🔄 Chargement des boutiques depuis l'API...")
       
       const response = await apiService.getStores()
-      console.log("📡 Réponse API stores:", response)
       
       if (response.success && response.data) {
         // Transformer les données de l'API pour correspondre au type Store
@@ -92,10 +90,19 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
           },
         }))
 
-        console.log("✅ Boutiques transformées:", transformedStores)
         setStores(transformedStores)
+
+        // Restaurer la boutique sélectionnée depuis le localStorage
+        const savedStoreId = localStorage.getItem("selectedStoreId")
+        if (savedStoreId) {
+          const savedStore = transformedStores.find(store => store.id === savedStoreId)
+          if (savedStore) {
+            setCurrentStoreState(savedStore)
+          } else {
+            localStorage.removeItem("selectedStoreId")
+          }
+        }
       } else {
-        console.error("❌ Erreur API stores:", response.message)
         setError(response.message || 'Erreur lors du chargement des boutiques')
       }
     } catch (err: any) {
@@ -107,35 +114,26 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   }
 
   const setCurrentStore = (store: Store) => {
-    console.log("🏪 Définition de la boutique courante:", store.name)
     setCurrentStoreState(store)
     localStorage.setItem("selectedStoreId", store.id)
   }
 
   const refreshStores = async () => {
-    console.log("🔄 Actualisation des boutiques...")
     await loadStores()
   }
 
   const loadStoreStats = async (storeId: string) => {
     try {
-      console.log("📊 Chargement des stats pour la boutique:", storeId)
       const response = await apiService.getStoreStats(storeId)
-      console.log("📡 Réponse API stats:", response)
       
       if (response.success && response.data) {
-        return {
-          store: stores.find(s => s.id === storeId),
-          stats: (response.data as any).stats || {},
-          overview: (response.data as any).overview || {},
-        }
+        return response.data
       } else {
-        console.error("❌ Erreur API stats:", response.message)
-        throw new Error(response.message || "Erreur lors du chargement des statistiques")
+        throw new Error(response.message || 'Erreur lors du chargement des statistiques')
       }
-    } catch (err: any) {
-      console.error("🚨 Erreur lors du chargement des stats:", err)
-      throw err
+    } catch (error: any) {
+      console.error("🚨 Erreur lors du chargement des stats:", error)
+      throw error
     }
   }
 

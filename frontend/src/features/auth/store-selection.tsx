@@ -2,45 +2,57 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { useAuth } from "@/hooks/useAuth"
 import { useStore } from "@/context/store-context"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Loader2, Store, Users, Package, TrendingUp } from "lucide-react"
+import { Loader2, LogOut, Plus, Sparkles, Store, ArrowRight } from "lucide-react"
 import { toast } from "sonner"
 
 export function StoreSelection() {
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const { stores, currentStore, setCurrentStore, isLoading, error } = useStore()
+  const { user, logout } = useAuth()
+  const { stores, setCurrentStore, isLoading, error } = useStore()
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
+  const [hoveredStore, setHoveredStore] = useState<string | null>(null)
 
-  console.log("🔍 StoreSelection - Debug:", {
-    user,
-    stores: stores.length,
-    isLoading,
-    error,
-    currentStore,
-    token: localStorage.getItem('auth_token')
-  })
+  // Vérification d'authentification
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token')
+    if (!token || !user) {
+      navigate({ to: '/sign-in' })
+      return
+    }
+  }, [user, navigate])
+
+  // État de chargement pour l'authentification
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-border/20 max-w-md w-full">
+          <div className="text-center">
+            <div className="relative mb-6">
+              <div className="w-16 h-16 mx-auto bg-primary rounded-2xl flex items-center justify-center shadow-lg">
+                <Loader2 className="h-8 w-8 animate-spin text-primary-foreground" />
+              </div>
+              <div className="absolute -inset-2 bg-primary rounded-2xl opacity-20 blur-lg"></div>
+            </div>
+            <p className="text-muted-foreground font-medium">Vérification de l'authentification...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const handleStoreSelect = async (storeId: string) => {
     try {
-      console.log("🔄 Sélection de la boutique:", storeId)
-      console.log("🔐 Token d'authentification:", localStorage.getItem('auth_token'))
-      console.log("👤 Utilisateur connecté:", user)
-      
       setSelectedStoreId(storeId)
       const selectedStore = stores.find(store => store.id === storeId)
       
       if (selectedStore) {
-        console.log("✅ Boutique trouvée:", selectedStore.name)
         setCurrentStore(selectedStore)
         toast.success("Boutique sélectionnée", {
           description: `Bienvenue dans ${selectedStore.name}`
         })
         
-        // Redirection vers le dashboard de la boutique avec la nouvelle structure
-        console.log("🔄 Redirection vers:", `/${storeId}/dashboard`)
+        // Redirection vers le dashboard de la boutique
         navigate({ to: `/${storeId}/dashboard` })
       } else {
         console.error("❌ Boutique non trouvée pour l'ID:", storeId)
@@ -54,12 +66,48 @@ export function StoreSelection() {
     }
   }
 
+  const handleLogout = () => {
+    logout()
+    navigate({ to: "/sign-in" })
+  }
+
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return "Bonjour"
+    if (hour < 18) return "Bon après-midi"
+    return "Bonsoir"
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const getGreetingEmoji = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return "☀️"
+    if (hour < 18) return "🌅"
+    return "🌙"
+  }
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Chargement de vos boutiques...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-10 shadow-xl border border-border/20 max-w-md w-full">
+          <div className="text-center">
+            <div className="relative mb-8">
+              <div className="w-20 h-20 mx-auto bg-primary rounded-3xl flex items-center justify-center shadow-xl">
+                <Loader2 className="h-10 w-10 animate-spin text-primary-foreground" />
+              </div>
+              <div className="absolute -inset-3 bg-primary rounded-3xl opacity-20 blur-xl animate-pulse"></div>
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">Chargement en cours</h3>
+            <p className="text-muted-foreground">Récupération de vos boutiques...</p>
+          </div>
         </div>
       </div>
     )
@@ -67,137 +115,157 @@ export function StoreSelection() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Erreur de chargement</CardTitle>
-            <CardDescription>
-              {error}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button 
-              onClick={() => window.location.reload()}
-              className="w-full"
-            >
-              Réessayer
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-destructive/5 flex items-center justify-center p-4">
+        <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-border/20 max-w-md w-full">
+          <div className="w-16 h-16 mx-auto mb-6 bg-destructive rounded-2xl flex items-center justify-center">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <h2 className="text-2xl font-bold text-foreground text-center mb-3">Oups !</h2>
+          <p className="text-muted-foreground text-center mb-8">{error}</p>
+          <Button 
+            onClick={() => window.location.reload()}
+            className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold py-3 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            Réessayer
+          </Button>
+        </div>
       </div>
     )
   }
 
   if (stores.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Aucune boutique trouvée</CardTitle>
-            <CardDescription>
-              Vous n'avez pas encore créé de boutique
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button 
-              onClick={() => navigate({ to: "/stores" })}
-              className="w-full"
-            >
-              Créer ma première boutique
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-10 shadow-xl border border-border/20 max-w-lg w-full">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 mx-auto mb-6 bg-primary rounded-3xl flex items-center justify-center shadow-lg">
+              <Store className="h-10 w-10 text-primary-foreground" />
+            </div>
+            <h2 className="text-3xl font-bold text-foreground mb-3">Commencez votre aventure</h2>
+            <p className="text-muted-foreground text-lg">Créez votre première boutique et commencez à vendre en ligne</p>
+          </div>
+          <Button 
+            onClick={() => navigate({ to: "/create-store" })}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl text-lg"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Créer ma première boutique
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Bienvenue, {user?.name} ! 👋
-          </h1>
-          <p className="text-lg text-gray-600">
-            Sélectionnez la boutique que vous souhaitez gérer
-          </p>
-        </div>
-
-        {/* Stores Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stores.map((store) => (
-            <Card 
-              key={store.id} 
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                selectedStoreId === store.id 
-                  ? 'ring-2 ring-blue-500 bg-blue-50' 
-                  : 'hover:scale-105'
-              }`}
-              onClick={() => handleStoreSelect(store.id)}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Store className="h-5 w-5 text-blue-600" />
-                    <CardTitle className="text-lg">{store.name}</CardTitle>
-                  </div>
-                  <Badge variant={store.status === 'active' ? 'default' : 'secondary'}>
-                    {store.status === 'active' ? 'Actif' : 'Inactif'}
-                  </Badge>
-                </div>
-                <CardDescription className="text-sm">
-                  {store.description || 'Aucune description'}
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="space-y-3">
-                  {/* Store Stats */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <Package className="h-4 w-4 text-gray-500" />
-                      <span>{store.stats?.totalProducts || 0} produits</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-gray-500" />
-                      <span>{store.stats?.totalCustomers || 0} clients</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="h-4 w-4 text-gray-500" />
-                      <span>{store.stats?.totalOrders || 0} commandes</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">
-                        {store.stats?.conversionRate || 0}% conversion
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Store Address */}
-                  {store.contact?.address?.street && (
-                    <div className="text-xs text-gray-500 pt-2 border-t">
-                      📍 {store.contact.address.street}, {store.contact.address.city}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Create New Store Button */}
-        <div className="text-center mt-8">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate({ to: "/stores" })}
-            className="mx-auto"
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="bg-card/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-border/20 w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        {/* Header avec logo et déconnexion */}
+        <div className="flex justify-between items-center p-8 pb-6 border-b border-border">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
+              <Sparkles className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Coovia</h1>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Preview</span>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="border-border hover:border-border/80 bg-card/70 backdrop-blur-sm hover:bg-card rounded-2xl px-4 py-2 transition-all duration-200 shadow-sm"
           >
-            <Store className="h-4 w-4 mr-2" />
-            Créer une nouvelle boutique
+            <LogOut className="h-4 w-4 mr-2" />
+            <span className="font-medium">Déconnexion</span>
           </Button>
+        </div>
+
+        {/* Contenu principal avec scroll */}
+        <div className="p-8 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {/* Salutation */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-2">
+              {getGreeting()} {user?.name} ! {getGreetingEmoji()}
+            </h2>
+            <p className="text-lg text-muted-foreground">Sélectionnez une boutique pour continuer</p>
+          </div>
+
+          {/* Liste des boutiques */}
+          <div className="space-y-3 mb-8">
+            {stores.map((store, index) => (
+              <div
+                key={store.id}
+                className="group relative"
+                onMouseEnter={() => setHoveredStore(store.id)}
+                onMouseLeave={() => setHoveredStore(null)}
+                style={{ 
+                  animation: `fadeInUp 0.5s ease-out ${index * 100}ms both`
+                }}
+              >
+                <button
+                  onClick={() => handleStoreSelect(store.id)}
+                  disabled={selectedStoreId === store.id}
+                  className="w-full bg-card/60 backdrop-blur-sm border border-border/60 rounded-2xl p-5 hover:bg-card hover:border-primary/30 hover:shadow-lg transition-all duration-300 group-hover:scale-[1.01] disabled:opacity-75"
+                >
+                  <div className="flex items-center space-x-5">
+                    {/* Avatar de la boutique */}
+                    <div className="relative">
+                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-base shadow-md transition-all duration-300 ${
+                        hoveredStore === store.id 
+                          ? 'bg-primary text-primary-foreground scale-105' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {getInitials(store.name)}
+                      </div>
+                      {hoveredStore === store.id && (
+                        <div className="absolute -inset-2 bg-primary rounded-xl opacity-20 blur-md transition-opacity duration-300"></div>
+                      )}
+                    </div>
+
+                    {/* Informations de la boutique */}
+                    <div className="flex-1 text-left">
+                      <h3 className="font-bold text-lg text-foreground mb-1 group-hover:text-primary transition-colors duration-200">
+                        {store.name}
+                      </h3>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-200">
+                        {store.description || "Aucune description"}
+                      </p>
+                    </div>
+
+                    {/* Flèche ou loader */}
+                    <div className="flex items-center">
+                      {selectedStoreId === store.id ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      ) : (
+                        <ArrowRight className={`h-5 w-5 transition-all duration-300 ${
+                          hoveredStore === store.id 
+                            ? 'text-primary translate-x-1' 
+                            : 'text-muted-foreground'
+                        }`} />
+                      )}
+                    </div>
+                  </div>
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Bouton créer une boutique */}
+          <div className="text-center pt-4 border-t border-border">
+            <Button
+              onClick={() => navigate({ to: "/create-store" })}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-3 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Ouvrir une nouvelle boutique
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   )
-} 
+}
