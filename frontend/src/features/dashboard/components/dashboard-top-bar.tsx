@@ -3,6 +3,7 @@
 import type React from "react"
 import { Bell, Menu } from "lucide-react"
 import { DashboardDynamicSearchBar } from "./dashboard-dynamic-dearch-bar"
+import { useStore } from "@/context/store-context"
 
 interface DashboardTopBarProps {
   onBack: () => void
@@ -12,6 +13,7 @@ interface DashboardTopBarProps {
 }
 
 export function DashboardTopBar({ onBack, onExport, onAddProduct, onNavigate }: DashboardTopBarProps) {
+  const { currentStore } = useStore()
   return (
     <header
       className="polaris-topbar fixed top-0 left-0 right-0 flex items-center gap-4 px-4 lg:px-6 border-b bg-white/95 backdrop-blur-sm md:left-[var(--sidebar-width)] md:peer-data-[state=collapsed]:left-[var(--sidebar-width-icon)]"
@@ -82,7 +84,7 @@ export function DashboardTopBar({ onBack, onExport, onAddProduct, onNavigate }: 
             }}
             className="hidden md:block"
           >
-            Ma Boutique
+            {currentStore?.name || "Ma Boutique"}
           </span>
         </div>
       </div>

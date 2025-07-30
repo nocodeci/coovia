@@ -12,61 +12,10 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { mockTransactions } from "@/data/mock-transactions"
+import apiService from "@/lib/api"
+import { useStore } from "@/context/store-context"
 
 export const description = "Graphique interactif des revenus des ventes à succès"
-
-// Générer des données de revenus basées uniquement sur les ventes à succès
-const generatePaymentData = () => {
-  const data = []
-  const endDate = new Date()
-  const startDate = new Date()
-  startDate.setMonth(startDate.getMonth() - 3)
-
-  // Créer un map pour calculer les revenus par date
-  const revenueByDate = new Map()
-
-  // Traiter uniquement les transactions avec le statut "Succès"
-  mockTransactions
-    .filter((transaction) => transaction.status === "Succès")
-    .forEach((transaction) => {
-      const transactionDate = new Date(transaction.joinDate)
-      const dateStr = transactionDate.toISOString().split("T")[0]
-
-      if (!revenueByDate.has(dateStr)) {
-        revenueByDate.set(dateStr, {
-          revenus: 0,
-        })
-      }
-
-      const dayData = revenueByDate.get(dateStr)
-      dayData.revenus += transaction.value
-    })
-
-  // Générer les données pour chaque jour des 3 derniers mois
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    const dateStr = d.toISOString().split("T")[0]
-    const dayData = revenueByDate.get(dateStr)
-
-    if (dayData) {
-      // Utiliser les vrais revenus
-      data.push({
-        date: dateStr,
-        revenus: dayData.revenus,
-      })
-    } else {
-      // Pas de revenus ce jour-là
-      data.push({
-        date: dateStr,
-        revenus: 0,
-      })
-    }
-  }
-
-  return data
-}
-
-const chartData = generatePaymentData()
 
 const chartConfig = {
   ventes: {
@@ -79,52 +28,68 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function Overview() {
+  const { currentStore } = useStore()
   const [timeRange, setTimeRange] = React.useState("30d")
+  const [chartData, setChartData] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
 
-  const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date)
-    const referenceDate = new Date()
-    let daysToSubtract = 90
-    if (timeRange === "30d") {
-      daysToSubtract = 30
-    } else if (timeRange === "7d") {
-      daysToSubtract = 7
+  // Charger les données du graphique depuis le backend
+  React.useEffect(() => {
+    const loadChartData = async () => {
+      if (!currentStore?.id) return
+
+      try {
+        setLoading(true)
+        const response = await apiService.getRevenueChart(currentStore.id, timeRange)
+        
+        if (response.success && response.data) {
+          setChartData(response.data)
+        } else {
+          setError('Erreur lors du chargement des données du graphique')
+        }
+      } catch (err: any) {
+        console.error('Erreur lors du chargement du graphique:', err)
+        setError(err.message || 'Erreur de connexion')
+      } finally {
+        setLoading(false)
+      }
     }
-    const startDate = new Date(referenceDate)
-    startDate.setDate(startDate.getDate() - daysToSubtract)
-    return date >= startDate
-  })
 
-  // Calculer les totaux pour la période sélectionnée basés sur les revenus des ventes à succès
+    loadChartData()
+  }, [currentStore?.id, timeRange])
+
+  // Calculer les totaux pour la période sélectionnée
   const totals = React.useMemo(() => {
-    const referenceDate = new Date()
-    let daysToSubtract = 90
-    if (timeRange === "30d") {
-      daysToSubtract = 30
-    } else if (timeRange === "7d") {
-      daysToSubtract = 7
-    }
-    const startDate = new Date(referenceDate)
-    startDate.setDate(startDate.getDate() - daysToSubtract)
+    if (!chartData.length) return { revenus: 0, ventes: 0 }
 
-    // Filtrer uniquement les transactions à succès selon la période sélectionnée
-    const filteredTransactions = mockTransactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.joinDate)
-      return transactionDate >= startDate && transaction.status === "Succès"
-    })
-
-    // Calculer le total des revenus
-    const totalRevenus = filteredTransactions.reduce((sum, transaction) => sum + transaction.value, 0)
-    const nombreVentes = filteredTransactions.length
+    const totalRevenus = chartData.reduce((sum, item) => sum + (item.revenus || 0), 0)
+    const nombreVentes = chartData.filter(item => item.revenus > 0).length
 
     return {
       revenus: totalRevenus,
       ventes: nombreVentes,
     }
-  }, [timeRange])
+  }, [chartData])
 
   const totalRevenus = totals.revenus
   const nombreVentes = totals.ventes
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[250px]">
+        <p className="text-muted-foreground">Chargement du graphique...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[250px]">
+        <p className="text-red-500">Erreur: {error}</p>
+      </div>
+    )
+  }
 
   return (
     <Card className="pt-0">
@@ -157,7 +122,7 @@ export function Overview() {
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-          <AreaChart data={filteredData}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="fillRevenus" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="var(--color-revenus)" stopOpacity={0.8} />
