@@ -4,17 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class PaymentGateway extends Model
+class PaymentMethod extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
+        'payment_gateway_id',
         'name',
         'type',
         'country',
         'country_code',
+        'provider',
+        'details',
         'logo',
         'is_active',
     ];
@@ -23,13 +27,8 @@ class PaymentGateway extends Model
         'is_active' => 'boolean',
     ];
 
-    public function paymentMethods(): HasMany
+    public function paymentGateway(): BelongsTo
     {
-        return $this->hasMany(PaymentMethod::class);
-    }
-
-    public function transactions(): HasMany
-    {
-        return $this->hasMany(PaymentTransaction::class);
+        return $this->belongsTo(PaymentGateway::class);
     }
 }

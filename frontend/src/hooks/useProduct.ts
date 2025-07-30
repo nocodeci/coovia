@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 import apiService from "@/lib/api"
 
@@ -10,7 +10,12 @@ interface Product {
   description: string
   price: number
   compare_price?: number
+  sale_price?: number
+  sku?: string
+  stock_quantity?: number
+  min_stock_level?: number
   images: string[]
+  files?: string[]
   category: string
   tags: string[]
   status: "active" | "inactive" | "draft"
@@ -21,16 +26,23 @@ interface Product {
   store_id: string
   created_at: string
   updated_at: string
+  attributes?: any
+  seo?: any
 }
 
 export function useProduct(storeId?: string) {
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const isFetchingRef = useRef(false)
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     if (!storeId) return
-
+    
+    // Éviter les appels répétés
+    if (isFetchingRef.current) return
+    
+    isFetchingRef.current = true
     setIsLoading(true)
     setError(null)
 
@@ -40,7 +52,7 @@ export function useProduct(storeId?: string) {
       console.log("📡 Réponse API produits:", response)
       
       if (response.success && response.data) {
-        setProducts(response.data)
+        setProducts(response.data as Product[])
       } else {
         console.error("❌ Erreur API produits:", response.message)
         setError(response.message || "Une erreur est survenue lors du chargement des produits")
@@ -56,10 +68,11 @@ export function useProduct(storeId?: string) {
       })
     } finally {
       setIsLoading(false)
+      isFetchingRef.current = false
     }
-  }
+  }, [storeId])
 
-  const createProduct = async (productData: Omit<Product, "id" | "created_at" | "updated_at">) => {
+  const createProduct = async (productData: Omit<Product, "id" | "created_at" | "updated_at" | "store_id">) => {
     if (!storeId) throw new Error("Store ID is required")
 
     setIsLoading(true)
@@ -69,9 +82,9 @@ export function useProduct(storeId?: string) {
       console.log("📡 Réponse API création produit:", response)
       
       if (response.success && response.data) {
-        setProducts((prev) => [...prev, response.data])
+        setProducts((prev) => [...prev, response.data as Product])
         toast.success("Produit créé", {
-          description: `Le produit ${response.data.name} a été créé avec succès`,
+          description: `Le produit ${(response.data as Product).name} a été créé avec succès`,
         })
         return response.data
       } else {
@@ -96,9 +109,9 @@ export function useProduct(storeId?: string) {
       console.log("📡 Réponse API mise à jour produit:", response)
       
       if (response.success && response.data) {
-        setProducts((prev) => prev.map((product) => (product.id === productId ? response.data : product)))
+        setProducts((prev) => prev.map((product) => (product.id === productId ? response.data as Product : product)))
         toast.success("Produit mis à jour", {
-          description: `Le produit ${response.data.name} a été mis à jour avec succès`,
+          description: `Le produit ${(response.data as Product).name} a été mis à jour avec succès`,
         })
         return response.data
       } else {
@@ -142,8 +155,22 @@ export function useProduct(storeId?: string) {
   }
 
   useEffect(() => {
-    fetchProducts()
-  }, [storeId])
+    if (storeId) {
+      fetchProducts()
+    }
+  }, [storeId, fetchProducts])
+
+  const uploadProductImage = async (productId: string, file: File) => {
+    // Placeholder implementation
+    console.log("🔄 Upload image for product:", productId, file.name)
+    return "https://example.com/image.jpg"
+  }
+
+  const uploadProductFiles = async (productId: string, files: File[]) => {
+    // Placeholder implementation
+    console.log("🔄 Upload files for product:", productId, files.length, "files")
+    return files.map(file => `https://example.com/files/${file.name}`)
+  }
 
   return {
     products,
@@ -153,5 +180,7 @@ export function useProduct(storeId?: string) {
     createProduct,
     updateProduct,
     deleteProduct,
+    uploadProductImage,
+    uploadProductFiles,
   }
 }

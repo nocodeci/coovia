@@ -42,8 +42,9 @@ import { ShineBorder } from "@/components/magicui/shine-border"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { TopBar } from "./components/top-bar-simple"
-import { useProducts } from "@/hooks/useProduct"
-import { useCategories } from "@/hooks/useCategorie"
+import { useProduct } from "@/hooks/useProduct"
+
+import { useCategorie } from "@/hooks/useCategorie"
 import { useStore } from "@/context/store-context"
 
 const productTypes = [
@@ -76,15 +77,19 @@ interface UploadedFile {
   file?: File
 }
 
-export default function AddProduct() {
+interface AddProductProps {
+  storeId?: string
+}
+
+export default function AddProduct({ storeId }: AddProductProps) {
   const { stores, currentStore } = useStore()
   const {
     createProduct,
     uploadProductImage,
     uploadProductFiles,
     isLoading: isProductLoading,
-  } = useProducts(currentStore?.id || "")
-  const { categories, isLoading: isCategoriesLoading } = useCategories()
+  } = useProduct(storeId || currentStore?.id || "")
+  const { categories, isLoading: isCategoriesLoading } = useCategorie()
 
   const [productName, setProductName] = useState("")
   const [selectedType, setSelectedType] = useState("telechargeable")
@@ -259,11 +264,10 @@ export default function AddProduct() {
     try {
       // Créer le produit
       const productData = {
-        store_id: currentStore.id,
         name: productName,
         description,
         price: Number.parseFloat(price) || 0,
-        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : null,
+        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : undefined,
         sku,
         category,
         stock_quantity: Number.parseInt(stockQuantity) || 0,
@@ -271,6 +275,11 @@ export default function AddProduct() {
         status: "active" as const,
         images: [],
         files: [],
+        tags: [],
+        inventory: {
+          quantity: Number.parseInt(stockQuantity) || 0,
+          low_stock_threshold: Number.parseInt(minStockLevel) || 0,
+        },
         attributes: {
           type: selectedType,
           featured: isFeatured,
@@ -281,17 +290,17 @@ export default function AddProduct() {
         },
       }
 
-      const createdProduct = await createProduct(productData)
+      const createdProduct = await createProduct(productData) as any
 
       // Télécharger l'image principale si elle existe
-      if (featuredImageFile) {
+      if (featuredImageFile && createdProduct?.id) {
         const imageUrl = await uploadProductImage(createdProduct.id, featuredImageFile)
         // Mettre à jour le produit avec l'URL de l'image
         // await updateProduct(createdProduct.id, { images: [imageUrl] })
       }
 
       // Télécharger les fichiers si ils existent
-      if (uploadedFiles.length > 0) {
+      if (uploadedFiles.length > 0 && createdProduct?.id) {
         const filesToUpload = uploadedFiles.filter((f) => f.file).map((f) => f.file!)
         if (filesToUpload.length > 0) {
           await uploadProductFiles(createdProduct.id, filesToUpload)
@@ -327,11 +336,10 @@ export default function AddProduct() {
 
     try {
       const productData = {
-        store_id: currentStore.id,
         name: productName || "Produit sans titre",
         description,
         price: Number.parseFloat(price) || 0,
-        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : null,
+        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : undefined,
         sku: sku || `draft-${Date.now()}`,
         category: category || "non-categorise",
         stock_quantity: Number.parseInt(stockQuantity) || 0,
@@ -339,6 +347,11 @@ export default function AddProduct() {
         status: "draft" as const,
         images: [],
         files: [],
+        tags: [],
+        inventory: {
+          quantity: Number.parseInt(stockQuantity) || 0,
+          low_stock_threshold: Number.parseInt(minStockLevel) || 0,
+        },
         attributes: {
           type: selectedType,
           featured: isFeatured,

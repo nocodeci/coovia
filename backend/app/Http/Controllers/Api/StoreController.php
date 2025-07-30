@@ -32,18 +32,12 @@ class StoreController extends Controller
                     return $query->where('category', $category);
                 })
                 ->orderBy('created_at', 'desc')
-                ->paginate($request->per_page ?? 15);
+                ->get();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Boutiques récupérées avec succès',
-                'data' => StoreResource::collection($stores),
-                'meta' => [
-                    'current_page' => $stores->currentPage(),
-                    'last_page' => $stores->lastPage(),
-                    'per_page' => $stores->perPage(),
-                    'total' => $stores->total(),
-                ]
+                'data' => StoreResource::collection($stores)
             ]);
 
         } catch (\Exception $e) {

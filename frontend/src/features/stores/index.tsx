@@ -28,6 +28,7 @@ import {
 import { Main } from "@/components/layout/main"
 import { SearchProvider } from "@/context/search-context"
 import { CreateStoreDialog } from "./components/create-store-dialog"
+import { DebugTokenUpdater } from "@/components/debug-token-updater"
 import type { Store } from "@/types/store"
 import apiService from "@/lib/api"
 
@@ -50,7 +51,7 @@ export function StoresManagement() {
 
       const response = await apiService.getStores()
       
-      if (response.success && response.data) {
+      if (response.success && response.data && Array.isArray(response.data)) {
         // Transformer les données de l'API pour correspondre au type Store
         const transformedStores: Store[] = response.data.map((store: any) => ({
           id: store.id,
@@ -120,11 +121,11 @@ export function StoresManagement() {
   }
 
   const handleViewStorefront = (store: Store) => {
-    window.open(`/store/${store.slug}`, "_blank")
+    window.open(`/store/${store.id}`, "_blank")
   }
 
   const handleManageSettings = (storeId: string) => {
-    navigate({ to: `/stores/${storeId}/settings` })
+    navigate({ to: `/${storeId}/settings` })
   }
 
   const handleDeleteStore = async (storeId: string) => {
@@ -142,7 +143,7 @@ export function StoresManagement() {
   }
 
   const handleManageStore = (storeId: string) => {
-    navigate({ to: `/stores/${storeId}/dashboard` })
+    navigate({ to: `/${storeId}/dashboard` })
   }
 
   const getStatusColor = (status: string) => {
@@ -219,6 +220,9 @@ export function StoresManagement() {
               Créer une boutique
             </Button>
           </div>
+
+          {/* Debug Token Updater - Temporary */}
+          <DebugTokenUpdater />
 
           {/* Statistiques globales */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

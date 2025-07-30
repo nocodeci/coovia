@@ -15,6 +15,11 @@ import { StoreProvider } from "@/context/store-context"
 // Import styles
 import "./index.css"
 
+// Import auto token fix
+import "./utils/auto-token-fix"
+import "./utils/console-token-fix"
+import "./utils/cleanup-debug"
+
 // Create a new router instance
 const router = createRouter({
   routeTree,

@@ -9,7 +9,7 @@ import { SearchProvider } from "@/context/search-context"
 import { Overview } from "./components/overview"
 import { RecentSales } from "./components/recent-sales"
 import Paiement from "@/components/paiement"
-import { useMemo, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { DashboardTopBar } from "./components/dashboard-top-bar"
 import apiService from "@/lib/api"
 import { useStore } from "@/context/store-context"
@@ -30,7 +30,7 @@ export default function Dashboard() {
         const response = await apiService.getStoreStats(currentStore.id)
         
         if (response.success && response.data) {
-          setStats(response.data.stats)
+          setStats((response.data as any).stats)
         } else {
           setError('Erreur lors du chargement des statistiques')
         }
@@ -54,7 +54,15 @@ export default function Dashboard() {
   }
 
   const handleAddProduct = () => {
-    window.location.href = "/add-product"
+    // Utiliser le storeId de l'URL actuelle
+    const pathSegments = window.location.pathname.split('/')
+    const storeId = pathSegments[1] // Le storeId est le premier segment après le slash
+    if (storeId) {
+      window.location.href = `/${storeId}/produits/addproduit`
+    } else {
+      // Fallback si pas de storeId
+      window.location.href = "/stores"
+    }
   }
 
   const handleNavigate = (section: string) => {

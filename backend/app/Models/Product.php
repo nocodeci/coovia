@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'store_id',
@@ -17,20 +18,31 @@ class Product extends Model
         'description',
         'price',
         'compare_price',
+        'sale_price',
+        'sku',
+        'stock_quantity',
+        'min_stock_level',
         'images',
+        'files',
         'category',
         'tags',
         'status',
         'inventory',
+        'attributes',
         'seo',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'compare_price' => 'decimal:2',
+        'sale_price' => 'decimal:2',
+        'stock_quantity' => 'integer',
+        'min_stock_level' => 'integer',
         'images' => 'array',
+        'files' => 'array',
         'tags' => 'array',
         'inventory' => 'array',
+        'attributes' => 'array',
         'seo' => 'array',
     ];
 

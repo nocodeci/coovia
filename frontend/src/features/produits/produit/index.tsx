@@ -12,7 +12,11 @@ interface FilterState {
   category: string
 }
 
-export default function Produits() {
+interface ProduitsProps {
+  storeId?: string
+}
+
+export default function Produits({ storeId }: ProduitsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("tous")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filters, setFilters] = useState<FilterState>({
@@ -115,23 +119,18 @@ export default function Produits() {
                 </div>
               </div>
             </div>
-
-            <ProductsTable activeTab={activeTab} sortOrder={sortOrder} filters={filters} />
           </div>
-
-          <div
-            className="text-center"
-            style={{
-              fontSize: "var(--p-font-size-300)",
-              color: "var(--p-color-text-secondary)",
-            }}
-          >
-            En savoir plus sur les{" "}
-            <a href="#" className="polaris-text-link">
-              produits
-            </a>
-          </div>
+          <ProductsTable 
+            activeTab={activeTab} 
+            sortOrder={sortOrder} 
+            filters={filters}
+            storeId={storeId}
+          />
         </main>
+      </div>
+      <div className="text-center" style={{ fontSize: "var(--p-font-size-300)", color: "var(--p-color-text-secondary)", }}>
+        En savoir plus sur les{" "}
+        <a href="#" className="polaris-text-link"> produits </a>
       </div>
     </>
   )
