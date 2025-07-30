@@ -189,6 +189,10 @@ class ApiService {
     return this.request(`/dashboard/stores/${storeId}/stats`)
   }
 
+  async getRevenueChart(storeId: string, timeRange: string = '30d') {
+    return this.request(`/dashboard/stores/${storeId}/revenue-chart?timeRange=${timeRange}`)
+  }
+
   async getStoreRecentOrders(storeId: string) {
     return this.request(`/dashboard/stores/${storeId}/recent-orders`)
   }

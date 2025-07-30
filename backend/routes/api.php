@@ -206,9 +206,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard
     Route::prefix('dashboard')->group(function () {
-        Route::get('stores/{store}/stats', [DashboardController::class, 'storeStats']);
-        Route::get('stores/{store}/recent-orders', [DashboardController::class, 'recentOrders']);
-        Route::get('stores/{store}/sales-chart', [DashboardController::class, 'salesChart']);
+        Route::get('stores/{storeId}/stats', [DashboardController::class, 'getStoreStats']);
+        Route::get('stores/{storeId}/revenue-chart', [DashboardController::class, 'getRevenueChart']);
     });
 
     // Gestion des produits
