@@ -1,5 +1,61 @@
 import { toast } from "sonner"
 
+// Fonctions utilitaires pour le debug
+declare global {
+  interface Window {
+    fixToken: () => void
+    cleanupDebug: () => void
+    enableDebug: () => void
+    disableDebug: () => void
+  }
+}
+
+// Variable globale pour contrôler les logs de debug
+let DEBUG_MODE = false
+
+// Fonction pour activer le mode debug
+export const enableDebug = () => {
+  DEBUG_MODE = true
+  console.log('🔧 Mode debug activé')
+}
+
+// Fonction pour désactiver le mode debug
+export const disableDebug = () => {
+  DEBUG_MODE = false
+  console.log('🔧 Mode debug désactivé')
+}
+
+// Fonction pour nettoyer les logs de debug
+export const cleanupDebug = () => {
+  console.clear()
+  console.log('🧹 Logs de debug nettoyés')
+}
+
+// Fonction pour corriger le token
+export const fixToken = () => {
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    console.log('🔧 Token trouvé:', token.substring(0, 20) + '...')
+  } else {
+    console.log('⚠️ Aucun token trouvé')
+  }
+}
+
+// Fonction de log conditionnel
+export const debugLog = (message: string, data?: any) => {
+  if (DEBUG_MODE) {
+    console.log(message, data)
+  }
+}
+
+// Ajouter les fonctions à la fenêtre globale
+if (typeof window !== 'undefined') {
+  window.fixToken = fixToken
+  window.cleanupDebug = cleanupDebug
+  window.enableDebug = enableDebug
+  window.disableDebug = disableDebug
+}
+
 interface ApiResponse<T = any> {
   success: boolean
   message: string
@@ -21,7 +77,6 @@ class ApiService {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -30,9 +85,6 @@ class ApiService {
 
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`
-      console.log("🔐 Token utilisé pour la requête:", this.token.substring(0, 20) + "...")
-    } else {
-      console.log("⚠️ Aucun token trouvé pour la requête")
     }
 
     const config: RequestInit = {
@@ -40,15 +92,8 @@ class ApiService {
       headers,
     }
 
-    console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`)
-    console.log('📤 Headers:', headers)
-    if (options.body) {
-      console.log('📤 Body:', options.body)
-    }
-
     try {
       const response = await fetch(url, config)
-      console.log(`📥 Response status: ${response.status}`)
 
       let data: any
       const contentType = response.headers.get('content-type')
@@ -57,8 +102,6 @@ class ApiService {
       } else {
         data = await response.text()
       }
-
-      console.log('📥 Response data:', data)
 
       if (!response.ok) {
         if (response.status === 422) {

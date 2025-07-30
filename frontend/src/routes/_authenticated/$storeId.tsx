@@ -5,6 +5,7 @@ export const Route = createFileRoute('/_authenticated/$storeId')({
 })
 
 function StoreLayout() {
+  // Le StoreGuard s'occupe de la vérification, on peut juste afficher le contenu
   return (
     <div>
       <Outlet />

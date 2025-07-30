@@ -53,18 +53,51 @@ const productTypes = [
     title: "Téléchargeable",
     description: "Fichiers numériques livrés instantanément",
     icon: Package,
+    categories: [
+      "Templates",
+      "Graphiques",
+      "Audio",
+      "Vidéo",
+      "Documents",
+      "Code",
+      "Photos",
+      "Illustrations",
+      "Fonts",
+      "Autre"
+    ]
   },
   {
     id: "cours",
     title: "Cours",
     description: "Formations structurées et interactives",
     icon: BookOpen,
+    categories: [
+      "Développement",
+      "Design",
+      "Marketing",
+      "Business",
+      "Langues",
+      "Musique",
+      "Photographie",
+      "Vidéo",
+      "Écriture",
+      "Autre"
+    ]
   },
   {
     id: "abonnement",
     title: "Abonnement",
     description: "Produits avec facturation récurrente",
     icon: RefreshCw,
+    categories: [
+      "Logiciels",
+      "Services",
+      "Contenu Premium",
+      "Support",
+      "Mentorat",
+      "Communauté",
+      "Autre"
+    ]
   },
 ]
 
@@ -89,7 +122,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
     uploadProductFiles,
     isLoading: isProductLoading,
   } = useProduct(storeId || currentStore?.id || "")
-  const { categories, isLoading: isCategoriesLoading } = useCategorie()
+
 
   const [productName, setProductName] = useState("")
   const [selectedType, setSelectedType] = useState("telechargeable")
@@ -111,9 +144,34 @@ export default function AddProduct({ storeId }: AddProductProps) {
 
   // États pour les combobox
   const [openCategory, setOpenCategory] = useState(false)
+  const [newCategory, setNewCategory] = useState("")
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false)
 
-  // Calculer si le formulaire est valide
-  const isFormValid = productName.trim() && category && selectedType && currentStore
+  // Obtenir les catégories selon le type de produit sélectionné
+  const getCategoriesForType = () => {
+    const selectedTypeData = productTypes.find(type => type.id === selectedType)
+    return selectedTypeData?.categories || []
+  }
+
+  // Gérer l'ajout d'une nouvelle catégorie
+  const handleAddNewCategory = () => {
+    if (newCategory.trim()) {
+      setCategory(newCategory.trim())
+      setNewCategory("")
+      setShowNewCategoryInput(false)
+      setOpenCategory(false)
+    }
+  }
+
+  // Calculer si le formulaire est valide pour publication
+  const isFormValid = 
+    productName.trim() && 
+    category && 
+    selectedType && 
+    currentStore && 
+    price && 
+    description.trim() && 
+    featuredImage
 
   // Détecter les changements non sauvegardés
   useEffect(() => {
@@ -141,6 +199,13 @@ export default function AddProduct({ storeId }: AddProductProps) {
     uploadedFiles,
     featuredImage,
   ])
+
+  // Réinitialiser la catégorie quand le type de produit change
+  useEffect(() => {
+    setCategory("")
+    setShowNewCategoryInput(false)
+    setNewCategory("")
+  }, [selectedType])
 
   // Générer automatiquement le SKU basé sur le nom du produit
   useEffect(() => {
@@ -257,6 +322,42 @@ export default function AddProduct({ storeId }: AddProductProps) {
     if (!currentStore) {
       toast.error("Erreur", {
         description: "Aucun magasin sélectionné",
+      })
+      return
+    }
+
+    // Validation des champs obligatoires
+    if (!productName.trim()) {
+      toast.error("Erreur", {
+        description: "Le nom du produit est obligatoire",
+      })
+      return
+    }
+
+    if (!category) {
+      toast.error("Erreur", {
+        description: "La catégorie est obligatoire",
+      })
+      return
+    }
+
+    if (!price || Number.parseFloat(price) <= 0) {
+      toast.error("Erreur", {
+        description: "Le prix est obligatoire et doit être supérieur à 0",
+      })
+      return
+    }
+
+    if (!description.trim()) {
+      toast.error("Erreur", {
+        description: "La description est obligatoire",
+      })
+      return
+    }
+
+    if (!featuredImage) {
+      toast.error("Erreur", {
+        description: "L'image principale est obligatoire",
       })
       return
     }
@@ -496,20 +597,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
                     />
                   </div>
 
-                  {/* SKU */}
-                  <div className="space-y-2">
-                    <Label htmlFor="sku" className="text-sm font-medium">
-                      SKU (Référence produit)
-                    </Label>
-                    <Input
-                      id="sku"
-                      value={sku}
-                      onChange={(e) => setSku(e.target.value)}
-                      placeholder="Référence unique du produit"
-                      className="h-12 text-base"
-                    />
-                    <p className="text-xs text-muted-foreground">Généré automatiquement si laissé vide</p>
-                  </div>
+
 
                   {/* Type de produit */}
                   <div className="space-y-4">
@@ -568,11 +656,9 @@ export default function AddProduct({ storeId }: AddProductProps) {
                           role="combobox"
                           aria-expanded={openCategory}
                           className="w-full h-12 justify-between bg-transparent"
-                          disabled={isCategoriesLoading}
+                          disabled={!selectedType}
                         >
-                          {category
-                            ? categories.find((cat) => cat.name === category)?.name
-                            : "Sélectionner une catégorie..."}
+                          {category || "Sélectionner une catégorie..."}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
@@ -580,22 +666,54 @@ export default function AddProduct({ storeId }: AddProductProps) {
                         <Command>
                           <CommandInput placeholder="Rechercher une catégorie..." className="h-9" />
                           <CommandList>
-                            <CommandEmpty>Aucune catégorie trouvée.</CommandEmpty>
+                            <CommandEmpty>
+                              {showNewCategoryInput ? (
+                                <div className="p-2">
+                                  <div className="flex gap-2">
+                                    <Input
+                                      value={newCategory}
+                                      onChange={(e) => setNewCategory(e.target.value)}
+                                      placeholder="Nouvelle catégorie..."
+                                      className="flex-1"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          handleAddNewCategory()
+                                        }
+                                      }}
+                                    />
+                                    <Button size="sm" onClick={handleAddNewCategory}>
+                                      Ajouter
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="p-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowNewCategoryInput(true)}
+                                    className="w-full"
+                                  >
+                                    + Créer une nouvelle catégorie
+                                  </Button>
+                                </div>
+                              )}
+                            </CommandEmpty>
                             <CommandGroup>
-                              {categories.map((cat) => (
+                              {getCategoriesForType().map((catName) => (
                                 <CommandItem
-                                  key={cat.id}
-                                  value={cat.name}
+                                  key={catName}
+                                  value={catName}
                                   onSelect={(currentValue) => {
                                     setCategory(currentValue === category ? "" : currentValue)
                                     setOpenCategory(false)
                                   }}
                                 >
-                                  {cat.name}
+                                  {catName}
                                   <Check
                                     className={cn(
                                       "ml-auto h-4 w-4",
-                                      category === cat.name ? "opacity-100" : "opacity-0",
+                                      category === catName ? "opacity-100" : "opacity-0",
                                     )}
                                   />
                                 </CommandItem>
@@ -613,7 +731,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="price" className="text-sm font-medium text-muted-foreground">
-                          Prix de vente
+                          Prix de vente <span className="text-destructive">*</span>
                         </Label>
                         <div className="relative">
                           <Input
@@ -722,7 +840,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
               <Card className="shadow-sm">
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Description du produit</CardTitle>
+                    <CardTitle className="text-lg">Description du produit <span className="text-destructive">*</span></CardTitle>
                     <AlertDialog open={isVideoDialogOpen} onOpenChange={setIsVideoDialogOpen}>
                       <AlertDialogTrigger asChild>
                         <Button variant="outline" size="sm">
@@ -873,7 +991,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
               {/* Image du produit */}
               <Card className="shadow-sm">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg">Image du produit</CardTitle>
+                  <CardTitle className="text-lg">Image du produit <span className="text-destructive">*</span></CardTitle>
                 </CardHeader>
                 <CardContent>
                   {featuredImage ? (
@@ -1057,12 +1175,14 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   <div className="flex justify-between text-sm">
                     <span>Catégorie :</span>
                     <span className="font-medium">
-                      {categories.find((c) => c.name === category)?.name || "Non définie"}
+                      {category || "Non définie"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Prix :</span>
-                    <span className="font-medium">{price ? `${price} FCFA` : "Gratuit"}</span>
+                    <span className={`font-medium ${!price || Number.parseFloat(price) <= 0 ? 'text-destructive' : ''}`}>
+                      {price ? `${price} FCFA` : "Non défini"}
+                    </span>
                   </div>
                   {promotionalPrice && (
                     <div className="flex justify-between text-sm">
@@ -1073,6 +1193,18 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   <div className="flex justify-between text-sm">
                     <span>Stock :</span>
                     <span className="font-medium">{stockQuantity || "0"}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Description :</span>
+                    <span className={`font-medium ${!description.trim() ? 'text-destructive' : ''}`}>
+                      {description.trim() ? "Définie" : "Non définie"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Image principale :</span>
+                    <span className={`font-medium ${!featuredImage ? 'text-destructive' : ''}`}>
+                      {featuredImage ? "Ajoutée" : "Non ajoutée"}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Fichiers :</span>

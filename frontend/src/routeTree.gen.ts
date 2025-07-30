@@ -9,10 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StoreSelectionRouteImport } from './routes/store-selection'
+import { Route as CreateStoreRouteImport } from './routes/create-store'
 import { Route as ClerkRouteRouteImport } from './routes/clerk/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedStoreSelectionRouteImport } from './routes/_authenticated/store-selection'
 import { Route as AuthenticatedStoreIdRouteImport } from './routes/_authenticated/$storeId'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
@@ -55,6 +56,16 @@ import { Route as AuthenticatedMarketingAjouterIndexRouteImport } from './routes
 import { Route as AuthenticatedStoreIdProduitsIndexRouteImport } from './routes/_authenticated/$storeId/produits/index'
 import { Route as AuthenticatedStoreIdProduitsAddproduitRouteImport } from './routes/_authenticated/$storeId/produits/addproduit'
 
+const StoreSelectionRoute = StoreSelectionRouteImport.update({
+  id: '/store-selection',
+  path: '/store-selection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateStoreRoute = CreateStoreRouteImport.update({
+  id: '/create-store',
+  path: '/create-store',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
   id: '/clerk',
   path: '/clerk',
@@ -69,12 +80,6 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedStoreSelectionRoute =
-  AuthenticatedStoreSelectionRouteImport.update({
-    id: '/store-selection',
-    path: '/store-selection',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedStoreIdRoute = AuthenticatedStoreIdRouteImport.update({
   id: '/$storeId',
   path: '/$storeId',
@@ -303,6 +308,8 @@ const AuthenticatedStoreIdProduitsAddproduitRoute =
 
 export interface FileRoutesByFullPath {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
+  '/create-store': typeof CreateStoreRoute
+  '/store-selection': typeof StoreSelectionRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/clerk/': typeof ClerkauthRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
@@ -316,7 +323,6 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/$storeId': typeof AuthenticatedStoreIdRouteWithChildren
-  '/store-selection': typeof AuthenticatedStoreSelectionRoute
   '/': typeof AuthenticatedIndexRoute
   '/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
   '/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
@@ -347,6 +353,8 @@ export interface FileRoutesByFullPath {
   '/produits/addproduit': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
 export interface FileRoutesByTo {
+  '/create-store': typeof CreateStoreRoute
+  '/store-selection': typeof StoreSelectionRoute
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
@@ -359,7 +367,6 @@ export interface FileRoutesByTo {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/$storeId': typeof AuthenticatedStoreIdRouteWithChildren
-  '/store-selection': typeof AuthenticatedStoreSelectionRoute
   '/': typeof AuthenticatedIndexRoute
   '/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
   '/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
@@ -392,6 +399,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/clerk': typeof ClerkRouteRouteWithChildren
+  '/create-store': typeof CreateStoreRoute
+  '/store-selection': typeof StoreSelectionRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/clerk/(auth)': typeof ClerkauthRouteRouteWithChildren
   '/clerk/_authenticated': typeof ClerkAuthenticatedRouteRouteWithChildren
@@ -406,7 +415,6 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/$storeId': typeof AuthenticatedStoreIdRouteWithChildren
-  '/_authenticated/store-selection': typeof AuthenticatedStoreSelectionRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
   '/_authenticated/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
@@ -440,6 +448,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/clerk'
+    | '/create-store'
+    | '/store-selection'
     | '/settings'
     | '/clerk/'
     | '/forgot-password'
@@ -453,7 +463,6 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/$storeId'
-    | '/store-selection'
     | '/'
     | '/$storeId/apps'
     | '/$storeId/clients'
@@ -484,6 +493,8 @@ export interface FileRouteTypes {
     | '/produits/addproduit'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/create-store'
+    | '/store-selection'
     | '/clerk'
     | '/forgot-password'
     | '/otp'
@@ -496,7 +507,6 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/$storeId'
-    | '/store-selection'
     | '/'
     | '/$storeId/apps'
     | '/$storeId/clients'
@@ -528,6 +538,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/clerk'
+    | '/create-store'
+    | '/store-selection'
     | '/_authenticated/settings'
     | '/clerk/(auth)'
     | '/clerk/_authenticated'
@@ -542,7 +554,6 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/$storeId'
-    | '/_authenticated/store-selection'
     | '/_authenticated/'
     | '/_authenticated/$storeId/apps'
     | '/_authenticated/$storeId/clients'
@@ -576,6 +587,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ClerkRouteRoute: typeof ClerkRouteRouteWithChildren
+  CreateStoreRoute: typeof CreateStoreRoute
+  StoreSelectionRoute: typeof StoreSelectionRoute
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authOtpRoute: typeof authOtpRoute
   authSignInRoute: typeof authSignInRoute
@@ -590,6 +603,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/store-selection': {
+      id: '/store-selection'
+      path: '/store-selection'
+      fullPath: '/store-selection'
+      preLoaderRoute: typeof StoreSelectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create-store': {
+      id: '/create-store'
+      path: '/create-store'
+      fullPath: '/create-store'
+      preLoaderRoute: typeof CreateStoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clerk': {
       id: '/clerk'
       path: '/clerk'
@@ -609,13 +636,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/store-selection': {
-      id: '/_authenticated/store-selection'
-      path: '/store-selection'
-      fullPath: '/store-selection'
-      preLoaderRoute: typeof AuthenticatedStoreSelectionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/$storeId': {
@@ -974,7 +994,6 @@ const AuthenticatedStoreIdRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedStoreIdRoute: typeof AuthenticatedStoreIdRouteWithChildren
-  AuthenticatedStoreSelectionRoute: typeof AuthenticatedStoreSelectionRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
@@ -992,7 +1011,6 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedStoreIdRoute: AuthenticatedStoreIdRouteWithChildren,
-  AuthenticatedStoreSelectionRoute: AuthenticatedStoreSelectionRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
@@ -1058,6 +1076,8 @@ const ClerkRouteRouteWithChildren = ClerkRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ClerkRouteRoute: ClerkRouteRouteWithChildren,
+  CreateStoreRoute: CreateStoreRoute,
+  StoreSelectionRoute: StoreSelectionRoute,
   authForgotPasswordRoute: authForgotPasswordRoute,
   authOtpRoute: authOtpRoute,
   authSignInRoute: authSignInRoute,
