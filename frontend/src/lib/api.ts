@@ -1,59 +1,12 @@
 import { toast } from "sonner"
+import { cache, CACHE_KEYS } from "./cache"
 
-// Fonctions utilitaires pour le debug
-declare global {
-  interface Window {
-    fixToken: () => void
-    cleanupDebug: () => void
-    enableDebug: () => void
-    disableDebug: () => void
-  }
-}
-
-// Variable globale pour contrôler les logs de debug
-let DEBUG_MODE = false
-
-// Fonction pour activer le mode debug
-export const enableDebug = () => {
-  DEBUG_MODE = true
-  console.log('🔧 Mode debug activé')
-}
-
-// Fonction pour désactiver le mode debug
-export const disableDebug = () => {
-  DEBUG_MODE = false
-  console.log('🔧 Mode debug désactivé')
-}
-
-// Fonction pour nettoyer les logs de debug
-export const cleanupDebug = () => {
-  console.clear()
-  console.log('🧹 Logs de debug nettoyés')
-}
-
-// Fonction pour corriger le token
-export const fixToken = () => {
-  const token = localStorage.getItem('auth_token')
-  if (token) {
-    console.log('🔧 Token trouvé:', token.substring(0, 20) + '...')
-  } else {
-    console.log('⚠️ Aucun token trouvé')
-  }
-}
-
-// Fonction de log conditionnel
+// Fonction de log conditionnel (pour les logs de cache uniquement)
 export const debugLog = (message: string, data?: any) => {
-  if (DEBUG_MODE) {
+  // Logs silencieux en production
+  if (import.meta.env.DEV) {
     console.log(message, data)
   }
-}
-
-// Ajouter les fonctions à la fenêtre globale
-if (typeof window !== 'undefined') {
-  window.fixToken = fixToken
-  window.cleanupDebug = cleanupDebug
-  window.enableDebug = enableDebug
-  window.disableDebug = disableDebug
 }
 
 interface ApiResponse<T = any> {
@@ -69,6 +22,7 @@ interface ApiResponse<T = any> {
 class ApiService {
   private baseUrl: string
   private token: string | null = null
+  private requestCache = new Map<string, { data: any; timestamp: number; ttl: number }>()
 
   constructor() {
     this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
@@ -121,7 +75,7 @@ class ApiService {
     }
   }
 
-  // Auth methods
+  // Auth methods - OPTIMISÉ
   async login(credentials: { email: string; password: string }) {
     const response = await this.request<{ token: string; user: any }>('/auth/login', {
       method: 'POST',
@@ -154,6 +108,10 @@ class ApiService {
     } finally {
       this.token = null
       localStorage.removeItem('auth_token')
+      
+      // Nettoyer tout le cache lors de la déconnexion
+      cache.clear()
+      this.requestCache.clear()
     }
   }
 
@@ -165,7 +123,20 @@ class ApiService {
   }
 
   async checkAuth() {
-    return this.request('/auth/me')
+    // Vérifier le cache d'abord avec TTL plus long
+    const cachedUser = cache.get(CACHE_KEYS.USER)
+    if (cachedUser) {
+      return { success: true, user: cachedUser }
+    }
+    
+    const response = await this.request('/auth/check')
+    
+    // Mettre en cache si la requête réussit avec TTL plus long
+    if (response.success && response.user) {
+      cache.set(CACHE_KEYS.USER, response.user, 60 * 60 * 1000) // 1 heure
+    }
+    
+    return response
   }
 
   // MFA methods
@@ -198,9 +169,22 @@ class ApiService {
     return this.request('/auth/mfa/backup-codes', { method: 'POST' })
   }
 
-  // Store methods
+  // Store methods - OPTIMISÉ
   async getStores() {
-    return this.request('/stores')
+    // Vérifier le cache d'abord avec TTL plus long
+    const cachedStores = cache.get(CACHE_KEYS.STORES)
+    if (cachedStores) {
+      return { success: true, data: cachedStores }
+    }
+    
+    const response = await this.request('/stores')
+    
+    // Mettre en cache si la requête réussit avec TTL plus long
+    if (response.success && response.data) {
+      cache.set(CACHE_KEYS.STORES, response.data, 15 * 60 * 1000) // 15 minutes
+    }
+    
+    return response
   }
 
   async getStore(storeId: string) {
@@ -208,64 +192,189 @@ class ApiService {
   }
 
   async createStore(storeData: any) {
-    return this.request('/stores', {
+    const response = await this.request('/stores', {
       method: 'POST',
       body: JSON.stringify(storeData),
     })
+    
+    // Invalider le cache des stores après création
+    if (response.success) {
+      cache.delete(CACHE_KEYS.STORES)
+    }
+    
+    return response
   }
 
   async updateStore(storeId: string, storeData: any) {
-    return this.request(`/stores/${storeId}`, {
+    const response = await this.request(`/stores/${storeId}`, {
       method: 'PUT',
       body: JSON.stringify(storeData),
     })
+    
+    // Invalider les caches après mise à jour
+    if (response.success) {
+      cache.delete(CACHE_KEYS.STORES)
+      cache.delete(`store_${storeId}`)
+    }
+    
+    return response
   }
 
   async deleteStore(storeId: string) {
-    return this.request(`/stores/${storeId}`, {
+    const response = await this.request(`/stores/${storeId}`, {
       method: 'DELETE',
     })
+    
+    // Invalider les caches après suppression
+    if (response.success) {
+      cache.delete(CACHE_KEYS.STORES)
+      cache.delete(`store_${storeId}`)
+    }
+    
+    return response
   }
 
-  // Store stats methods
+  // Store stats methods - OPTIMISÉ
   async getStoreStats(storeId: string) {
-    return this.request(`/dashboard/stores/${storeId}/stats`)
+    // Vérifier le cache d'abord
+    const cacheKey = CACHE_KEYS.STORE_STATS(storeId)
+    const cachedData = cache.get(cacheKey)
+    if (cachedData) {
+      return { success: true, data: cachedData, message: 'Données depuis le cache' }
+    }
+
+    const response = await this.request(`/dashboard/stores/${storeId}/stats`)
+    
+    // Mettre en cache si succès avec TTL plus long
+    if (response.success && response.data) {
+      cache.set(cacheKey, response.data, 10 * 60 * 1000) // 10 minutes
+    }
+    
+    return response
   }
 
   async getRevenueChart(storeId: string, timeRange: string = '30d') {
-    return this.request(`/dashboard/stores/${storeId}/revenue-chart?timeRange=${timeRange}`)
+    // Vérifier le cache d'abord
+    const cacheKey = CACHE_KEYS.REVENUE_CHART(storeId)
+    const cachedData = cache.get(cacheKey)
+    if (cachedData) {
+      return { success: true, data: cachedData, message: 'Données depuis le cache' }
+    }
+
+    const response = await this.request(`/dashboard/stores/${storeId}/revenue-chart?timeRange=${timeRange}`)
+    
+    // Mettre en cache si succès avec TTL plus long
+    if (response.success && response.data) {
+      cache.set(cacheKey, response.data, 15 * 60 * 1000) // 15 minutes
+    }
+    
+    return response
   }
 
   async getStoreRecentOrders(storeId: string) {
-    return this.request(`/dashboard/stores/${storeId}/recent-orders`)
+    // Vérifier le cache d'abord
+    const cacheKey = CACHE_KEYS.ORDERS(storeId)
+    const cachedData = cache.get(cacheKey)
+    if (cachedData) {
+      return { success: true, data: cachedData, message: 'Données depuis le cache' }
+    }
+
+    const response = await this.request(`/dashboard/stores/${storeId}/recent-orders`)
+    
+    // Mettre en cache si succès avec TTL plus long
+    if (response.success && response.data) {
+      cache.set(cacheKey, response.data, 5 * 60 * 1000) // 5 minutes
+    }
+    
+    return response
   }
 
   async getStoreSalesChart(storeId: string) {
-    return this.request(`/dashboard/stores/${storeId}/sales-chart`)
+    // Vérifier le cache d'abord
+    const cacheKey = CACHE_KEYS.SALES_CHART(storeId)
+    const cachedData = cache.get(cacheKey)
+    if (cachedData) {
+      return { success: true, data: cachedData, message: 'Données depuis le cache' }
+    }
+
+    const response = await this.request(`/dashboard/stores/${storeId}/sales-chart`)
+    
+    // Mettre en cache si succès avec TTL plus long
+    if (response.success && response.data) {
+      cache.set(cacheKey, response.data, 15 * 60 * 1000) // 15 minutes
+    }
+    
+    return response
   }
 
-  // Product methods
-  async getStoreProducts(storeId: string) {
-    return this.request(`/stores/${storeId}/products`)
+  // Product methods - OPTIMISÉ avec pagination
+  async getStoreProducts(storeId: string, page: number = 1, perPage: number = 20) {
+    // Vérifier le cache d'abord
+    const cacheKey = `${CACHE_KEYS.PRODUCTS(storeId)}_page_${page}_per_${perPage}`
+    const cachedProducts = cache.get(cacheKey)
+    if (cachedProducts) {
+      return { success: true, data: cachedProducts, message: 'Produits depuis le cache' }
+    }
+
+    const response = await this.request(`/stores/${storeId}/products?page=${page}&per_page=${perPage}`)
+    
+    // Mettre en cache si succès avec TTL plus long
+    if (response.success && response.data) {
+      cache.set(cacheKey, response.data, 15 * 60 * 1000) // 15 minutes
+    }
+    
+    return response
   }
 
   async createProduct(storeId: string, productData: any) {
-    return this.request(`/stores/${storeId}/products`, {
+    const response = await this.request(`/stores/${storeId}/products`, {
       method: 'POST',
       body: JSON.stringify(productData),
     })
+    
+    // Invalider le cache des produits après création
+    if (response.success) {
+      this.invalidateProductCache(storeId)
+    }
+    
+    return response
   }
 
   async updateProduct(productId: string, productData: any) {
-    return this.request(`/products/${productId}`, {
+    const response = await this.request(`/products/${productId}`, {
       method: 'PUT',
       body: JSON.stringify(productData),
     })
+    
+    // Invalider le cache des produits après mise à jour
+    if (response.success) {
+      this.invalidateProductCache(productId)
+    }
+    
+    return response
   }
 
   async deleteProduct(productId: string) {
-    return this.request(`/products/${productId}`, {
+    const response = await this.request(`/products/${productId}`, {
       method: 'DELETE',
+    })
+    
+    // Invalider le cache des produits après suppression
+    if (response.success) {
+      this.invalidateProductCache(productId)
+    }
+    
+    return response
+  }
+
+  // Méthode pour invalider le cache des produits
+  private invalidateProductCache(storeId: string) {
+    // Supprimer tous les caches de produits de cette boutique
+    const keys = Object.keys(localStorage)
+    keys.forEach(key => {
+      if (key.startsWith(`products_${storeId}`)) {
+        cache.delete(key)
+      }
     })
   }
 
@@ -290,6 +399,71 @@ class ApiService {
 
   async deleteCategory(categoryId: string) {
     return this.request(`/categories/${categoryId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Media methods
+  async getStoreMedia(storeId: string, params: {
+    type?: string
+    search?: string
+    sortBy?: string
+    sortOrder?: string
+    page?: number
+    perPage?: number
+  } = {}) {
+    const queryParams = new URLSearchParams()
+    
+    if (params.type && params.type !== 'all') {
+      queryParams.append('type', params.type)
+    }
+    if (params.search) {
+      queryParams.append('search', params.search)
+    }
+    if (params.sortBy) {
+      queryParams.append('sort_by', params.sortBy)
+    }
+    if (params.sortOrder) {
+      queryParams.append('sort_order', params.sortOrder)
+    }
+    if (params.page) {
+      queryParams.append('page', params.page.toString())
+    }
+    if (params.perPage) {
+      queryParams.append('per_page', params.perPage.toString())
+    }
+
+    const queryString = queryParams.toString()
+    const endpoint = `/stores/${storeId}/media${queryString ? `?${queryString}` : ''}`
+    
+    return this.request(endpoint)
+  }
+
+  async uploadMedia(storeId: string, files: File[]) {
+    const formData = new FormData()
+    
+    files.forEach((file, index) => {
+      formData.append(`files[${index}]`, file)
+    })
+
+    return this.request(`/stores/${storeId}/media`, {
+      method: 'POST',
+      headers: {
+        // Ne pas définir Content-Type pour FormData
+      },
+      body: formData,
+    })
+  }
+
+  async updateMedia(storeId: string, mediaId: string, data: { name: string }) {
+    return this.request(`/stores/${storeId}/media/${mediaId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteMedia(storeId: string, mediaId: string) {
+    return this.request(`/stores/${storeId}/media/${mediaId}`, {
       method: 'DELETE',
     })
   }

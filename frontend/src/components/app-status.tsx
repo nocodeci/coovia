@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+import { CheckCircle, AlertCircle } from "lucide-react"
+import { CircleLoader } from "@/components/ui/circle-loader"
 
 interface AppStatusProps {
   isLoading?: boolean
@@ -11,7 +12,7 @@ export function AppStatus({ isLoading, error, tokenValid }: AppStatusProps) {
   if (isLoading) {
     return (
       <Badge variant="secondary" className="flex items-center gap-1">
-        <Loader2 className="h-3 w-3 animate-spin" />
+        <CircleLoader size="sm" className="!flex-row" />
         Chargement...
       </Badge>
     )

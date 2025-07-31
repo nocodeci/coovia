@@ -16,6 +16,9 @@ import {
   ChevronsUpDown,
   BookOpen,
   RefreshCw,
+  ArrowLeft,
+  Image,
+  File,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,10 +45,9 @@ import { ShineBorder } from "@/components/magicui/shine-border"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { TopBar } from "./components/top-bar-simple"
-import { useProduct } from "@/hooks/useProduct"
+import { useNavigate } from "@tanstack/react-router"
+import apiService from "@/lib/api"
 
-import { useCategorie } from "@/hooks/useCategorie"
-import { useStore } from "@/context/store-context"
 
 const productTypes = [
   {
@@ -53,53 +55,121 @@ const productTypes = [
     title: "Téléchargeable",
     description: "Fichiers numériques livrés instantanément",
     icon: Package,
-    categories: [
-      "Templates",
-      "Graphiques",
-      "Audio",
-      "Vidéo",
-      "Documents",
-      "Code",
-      "Photos",
-      "Illustrations",
-      "Fonts",
-      "Autre"
-    ]
   },
   {
     id: "cours",
     title: "Cours",
     description: "Formations structurées et interactives",
     icon: BookOpen,
-    categories: [
-      "Développement",
-      "Design",
-      "Marketing",
-      "Business",
-      "Langues",
-      "Musique",
-      "Photographie",
-      "Vidéo",
-      "Écriture",
-      "Autre"
-    ]
   },
   {
     id: "abonnement",
     title: "Abonnement",
     description: "Produits avec facturation récurrente",
     icon: RefreshCw,
-    categories: [
-      "Logiciels",
-      "Services",
-      "Contenu Premium",
-      "Support",
-      "Mentorat",
-      "Communauté",
-      "Autre"
-    ]
   },
 ]
+
+// Catégories adaptées selon le type de produit
+const getCategoriesByType = (type: string) => {
+  switch (type) {
+    case "telechargeable":
+      return [
+        { id: "1", name: "Templates" },
+        { id: "2", name: "Graphiques" },
+        { id: "3", name: "Audio" },
+        { id: "4", name: "Vidéo" },
+        { id: "5", name: "Documents" },
+        { id: "6", name: "Code" },
+        { id: "7", name: "Photos" },
+        { id: "8", name: "Illustrations" },
+        { id: "9", name: "Fonts" },
+        { id: "10", name: "Développement" },
+        { id: "11", name: "Design" },
+        { id: "12", name: "Marketing" },
+        { id: "13", name: "Business" },
+        { id: "14", name: "Langues" },
+        { id: "15", name: "Musique" },
+        { id: "16", name: "Photographie" },
+        { id: "17", name: "Écriture" },
+        { id: "18", name: "Logiciels" },
+        { id: "19", name: "Services" },
+        { id: "20", name: "Contenu Premium" },
+        { id: "21", name: "Support" },
+        { id: "22", name: "Mentorat" },
+        { id: "23", name: "Communauté" },
+        { id: "24", name: "Autre" },
+      ]
+    case "cours":
+      return [
+        { id: "c1", name: "Formation en ligne" },
+        { id: "c2", name: "Tutoriel vidéo" },
+        { id: "c3", name: "Cours interactif" },
+        { id: "c4", name: "Formation technique" },
+        { id: "c5", name: "Cours de langues" },
+        { id: "c6", name: "Formation business" },
+        { id: "c7", name: "Cours de design" },
+        { id: "c8", name: "Formation marketing" },
+        { id: "c9", name: "Cours de développement" },
+        { id: "c10", name: "Formation créative" },
+        { id: "c11", name: "Cours de photographie" },
+        { id: "c12", name: "Formation musique" },
+        { id: "c13", name: "Cours de fitness" },
+        { id: "c14", name: "Formation cuisine" },
+        { id: "c15", name: "Cours de bien-être" },
+        { id: "c16", name: "Formation finance" },
+        { id: "c17", name: "Cours de leadership" },
+        { id: "c18", name: "Formation vente" },
+        { id: "c19", name: "Cours de communication" },
+        { id: "c20", name: "Formation entrepreneuriat" },
+      ]
+    case "abonnement":
+      return [
+        { id: "a1", name: "Abonnement mensuel" },
+        { id: "a2", name: "Abonnement annuel" },
+        { id: "a3", name: "Accès premium" },
+        { id: "a4", name: "Mentorat continu" },
+        { id: "a5", name: "Support prioritaire" },
+        { id: "a6", name: "Contenu exclusif" },
+        { id: "a7", name: "Communauté privée" },
+        { id: "a8", name: "Formation continue" },
+        { id: "a9", name: "Coaching personnalisé" },
+        { id: "a10", name: "Accès illimité" },
+        { id: "a11", name: "Mise à jour continue" },
+        { id: "a12", name: "Support technique" },
+        { id: "a13", name: "Consultation" },
+        { id: "a14", name: "Accès VIP" },
+        { id: "a15", name: "Formation avancée" },
+      ]
+    default:
+      return [
+        { id: "1", name: "Templates" },
+        { id: "2", name: "Graphiques" },
+        { id: "3", name: "Audio" },
+        { id: "4", name: "Vidéo" },
+        { id: "5", name: "Documents" },
+        { id: "6", name: "Code" },
+        { id: "7", name: "Photos" },
+        { id: "8", name: "Illustrations" },
+        { id: "9", name: "Fonts" },
+        { id: "10", name: "Développement" },
+        { id: "11", name: "Design" },
+        { id: "12", name: "Marketing" },
+        { id: "13", name: "Business" },
+        { id: "14", name: "Langues" },
+        { id: "15", name: "Musique" },
+        { id: "16", name: "Photographie" },
+        { id: "17", name: "Écriture" },
+        { id: "18", name: "Logiciels" },
+        { id: "19", name: "Services" },
+        { id: "20", name: "Contenu Premium" },
+        { id: "21", name: "Support" },
+        { id: "22", name: "Mentorat" },
+        { id: "23", name: "Communauté" },
+        { id: "24", name: "Autre" },
+      ]
+  }
+}
 
 interface UploadedFile {
   id: string
@@ -111,19 +181,13 @@ interface UploadedFile {
 }
 
 interface AddProductProps {
-  storeId?: string
+  storeId: string
 }
 
 export default function AddProduct({ storeId }: AddProductProps) {
-  const { stores, currentStore } = useStore()
-  const {
-    createProduct,
-    uploadProductImage,
-    uploadProductFiles,
-    isLoading: isProductLoading,
-  } = useProduct(storeId || currentStore?.id || "")
+  const navigate = useNavigate()
 
-
+  // États locaux uniquement (pas d'appels API)
   const [productName, setProductName] = useState("")
   const [selectedType, setSelectedType] = useState("telechargeable")
   const [category, setCategory] = useState("")
@@ -144,34 +208,40 @@ export default function AddProduct({ storeId }: AddProductProps) {
 
   // États pour les combobox
   const [openCategory, setOpenCategory] = useState(false)
-  const [newCategory, setNewCategory] = useState("")
-  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false)
 
-  // Obtenir les catégories selon le type de produit sélectionné
-  const getCategoriesForType = () => {
-    const selectedTypeData = productTypes.find(type => type.id === selectedType)
-    return selectedTypeData?.categories || []
-  }
+  // Magasin simulé (côté client uniquement)
+  const currentStore = { id: storeId, name: "Boutique sélectionnée" }
 
-  // Gérer l'ajout d'une nouvelle catégorie
-  const handleAddNewCategory = () => {
-    if (newCategory.trim()) {
-      setCategory(newCategory.trim())
-      setNewCategory("")
-      setShowNewCategoryInput(false)
-      setOpenCategory(false)
+  // Générer automatiquement le SKU basé sur le nom du produit
+  useEffect(() => {
+    if (productName && !sku) {
+      const generatedSku = productName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .substring(0, 20)
+      setSku(generatedSku + "-" + Date.now().toString().slice(-4))
     }
-  }
+  }, [productName, sku])
 
-  // Calculer si le formulaire est valide pour publication
-  const isFormValid = 
+  // Réinitialiser la catégorie quand le type change
+  useEffect(() => {
+    setCategory("")
+  }, [selectedType])
+
+  // Validation pour la publication (prix, description et image requis)
+  const canPublish = Boolean(
     productName.trim() && 
     category && 
     selectedType && 
-    currentStore && 
     price && 
     description.trim() && 
     featuredImage
+  )
+
+  // Validation pour le brouillon (nom et type requis)
+  const canSaveDraft = Boolean(productName.trim() && selectedType)
 
   // Détecter les changements non sauvegardés
   useEffect(() => {
@@ -186,7 +256,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
       minStockLevel ||
       uploadedFiles.length > 0 ||
       featuredImage
-    setHasUnsavedChanges(true)
+    setHasUnsavedChanges(!!hasChanges)
   }, [
     productName,
     category,
@@ -199,13 +269,6 @@ export default function AddProduct({ storeId }: AddProductProps) {
     uploadedFiles,
     featuredImage,
   ])
-
-  // Réinitialiser la catégorie quand le type de produit change
-  useEffect(() => {
-    setCategory("")
-    setShowNewCategoryInput(false)
-    setNewCategory("")
-  }, [selectedType])
 
   // Générer automatiquement le SKU basé sur le nom du produit
   useEffect(() => {
@@ -326,59 +389,24 @@ export default function AddProduct({ storeId }: AddProductProps) {
       return
     }
 
-    // Validation des champs obligatoires
-    if (!productName.trim()) {
-      toast.error("Erreur", {
-        description: "Le nom du produit est obligatoire",
-      })
-      return
-    }
-
-    if (!category) {
-      toast.error("Erreur", {
-        description: "La catégorie est obligatoire",
-      })
-      return
-    }
-
-    if (!price || Number.parseFloat(price) <= 0) {
-      toast.error("Erreur", {
-        description: "Le prix est obligatoire et doit être supérieur à 0",
-      })
-      return
-    }
-
-    if (!description.trim()) {
-      toast.error("Erreur", {
-        description: "La description est obligatoire",
-      })
-      return
-    }
-
-    if (!featuredImage) {
-      toast.error("Erreur", {
-        description: "L'image principale est obligatoire",
-      })
-      return
-    }
-
     try {
-      // Créer le produit
+      // Préparer les données du produit pour l'API
       const productData = {
         name: productName,
         description,
         price: Number.parseFloat(price) || 0,
-        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : undefined,
+        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : null,
         sku,
         category,
         stock_quantity: Number.parseInt(stockQuantity) || 0,
         min_stock_level: Number.parseInt(minStockLevel) || 0,
-        status: "active" as const,
-        images: [],
-        files: [],
-        tags: [],
+        status: "active",
+        images: featuredImage ? [featuredImage] : [],
+        files: uploadedFiles.map(file => file.name),
         inventory: {
           quantity: Number.parseInt(stockQuantity) || 0,
+          min_level: Number.parseInt(minStockLevel) || 0,
+          track_inventory: true,
           low_stock_threshold: Number.parseInt(minStockLevel) || 0,
         },
         attributes: {
@@ -391,39 +419,30 @@ export default function AddProduct({ storeId }: AddProductProps) {
         },
       }
 
-      const createdProduct = await createProduct(productData) as any
+      // Appel à l'API pour créer le produit
+      const response = await apiService.createProduct(storeId, productData)
 
-      // Télécharger l'image principale si elle existe
-      if (featuredImageFile && createdProduct?.id) {
-        const imageUrl = await uploadProductImage(createdProduct.id, featuredImageFile)
-        // Mettre à jour le produit avec l'URL de l'image
-        // await updateProduct(createdProduct.id, { images: [imageUrl] })
+      if (response.success) {
+        toast.success("🎉 Produit publié avec succès !", {
+          description: "Votre produit est maintenant visible par tous les utilisateurs",
+          action: {
+            label: "Voir le produit",
+            onClick: () => navigate({ to: `/${storeId}/produits` }),
+          },
+        })
+
+        setHasUnsavedChanges(false)
+
+        // Rediriger immédiatement vers la liste des produits
+        navigate({ to: `/${storeId}/produits` })
+      } else {
+        throw new Error(response.message || "Erreur lors de la création du produit")
       }
-
-      // Télécharger les fichiers si ils existent
-      if (uploadedFiles.length > 0 && createdProduct?.id) {
-        const filesToUpload = uploadedFiles.filter((f) => f.file).map((f) => f.file!)
-        if (filesToUpload.length > 0) {
-          await uploadProductFiles(createdProduct.id, filesToUpload)
-        }
-      }
-
-      toast.success("🎉 Produit publié avec succès !", {
-        description: "Votre produit est maintenant visible par tous les utilisateurs",
-        action: {
-          label: "Voir le produit",
-          onClick: () => (window.location.href = `/produits/${createdProduct.id}`),
-        },
-      })
-
-      setHasUnsavedChanges(false)
-
-      // Rediriger vers la liste des produits après un délai
-      setTimeout(() => {
-        window.location.href = "/produits"
-      }, 2000)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la publication:", error)
+      toast.error("Erreur lors de la publication", {
+        description: error.message || "Veuillez réessayer",
+      })
     }
   }
 
@@ -440,17 +459,18 @@ export default function AddProduct({ storeId }: AddProductProps) {
         name: productName || "Produit sans titre",
         description,
         price: Number.parseFloat(price) || 0,
-        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : undefined,
+        sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : null,
         sku: sku || `draft-${Date.now()}`,
         category: category || "non-categorise",
         stock_quantity: Number.parseInt(stockQuantity) || 0,
         min_stock_level: Number.parseInt(minStockLevel) || 0,
-        status: "draft" as const,
-        images: [],
-        files: [],
-        tags: [],
+        status: "draft",
+        images: featuredImage ? [featuredImage] : [],
+        files: uploadedFiles.map(file => file.name),
         inventory: {
           quantity: Number.parseInt(stockQuantity) || 0,
+          min_level: Number.parseInt(minStockLevel) || 0,
+          track_inventory: true,
           low_stock_threshold: Number.parseInt(minStockLevel) || 0,
         },
         attributes: {
@@ -463,18 +483,26 @@ export default function AddProduct({ storeId }: AddProductProps) {
         },
       }
 
-      await createProduct(productData)
+      // Appel à l'API pour créer le brouillon
+      const response = await apiService.createProduct(storeId, productData)
 
-      toast.success("💾 Brouillon sauvegardé", {
-        description: "Votre produit a été sauvegardé en tant que brouillon",
-        action: {
-          label: "Continuer",
-          onClick: () => console.log("Continuer l'édition"),
-        },
-      })
-      setHasUnsavedChanges(false)
-    } catch (error) {
+      if (response.success) {
+        toast.success("💾 Brouillon sauvegardé", {
+          description: "Votre produit a été sauvegardé en tant que brouillon",
+          action: {
+            label: "Continuer",
+            onClick: () => console.log("Continuer l'édition"),
+          },
+        })
+        setHasUnsavedChanges(false)
+      } else {
+        throw new Error(response.message || "Erreur lors de la sauvegarde")
+      }
+    } catch (error: any) {
       console.error("Erreur lors de la sauvegarde:", error)
+      toast.error("Erreur lors de la sauvegarde", {
+        description: error.message || "Veuillez réessayer",
+      })
     }
   }
 
@@ -487,10 +515,14 @@ export default function AddProduct({ storeId }: AddProductProps) {
   }
 
   const handleSave = () => {
-    if (isFormValid) {
+    if (canPublish) {
       handlePublish()
-    } else {
+    } else if (canSaveDraft) {
       handleSaveDraft()
+    } else {
+      toast.error("Informations manquantes", {
+        description: "Veuillez remplir au minimum le nom du produit et le type pour sauvegarder un brouillon",
+      })
     }
   }
 
@@ -516,7 +548,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
   }
 
   const handleBack = () => {
-    window.location.href = "/produits"
+    navigate({ to: `/${storeId}/produits` })
   }
 
   const handlePreview = () => {
@@ -532,24 +564,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
     reader.readAsDataURL(file)
   }
 
-  if (!currentStore) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">Aucun magasin sélectionné</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Vous devez sélectionner un magasin pour créer un produit.
-              </p>
-              <Button onClick={() => (window.location.href = "/stores")}>Gérer les magasins</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -561,7 +576,8 @@ export default function AddProduct({ storeId }: AddProductProps) {
         description={description}
         selectedType={selectedType}
         uploadedFilesCount={uploadedFiles.length}
-        isFormValid={true}
+        featuredImage={featuredImage}
+        isFormValid={canPublish}
         hasUnsavedChanges={hasUnsavedChanges}
         onSave={handleSave}
         onDiscard={handleDiscard}
@@ -597,7 +613,20 @@ export default function AddProduct({ storeId }: AddProductProps) {
                     />
                   </div>
 
-
+                  {/* SKU - Masqué car généré automatiquement */}
+                  {/* <div className="space-y-2">
+                    <Label htmlFor="sku" className="text-sm font-medium">
+                      SKU (Référence produit)
+                    </Label>
+                    <Input
+                      id="sku"
+                      value={sku}
+                      onChange={(e) => setSku(e.target.value)}
+                      placeholder="Référence unique du produit"
+                      className="h-12 text-base"
+                    />
+                    <p className="text-xs text-muted-foreground">Généré automatiquement si laissé vide</p>
+                  </div> */}
 
                   {/* Type de produit */}
                   <div className="space-y-4">
@@ -656,9 +685,10 @@ export default function AddProduct({ storeId }: AddProductProps) {
                           role="combobox"
                           aria-expanded={openCategory}
                           className="w-full h-12 justify-between bg-transparent"
-                          disabled={!selectedType}
                         >
-                          {category || "Sélectionner une catégorie..."}
+                          {category
+                            ? getCategoriesByType(selectedType).find((cat) => cat.name === category)?.name
+                            : "Sélectionner une catégorie..."}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
@@ -666,54 +696,22 @@ export default function AddProduct({ storeId }: AddProductProps) {
                         <Command>
                           <CommandInput placeholder="Rechercher une catégorie..." className="h-9" />
                           <CommandList>
-                            <CommandEmpty>
-                              {showNewCategoryInput ? (
-                                <div className="p-2">
-                                  <div className="flex gap-2">
-                                    <Input
-                                      value={newCategory}
-                                      onChange={(e) => setNewCategory(e.target.value)}
-                                      placeholder="Nouvelle catégorie..."
-                                      className="flex-1"
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          handleAddNewCategory()
-                                        }
-                                      }}
-                                    />
-                                    <Button size="sm" onClick={handleAddNewCategory}>
-                                      Ajouter
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="p-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setShowNewCategoryInput(true)}
-                                    className="w-full"
-                                  >
-                                    + Créer une nouvelle catégorie
-                                  </Button>
-                                </div>
-                              )}
-                            </CommandEmpty>
+                            <CommandEmpty>Aucune catégorie trouvée.</CommandEmpty>
                             <CommandGroup>
-                              {getCategoriesForType().map((catName) => (
+                              {getCategoriesByType(selectedType).map((cat) => (
                                 <CommandItem
-                                  key={catName}
-                                  value={catName}
+                                  key={cat.id}
+                                  value={cat.name}
                                   onSelect={(currentValue) => {
                                     setCategory(currentValue === category ? "" : currentValue)
                                     setOpenCategory(false)
                                   }}
                                 >
-                                  {catName}
+                                  {cat.name}
                                   <Check
                                     className={cn(
                                       "ml-auto h-4 w-4",
-                                      category === catName ? "opacity-100" : "opacity-0",
+                                      category === cat.name ? "opacity-100" : "opacity-0",
                                     )}
                                   />
                                 </CommandItem>
@@ -746,6 +744,9 @@ export default function AddProduct({ storeId }: AddProductProps) {
                             FCFA
                           </span>
                         </div>
+                        {!price && (
+                          <p className="text-xs text-destructive">Le prix est requis pour publier le produit</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
@@ -882,6 +883,9 @@ export default function AddProduct({ storeId }: AddProductProps) {
                 </CardHeader>
                 <CardContent>
                   <RichTextEditor value={description} onChange={setDescription} />
+                  {!description.trim() && (
+                    <p className="text-xs text-destructive mt-2">La description est requise pour publier le produit</p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1033,28 +1037,31 @@ export default function AddProduct({ storeId }: AddProductProps) {
                       </div>
                     </div>
                   ) : (
-                    <Button
-                      variant="outline"
-                      className="w-full h-48 border-dashed bg-muted/30 hover:bg-muted/50 transition-colors"
-                      onClick={() => {
-                        const input = document.createElement("input")
-                        input.type = "file"
-                        input.accept = "image/*"
-                        input.onchange = (e) => {
-                          const file = (e.target as HTMLInputElement).files?.[0]
-                          if (file) {
-                            handleFeaturedImageUpload(file)
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        className="w-full h-48 border-dashed bg-muted/30 hover:bg-muted/50 transition-colors"
+                        onClick={() => {
+                          const input = document.createElement("input")
+                          input.type = "file"
+                          input.accept = "image/*"
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0]
+                            if (file) {
+                              handleFeaturedImageUpload(file)
+                            }
                           }
-                        }
-                        input.click()
-                      }}
-                    >
-                      <div className="text-center">
-                        <ImageIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                        <div className="font-medium">Ajouter une image</div>
-                        <div className="text-sm text-muted-foreground mt-1">Cliquez pour sélectionner</div>
-                      </div>
-                    </Button>
+                          input.click()
+                        }}
+                      >
+                        <div className="text-center">
+                          <ImageIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                          <div className="font-medium">Ajouter une image</div>
+                          <div className="text-sm text-muted-foreground mt-1">Cliquez pour sélectionner</div>
+                        </div>
+                      </Button>
+                      <p className="text-xs text-destructive">L'image principale est requise pour publier le produit</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -1070,14 +1077,29 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   <CardContent className="space-y-4 relative z-10">
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Statut :</span>
-                      <Badge variant={isFormValid ? "default" : "secondary"}>
-                        {isFormValid ? "Prêt à publier" : "Brouillon"}
+                      <Badge variant={canPublish ? "default" : "secondary"}>
+                        {canPublish ? "Prêt à publier" : "Brouillon"}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Visibilité :</span>
                       <Badge variant="outline">Publique</Badge>
                     </div>
+                    
+                    {/* Indicateurs des champs manquants */}
+                    {!canPublish && (
+                      <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-destructive/20">
+                        <p className="text-xs font-medium text-destructive">Champs requis pour la publication :</p>
+                        <ul className="text-xs space-y-1">
+                          {!productName.trim() && <li className="text-destructive">• Nom du produit</li>}
+                          {!category && <li className="text-destructive">• Catégorie</li>}
+                          {!price && <li className="text-destructive">• Prix de vente</li>}
+                          {!description.trim() && <li className="text-destructive">• Description</li>}
+                          {!featuredImage && <li className="text-destructive">• Image principale</li>}
+                        </ul>
+                      </div>
+                    )}
+                    
                     <Separator />
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -1093,8 +1115,8 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   <CardFooter className="flex flex-col space-y-3 pt-6 relative z-10">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button className="w-full" disabled={!isFormValid || isProductLoading}>
-                          {isProductLoading ? "Publication..." : "Publier le produit"}
+                        <Button className="w-full" disabled={!canPublish}>
+                          Publier le produit
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -1119,9 +1141,9 @@ export default function AddProduct({ storeId }: AddProductProps) {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline" className="w-full bg-transparent" disabled={isProductLoading}>
+                        <Button variant="outline" className="w-full bg-transparent">
                           <Save className="h-4 w-4 mr-2" />
-                          {isProductLoading ? "Sauvegarde..." : "Sauvegarder comme brouillon"}
+                          Sauvegarder comme brouillon
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -1175,14 +1197,12 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   <div className="flex justify-between text-sm">
                     <span>Catégorie :</span>
                     <span className="font-medium">
-                      {category || "Non définie"}
+                      {getCategoriesByType(selectedType).find((c) => c.name === category)?.name || "Non définie"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Prix :</span>
-                    <span className={`font-medium ${!price || Number.parseFloat(price) <= 0 ? 'text-destructive' : ''}`}>
-                      {price ? `${price} FCFA` : "Non défini"}
-                    </span>
+                    <span className="font-medium">{price ? `${price} FCFA` : "Gratuit"}</span>
                   </div>
                   {promotionalPrice && (
                     <div className="flex justify-between text-sm">
@@ -1193,18 +1213,6 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   <div className="flex justify-between text-sm">
                     <span>Stock :</span>
                     <span className="font-medium">{stockQuantity || "0"}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Description :</span>
-                    <span className={`font-medium ${!description.trim() ? 'text-destructive' : ''}`}>
-                      {description.trim() ? "Définie" : "Non définie"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Image principale :</span>
-                    <span className={`font-medium ${!featuredImage ? 'text-destructive' : ''}`}>
-                      {featuredImage ? "Ajoutée" : "Non ajoutée"}
-                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Fichiers :</span>
@@ -1218,4 +1226,4 @@ export default function AddProduct({ storeId }: AddProductProps) {
       </main>
     </div>
   )
-}
+} 

@@ -1,26 +1,35 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import type { Store } from "@/types/store"
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react"
+import { cache, CACHE_KEYS } from "@/lib/cache"
 import apiService from "@/lib/api"
+
+interface Store {
+  id: string
+  name: string
+  description?: string
+  owner_id: string
+  created_at: string
+  updated_at: string
+}
 
 interface StoreContextType {
   stores: Store[]
   currentStore: Store | null
   isLoading: boolean
   error: string | null
+  hasLoaded: boolean
   setCurrentStore: (store: Store) => void
   refreshStores: () => Promise<void>
   loadStoreStats: (storeId: string) => Promise<any>
 }
 
-const StoreContext = createContext<StoreContextType | undefined>(undefined)
+const StoreContext = createContext<StoreContextType | null>(null)
 
 export const useStore = () => {
   const context = useContext(StoreContext)
-  if (context === undefined) {
-    throw new Error("useStore must be used within a StoreProvider")
+  if (!context) {
+    throw new Error("useStore must be used within StoreProvider")
   }
   return context
 }
@@ -34,68 +43,62 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   const [currentStore, setCurrentStoreState] = useState<Store | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hasLoaded, setHasLoaded] = useState(false)
+  const loadStoresInProgress = useRef(false)
 
-  const loadStores = async () => {
+  const loadStores = async (forceRefresh = false) => {
+    // Éviter les appels simultanés
+    if (loadStoresInProgress.current && !forceRefresh) return
+    
+    loadStoresInProgress.current = true
+    
     try {
-      setIsLoading(true)
       setError(null)
       
+      // Vérifier le cache d'abord (sauf si forceRefresh)
+      if (!forceRefresh) {
+        const cachedStores = cache.get<Store[]>(CACHE_KEYS.STORES)
+        if (cachedStores && cachedStores.length > 0) {
+          setStores(cachedStores)
+          setHasLoaded(true)
+          setIsLoading(false)
+          
+          // Restaurer la boutique sélectionnée depuis le localStorage
+          const savedStoreId = localStorage.getItem("selectedStoreId")
+          if (savedStoreId) {
+            const savedStore = cachedStores.find(store => store.id === savedStoreId)
+            if (savedStore) {
+              setCurrentStoreState(savedStore)
+            } else {
+              localStorage.removeItem("selectedStoreId")
+            }
+          }
+          return
+        }
+      }
+
       const response = await apiService.getStores()
-      
+
       if (response.success && response.data) {
-        // Transformer les données de l'API pour correspondre au type Store
-        const transformedStores: Store[] = (response.data as any[]).map((store: any) => ({
-          id: store.id.toString(),
+        const transformedStores = (response.data as any[]).map((store: any) => ({
+          id: store.id,
           name: store.name,
           description: store.description,
-          logo: store.logo,
-          status: store.status,
-          plan: store.settings?.plan || 'starter',
-          createdAt: store.created_at,
-          updatedAt: store.updated_at,
-          settings: {
-            currency: store.settings?.currency || 'XOF',
-            language: store.settings?.language || 'fr',
-            timezone: store.settings?.timezone || 'Africa/Abidjan',
-            notifications: {
-              email: store.settings?.notifications?.email || true,
-              sms: store.settings?.notifications?.sms || false,
-              push: store.settings?.notifications?.push || true,
-            },
-            features: {
-              inventory: store.settings?.features?.inventory || true,
-              analytics: store.settings?.features?.analytics || true,
-              multiChannel: store.settings?.features?.multiChannel || false,
-              customDomain: store.settings?.features?.customDomain || false,
-            },
-          },
-          stats: {
-            totalProducts: store.stats?.totalProducts || store.products_count || 0,
-            totalOrders: store.stats?.totalOrders || store.orders_count || 0,
-            totalRevenue: store.stats?.totalRevenue || 0,
-            totalCustomers: store.stats?.totalCustomers || 0,
-            conversionRate: store.stats?.conversionRate || 0,
-            averageOrderValue: store.stats?.averageOrderValue || 0,
-          },
-          contact: {
-            email: store.contact?.email || '',
-            phone: store.contact?.phone || '',
-            address: {
-              street: store.address?.street || '',
-              city: store.address?.city || '',
-              state: store.address?.state || '',
-              country: store.address?.country || '',
-              postalCode: store.address?.postal_code || '',
-            },
-          },
+          owner_id: store.owner_id,
+          created_at: store.created_at,
+          updated_at: store.updated_at,
         }))
 
         setStores(transformedStores)
+        setHasLoaded(true)
+
+        // Mettre en cache les boutiques avec TTL plus long
+        cache.set(CACHE_KEYS.STORES, transformedStores, 15 * 60 * 1000) // 15 minutes
 
         // Restaurer la boutique sélectionnée depuis le localStorage
         const savedStoreId = localStorage.getItem("selectedStoreId")
         if (savedStoreId) {
-          const savedStore = transformedStores.find(store => store.id === savedStoreId)
+          const savedStore = transformedStores.find((store: Store) => store.id === savedStoreId)
           if (savedStore) {
             setCurrentStoreState(savedStore)
           } else {
@@ -103,13 +106,14 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
           }
         }
       } else {
-        setError(response.message || 'Erreur lors du chargement des boutiques')
+        setError('Erreur lors du chargement des boutiques')
       }
     } catch (err: any) {
       console.error("🚨 Erreur lors du chargement des boutiques:", err)
       setError(err.message || "Erreur lors du chargement des boutiques")
     } finally {
       setIsLoading(false)
+      loadStoresInProgress.current = false
     }
   }
 
@@ -119,14 +123,25 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   }
 
   const refreshStores = async () => {
-    await loadStores()
+    setHasLoaded(false)
+    cache.delete(CACHE_KEYS.STORES)
+    await loadStores(true) // Force refresh
   }
 
   const loadStoreStats = async (storeId: string) => {
     try {
+      // Vérifier le cache des stats
+      const cacheKey = `store_stats_${storeId}`
+      const cachedStats = cache.get(cacheKey)
+      if (cachedStats) {
+        return cachedStats
+      }
+
       const response = await apiService.getStoreStats(storeId)
       
       if (response.success && response.data) {
+        // Mettre en cache les stats pour 5 minutes
+        cache.set(cacheKey, response.data, 5 * 60 * 1000)
         return response.data
       } else {
         throw new Error(response.message || 'Erreur lors du chargement des statistiques')
@@ -137,9 +152,36 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     }
   }
 
-  // Charger les boutiques au montage du composant
+  // Charger les boutiques au montage du composant - OPTIMISÉ
   useEffect(() => {
-    loadStores()
+    const token = localStorage.getItem("auth_token")
+    
+    if (token) {
+      // Vérifier immédiatement le cache
+      const cachedStores = cache.get<Store[]>(CACHE_KEYS.STORES)
+      if (cachedStores && cachedStores.length > 0) {
+        setStores(cachedStores)
+        setHasLoaded(true)
+        setIsLoading(false)
+        
+        // Restaurer la boutique sélectionnée depuis le localStorage
+        const savedStoreId = localStorage.getItem("selectedStoreId")
+        if (savedStoreId) {
+          const savedStore = cachedStores.find(store => store.id === savedStoreId)
+          if (savedStore) {
+            setCurrentStoreState(savedStore)
+          } else {
+            localStorage.removeItem("selectedStoreId")
+          }
+        }
+        return
+      }
+      
+      // Si pas de cache, charger immédiatement
+      loadStores()
+    } else {
+      setIsLoading(false)
+    }
   }, [])
 
   const value: StoreContextType = {
@@ -147,6 +189,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     currentStore,
     isLoading,
     error,
+    hasLoaded,
     setCurrentStore,
     refreshStores,
     loadStoreStats,

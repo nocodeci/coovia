@@ -2,34 +2,72 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Auth\Middleware\Authenticate as Middleware;
+use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
-class ApiAuthenticate extends Middleware
+class ApiAuthenticate
 {
     /**
-     * Get the path the user should be redirected to when they are not authenticated.
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
-    protected function redirectTo(Request $request): ?string
+    public function handle(Request $request, Closure $next)
     {
-        // Pour les API, on ne redirige pas, on retourne null
-        // Cela va déclencher une exception 401 au lieu d'une redirection
-        return $request->expectsJson() ? null : route('login');
-    }
-
-    /**
-     * Handle unauthenticated user for API requests
-     */
-    protected function unauthenticated($request, array $guards)
-    {
-        // Pour les requêtes API, retourner une réponse JSON 401
-        if ($request->expectsJson() || $request->is('api/*')) {
-            abort(response()->json([
-                'message' => 'Non authentifié. Token requis.',
-                'error' => 'Unauthenticated'
-            ], 401));
+        // Vérifier le token Bearer
+        $token = $request->bearerToken();
+        
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token d\'authentification manquant',
+                'error' => 'UNAUTHORIZED'
+            ], 401);
         }
 
-        parent::unauthenticated($request, $guards);
+        // Vérifier le cache pour éviter les requêtes DB répétées
+        $cacheKey = "user_token_{$token}";
+        $cachedUser = Cache::get($cacheKey);
+        
+        if ($cachedUser) {
+            Auth::login($cachedUser);
+            return $next($request);
+        }
+
+        // Vérifier le token dans la base de données
+        $user = User::where('remember_token', $token)->first();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token invalide ou expiré',
+                'error' => 'INVALID_TOKEN'
+            ], 401);
+        }
+
+        // Vérifier si l'utilisateur est actif
+        if (!$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Compte désactivé',
+                'error' => 'ACCOUNT_DISABLED'
+            ], 403);
+        }
+
+        // Mettre en cache l'utilisateur pour 30 minutes
+        Cache::put($cacheKey, $user, 30 * 60);
+        
+        // Connecter l'utilisateur
+        Auth::login($user);
+        
+        // Ajouter l'utilisateur à la requête pour un accès facile
+        $request->merge(['user' => $user]);
+
+        return $next($request);
     }
 }

@@ -29,6 +29,8 @@ class User extends Authenticatable
         'login_attempts',
         'locked_until',
         'supabase_user_id',
+        'remember_token',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -47,6 +49,7 @@ class User extends Authenticatable
         'last_login_at' => 'datetime',
         'locked_until' => 'datetime',
         'login_attempts' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     protected $dates = [

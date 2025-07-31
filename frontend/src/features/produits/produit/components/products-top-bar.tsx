@@ -3,7 +3,6 @@
 import type React from "react"
 import { Bell, Menu } from "lucide-react"
 import { ProductsDynamicSearchBar } from "./product-dynamic-search-bar"
-import { useStore } from "@/context/store-context"
 
 type TabType = "tous" | "actifs" | "brouillons" | "archives"
 
@@ -33,7 +32,6 @@ export function ProductsTopBar({
   onToggleSort,
   onBack,
 }: ProductsTopBarProps) {
-  const { currentStore } = useStore()
   return (
     <header
       className="polaris-topbar fixed top-0 left-0 right-0 flex items-center gap-4 px-4 lg:px-6 border-b bg-white/95 backdrop-blur-sm md:left-[var(--sidebar-width)] md:peer-data-[state=collapsed]:left-[var(--sidebar-width-icon)]"
@@ -88,31 +86,29 @@ export function ProductsTopBar({
           <Bell className="h-4 w-4" style={{ color: "var(--p-color-icon)" }} />
         </button>
 
-                  <div className="flex items-center gap-2">
-            <div
-              className="polaris-avatar"
-              style={{
-                width: "2rem",
-                height: "2rem",
-                backgroundColor: "#7126FF",
-                fontSize: "var(--p-font-size-275)",
-              }}
-            >
-              <span style={{ color: "white" }}>
-                {currentStore?.name ? currentStore.name.substring(0, 2).toUpperCase() : "MS"}
-              </span>
-            </div>
-            <span
-              style={{
-                fontSize: "var(--p-font-size-300)",
-                fontWeight: "var(--p-font-weight-medium)",
-                color: "var(--p-color-text)",
-              }}
-              className="hidden md:block"
-            >
-              {currentStore?.name || "Ma Boutique"}
-            </span>
+        <div className="flex items-center gap-2">
+          <div
+            className="polaris-avatar"
+            style={{
+              width: "2rem",
+              height: "2rem",
+              backgroundColor: "#7126FF",
+              fontSize: "var(--p-font-size-275)",
+            }}
+          >
+            <span style={{ color: "white" }}>MS</span>
           </div>
+          <span
+            style={{
+              fontSize: "var(--p-font-size-300)",
+              fontWeight: "var(--p-font-weight-medium)",
+              color: "var(--p-color-text)",
+            }}
+            className="hidden md:block"
+          >
+            My Store
+          </span>
+        </div>
       </div>
     </header>
   )

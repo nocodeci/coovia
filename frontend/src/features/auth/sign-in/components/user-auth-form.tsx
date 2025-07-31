@@ -34,15 +34,7 @@ export function UserAuthForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      console.log('🚀 Début de la soumission du formulaire:', data);
-      console.log('📋 Type des données:', typeof data);
-      console.log('📋 Email type:', typeof data.email);
-      console.log('📋 Password type:', typeof data.password);
-      console.log('📋 Email valeur:', data.email);
-      console.log('📋 Password valeur:', data.password ? '***' : 'undefined');
-      
       await login({ email: data.email, password: data.password })
-      console.log('✅ Connexion réussie, redirection gérée par le hook useAuth')
     } catch (error) {
       // L'erreur est déjà gérée dans le hook useAuth avec toast
       console.error("Login error:", error)
@@ -51,10 +43,7 @@ export function UserAuthForm() {
 
   const testConnection = async () => {
     try {
-      console.log('🧪 Test de connexion avec des identifiants de test');
-      console.log('📋 Données de test:', { email: 'admin@example.com', password: 'password' });
       await login({ email: 'admin@example.com', password: 'password' });
-      console.log('✅ Test de connexion réussi, redirection gérée par le hook useAuth');
     } catch (error) {
       console.error("Test connection error:", error);
     }

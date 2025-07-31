@@ -3,116 +3,44 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\LoginRequest;
-use App\Http\Requests\RegisterRequest;
-use App\Http\Requests\MfaVerifyRequest;
-use App\Http\Requests\MfaSetupRequest;
-use App\Http\Resources\UserResource;
 use App\Models\User;
-use App\Models\LoginAttempt;
-use App\Services\MfaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class AuthController extends Controller
 {
-    protected $mfaService;
-
-    public function __construct(MfaService $mfaService)
-    {
-        $this->mfaService = $mfaService;
-    }
-
     /**
-     * Inscription d'un nouvel utilisateur
+     * Login user and create token
      */
-    public function register(RegisterRequest $request)
+    public function login(Request $request)
     {
-        try {
-            DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string|min:6',
+        ]);
 
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'phone' => $request->phone,
-                'email_verified_at' => now(), // Marquer comme vérifié automatiquement
-                'role' => 'user',
-                'is_active' => true,
-            ]);
-
-            // Créer un token d'authentification avec Sanctum
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Inscription réussie',
-                'user' => new UserResource($user),
-                'token' => $token,
-                'token_type' => 'Bearer'
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'inscription',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Connexion utilisateur avec gestion MFA
-     */
-    public function login(LoginRequest $request)
-    {
-        $email = $request->email;
-        $password = $request->password;
-        $ip = $request->ip();
-        $userAgent = $request->userAgent();
-
-        // Vérifier le rate limiting
-        $key = 'login_attempts:' . $ip;
-        if (RateLimiter::tooManyAttempts($key, 5)) {
-            $seconds = RateLimiter::availableIn($key);
-            return response()->json([
-                'success' => false,
-                'message' => "Trop de tentatives. Réessayez dans {$seconds} secondes."
-            ], 429);
+                'message' => 'Données invalides',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        $user = User::where('email', $email)->first();
+        $user = User::where('email', $request->email)->first();
 
-        // Enregistrer la tentative de connexion
-        $this->logLoginAttempt($user, $email, $ip, $userAgent, false, 'Tentative de connexion');
-
-        if (!$user || $user->isLocked()) {
-            RateLimiter::hit($key, 300); // 5 minutes
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Compte verrouillé ou identifiants incorrects'
+                'message' => 'Identifiants invalides'
             ], 401);
         }
 
-        if (!Hash::check($password, $user->password)) {
-            $user->incrementLoginAttempts();
-            RateLimiter::hit($key, 300);
-
-            $this->logLoginAttempt($user, $email, $ip, $userAgent, false, 'Mot de passe incorrect');
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Identifiants incorrects'
-            ], 401);
-        }
-
+        // Vérifier si l'utilisateur est actif
         if (!$user->is_active) {
             return response()->json([
                 'success' => false,
@@ -120,206 +48,160 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Si MFA est activé
-        if ($user->mfa_enabled) {
-            $mfaToken = $this->mfaService->generateMfaToken($user, 'login');
+        // Générer un nouveau token
+        $token = Str::random(60);
+        $user->remember_token = $token;
+        $user->last_login_at = now();
+        $user->save();
 
-            $this->logLoginAttempt($user, $email, $ip, $userAgent, false, 'MFA requis', true);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Code MFA requis',
-                'mfa_required' => true,
-                'mfa_token' => $mfaToken,
-                'backup_codes_available' => count($user->backup_codes ?? []) > 0,
-            ]);
-        }
-
-        // Connexion réussie sans MFA
-        $user->resetLoginAttempts();
-        RateLimiter::clear($key);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        $this->logLoginAttempt($user, $email, $ip, $userAgent, true);
+        // Mettre en cache l'utilisateur avec TTL plus long
+        $cacheKey = "user_token_{$token}";
+        Cache::put($cacheKey, $user, 60 * 60); // 1 heure au lieu de 30 minutes
 
         return response()->json([
             'success' => true,
             'message' => 'Connexion réussie',
-            'user' => new UserResource($user),
             'token' => $token,
-            'token_type' => 'Bearer'
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ]
         ]);
     }
 
     /**
-     * Vérification du code MFA
+     * Check authentication status - OPTIMISÉ
      */
-    public function verifyMfa(MfaVerifyRequest $request)
+    public function checkAuth(Request $request)
     {
-        $mfaToken = $request->mfa_token;
-        $code = $request->code;
-        $isBackupCode = $request->is_backup_code ?? false;
+        // Vérifier d'abord le cache pour éviter les requêtes DB
+        $token = $request->bearerToken();
+        if ($token) {
+            $cacheKey = "user_token_{$token}";
+            $cachedUser = Cache::get($cacheKey);
+            
+            if ($cachedUser) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Authentifié (cache)',
+                    'user' => [
+                        'id' => $cachedUser->id,
+                        'name' => $cachedUser->name,
+                        'email' => $cachedUser->email,
+                        'role' => $cachedUser->role,
+                        'created_at' => $cachedUser->created_at,
+                        'updated_at' => $cachedUser->updated_at,
+                    ]
+                ]);
+            }
+        }
 
-        $user = $this->mfaService->verifyMfaToken($mfaToken, 'login');
-
+        // Fallback vers la DB si pas en cache
+        $user = $request->user();
+        
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Token MFA invalide ou expiré'
+                'message' => 'Non authentifié'
             ], 401);
         }
 
-        $verified = false;
-
-        if ($isBackupCode) {
-            $verified = $this->mfaService->verifyBackupCode($user, $code);
-        } else {
-            $verified = $this->mfaService->verifyCode($user, $code);
+        // Remettre en cache si trouvé en DB
+        if ($token) {
+            $cacheKey = "user_token_{$token}";
+            Cache::put($cacheKey, $user, 60 * 60);
         }
-
-        if (!$verified) {
-            $this->logLoginAttempt($user, $user->email, request()->ip(), request()->userAgent(), false, 'Code MFA incorrect', true, false);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Code de vérification invalide'
-            ], 401);
-        }
-
-        // MFA vérifié avec succès
-        $user->resetLoginAttempts();
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        $this->logLoginAttempt($user, $user->email, request()->ip(), request()->userAgent(), true, null, true, true);
 
         return response()->json([
             'success' => true,
-            'message' => 'Connexion réussie',
-            'user' => new UserResource($user),
-            'token' => $token,
-            'token_type' => 'Bearer'
+            'message' => 'Authentifié',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ]
         ]);
     }
 
     /**
-     * Configuration initiale MFA
-     */
-    public function setupMfa(Request $request)
-    {
-        $user = $request->user();
-
-        if ($user->mfa_enabled) {
-            return response()->json([
-                'success' => false,
-                'message' => 'MFA déjà activé'
-            ], 400);
-        }
-
-        $secret = $this->mfaService->generateSecret($user);
-        $qrCodeUrl = $this->mfaService->generateQrCode($user, $secret);
-
-        return response()->json([
-            'success' => true,
-            'secret' => $secret,
-            'qr_code_url' => $qrCodeUrl,
-            'message' => 'Scannez le QR code avec votre application d\'authentification'
-        ]);
-    }
-
-    /**
-     * Activer MFA
-     */
-    public function enableMfa(MfaSetupRequest $request)
-    {
-        $user = $request->user();
-        $code = $request->code;
-
-        try {
-            $backupCodes = $this->mfaService->enableMfa($user, $code);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'MFA activé avec succès',
-                'backup_codes' => $backupCodes,
-                'warning' => 'Sauvegardez ces codes de récupération dans un endroit sûr'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
-        }
-    }
-
-    /**
-     * Désactiver MFA
-     */
-    public function disableMfa(Request $request)
-    {
-        $request->validate([
-            'password' => 'required|string',
-        ]);
-
-        $user = $request->user();
-
-        try {
-            $this->mfaService->disableMfa($user, $request->password);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'MFA désactivé avec succès'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
-        }
-    }
-
-    /**
-     * Générer de nouveaux codes de récupération
-     */
-    public function regenerateBackupCodes(Request $request)
-    {
-        $user = $request->user();
-
-        if (!$user->mfa_enabled) {
-            return response()->json([
-                'success' => false,
-                'message' => 'MFA n\'est pas activé'
-            ], 400);
-        }
-
-        $backupCodes = $user->generateBackupCodes();
-
-        return response()->json([
-            'success' => true,
-            'backup_codes' => $backupCodes,
-            'message' => 'Nouveaux codes de récupération générés'
-        ]);
-    }
-
-    /**
-     * Récupérer les informations de l'utilisateur connecté
+     * Get current user info - OPTIMISÉ
      */
     public function me(Request $request)
     {
+        // Même logique que checkAuth mais avec cache
+        $token = $request->bearerToken();
+        if ($token) {
+            $cacheKey = "user_token_{$token}";
+            $cachedUser = Cache::get($cacheKey);
+            
+            if ($cachedUser) {
+                return response()->json([
+                    'success' => true,
+                    'user' => [
+                        'id' => $cachedUser->id,
+                        'name' => $cachedUser->name,
+                        'email' => $cachedUser->email,
+                        'role' => $cachedUser->role,
+                        'created_at' => $cachedUser->created_at,
+                        'updated_at' => $cachedUser->updated_at,
+                    ]
+                ]);
+            }
+        }
+
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        // Remettre en cache
+        if ($token) {
+            $cacheKey = "user_token_{$token}";
+            Cache::put($cacheKey, $user, 60 * 60);
+        }
+
         return response()->json([
             'success' => true,
-            'user' => new UserResource($request->user())
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ]
         ]);
     }
 
     /**
-     * Déconnexion
+     * Logout user (Revoke the token)
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        
+        if ($user) {
+            // Supprimer le token
+            $user->remember_token = null;
+            $user->save();
+
+            // Supprimer du cache
+            $token = $request->bearerToken();
+            if ($token) {
+                Cache::forget("user_token_{$token}");
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -328,37 +210,154 @@ class AuthController extends Controller
     }
 
     /**
-     * Déconnexion de tous les appareils
+     * Register a new user
      */
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données invalides',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'user',
+            'is_active' => true,
+        ]);
+
+        // Générer un token
+        $token = Str::random(60);
+        $user->remember_token = $token;
+        $user->save();
+
+        // Mettre en cache l'utilisateur
+        $cacheKey = "user_token_{$token}";
+        Cache::put($cacheKey, $user, 60 * 60);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Inscription réussie',
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ]
+        ], 201);
+    }
+
+    /**
+     * Refresh user token
+     */
+    public function refresh(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        // Supprimer l'ancien token du cache
+        $oldToken = $request->bearerToken();
+        if ($oldToken) {
+            Cache::forget("user_token_{$oldToken}");
+        }
+
+        // Générer un nouveau token
+        $newToken = Str::random(60);
+        $user->remember_token = $newToken;
+        $user->save();
+
+        // Mettre en cache avec le nouveau token
+        $cacheKey = "user_token_{$newToken}";
+        Cache::put($cacheKey, $user, 60 * 60);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Token rafraîchi',
+            'token' => $newToken,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ]
+        ]);
+    }
+
+    // Méthodes MFA pour compatibilité
+    public function verifyMfa(Request $request)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'MFA non implémenté'
+        ], 501);
+    }
+
+    public function setupMfa(Request $request)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'MFA non implémenté'
+        ], 501);
+    }
+
+    public function enableMfa(Request $request)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'MFA non implémenté'
+        ], 501);
+    }
+
+    public function disableMfa(Request $request)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'MFA non implémenté'
+        ], 501);
+    }
+
+    public function regenerateBackupCodes(Request $request)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'MFA non implémenté'
+        ], 501);
+    }
+
     public function logoutAll(Request $request)
     {
-        $request->user()->tokens()->delete();
+        $user = $request->user();
+        
+        if ($user) {
+            // Supprimer tous les tokens de l'utilisateur
+            $user->remember_token = null;
+            $user->save();
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Déconnexion de tous les appareils réussie'
         ]);
-    }
-
-    /**
-     * Enregistrer une tentative de connexion
-     */
-    private function logLoginAttempt($user, $email, $ip, $userAgent, $successful, $failureReason = null, $mfaRequired = false, $mfaSuccessful = null)
-    {
-        try {
-            LoginAttempt::create([
-                'user_id' => $user ? $user->id : null,
-                'email' => $email,
-                'ip_address' => $ip,
-                'user_agent' => $userAgent,
-                'successful' => $successful,
-                'failure_reason' => $failureReason,
-                'mfa_required' => $mfaRequired,
-                'mfa_successful' => $mfaSuccessful,
-            ]);
-        } catch (\Exception $e) {
-            // Log silencieusement l'erreur sans interrompre le processus
-            \Log::error('Erreur lors de l\'enregistrement de la tentative de connexion: ' . $e->getMessage());
-        }
     }
 }

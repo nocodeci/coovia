@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\MediaController;
 //use App\Http\Controllers\Api\StatsController;
 
 /*
@@ -98,10 +99,12 @@ Route::prefix('auth')->group(function () {
     Route::post('verify-mfa', [AuthController::class, 'verifyMfa']);
 
     // Routes protégées par authentification
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth.api')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
+        Route::get('check', [AuthController::class, 'checkAuth']);
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('logout-all', [AuthController::class, 'logoutAll']);
+        Route::post('refresh', [AuthController::class, 'refresh']);
 
         // Configuration MFA
         Route::prefix('mfa')->group(function () {
@@ -167,7 +170,7 @@ Route::get('/products', function () {
 });
 
 // Routes protégées par authentification
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth.api')->group(function () {
 
     // Gestion des boutiques
     Route::apiResource('stores', StoreController::class);
@@ -198,7 +201,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('verify', [PaymentController::class, 'verifyPayment']);
     });
 
-}); // <-- CORRECTION : Accolade fermante manquante ajoutée ici
+    // Gestion des médias
+    Route::prefix('stores/{storeId}/media')->group(function () {
+        Route::get('/', [MediaController::class, 'index']);
+        Route::post('/', [MediaController::class, 'store']);
+        Route::put('/{mediaId}', [MediaController::class, 'update']);
+        Route::delete('/{mediaId}', [MediaController::class, 'destroy']);
+    });
+
+    // Route de test pour les médias (sans authentification pour le développement)
+    Route::prefix('test/stores/{storeId}/media')->group(function () {
+        Route::get('/', [MediaController::class, 'index']);
+        Route::post('/', [MediaController::class, 'store']);
+        Route::put('/{mediaId}', [MediaController::class, 'update']);
+        Route::delete('/{mediaId}', [MediaController::class, 'destroy']);
+    });
+}); // Fin du middleware auth.api
+
+// Routes publiques pour les médias (développement seulement)
+Route::prefix('public/stores/{storeId}/media')->group(function () {
+    Route::get('/', [MediaController::class, 'index']);
+    Route::post('/', [MediaController::class, 'store']);
+    Route::put('/{mediaId}', [MediaController::class, 'update']);
+    Route::delete('/{mediaId}', [MediaController::class, 'destroy']);
+});
 
 // Route de debug (développement seulement)
 if (app()->environment('local')) {

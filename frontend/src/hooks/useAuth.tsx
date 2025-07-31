@@ -1,15 +1,25 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react"
 import { toast } from "sonner"
 import apiService from "@/lib/api"
-import type { User } from "@/types/auth"
+import { cache, CACHE_KEYS } from "@/lib/cache"
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  created_at: string
+  updated_at: string
+}
 
 interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
   mfaRequired: boolean
+  hasCheckedAuth: boolean
   login: (credentials: { email: string; password: string }) => Promise<void>
   logout: () => Promise<void>
   register: (userData: any) => Promise<void>
@@ -20,70 +30,107 @@ interface AuthContextType {
   regenerateBackupCodes: () => Promise<any>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [mfaRequired, setMfaRequired] = useState(false)
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
+  const checkAuthInProgress = useRef(false)
 
+  // Vérifier l'authentification au montage - OPTIMISÉ
   useEffect(() => {
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      apiService.setToken(token)
-      checkAuth()
-    } else {
-      setIsLoading(false)
-    }
+    checkAuth()
   }, [])
 
   const checkAuth = async () => {
+    // Éviter les vérifications simultanées
+    if (checkAuthInProgress.current || hasCheckedAuth) return
+    
+    checkAuthInProgress.current = true
+    
     try {
-      console.log("🔍 checkAuth - Token présent:", !!localStorage.getItem('auth_token'))
-      const response = await apiService.checkAuth()
-      console.log("📡 checkAuth - Réponse API:", response)
+      // Vérifier le cache d'abord pour un chargement instantané
+      const cachedUser = cache.get<User>(CACHE_KEYS.USER)
+      if (cachedUser) {
+        setUser(cachedUser)
+        setIsLoading(false)
+        setHasCheckedAuth(true)
+        return
+      }
       
+      // Vérifier si un token existe
+      const token = localStorage.getItem("auth_token")
+      if (!token) {
+        setIsLoading(false)
+        setHasCheckedAuth(true)
+        return
+      }
+      
+      // Vérifier si on a déjà vérifié récemment (dans les 5 dernières minutes)
+      const lastCheck = localStorage.getItem("auth_last_check")
+      const now = Date.now()
+      if (lastCheck && (now - parseInt(lastCheck)) < 5 * 60 * 1000) {
+        // Utiliser le cache si la vérification est récente
+        const cachedUser = cache.get<User>(CACHE_KEYS.USER)
+        if (cachedUser) {
+          setUser(cachedUser)
+          setIsLoading(false)
+          setHasCheckedAuth(true)
+          return
+        }
+      }
+      
+      const response = await apiService.checkAuth()
+
       if (response.success && response.user) {
-        console.log("✅ checkAuth - Utilisateur trouvé:", response.user)
-        setUser(response.user as User)
+        const user = response.user as User
+        setUser(user)
+        
+        // Mettre en cache l'utilisateur avec TTL plus long
+        cache.set(CACHE_KEYS.USER, user, 60 * 60 * 1000) // 1 heure
+        localStorage.setItem("auth_last_check", now.toString())
       } else {
-        console.log("❌ checkAuth - Pas d'utilisateur ou échec")
-        localStorage.removeItem('auth_token')
-        apiService.setToken('')
+        // Token invalide, nettoyer
+        localStorage.removeItem("auth_token")
+        localStorage.removeItem("auth_last_check")
+        apiService.setToken("")
+        cache.delete(CACHE_KEYS.USER)
       }
     } catch (error) {
-      console.error('🚨 checkAuth - Erreur:', error)
-      localStorage.removeItem('auth_token')
-      apiService.setToken('')
+      // Erreur réseau ou token invalide
+      localStorage.removeItem("auth_token")
+      localStorage.removeItem("auth_last_check")
+      apiService.setToken("")
+      cache.delete(CACHE_KEYS.USER)
     } finally {
       setIsLoading(false)
+      setHasCheckedAuth(true)
+      checkAuthInProgress.current = false
     }
   }
 
   const login = async (credentials: { email: string; password: string }) => {
     try {
       setIsLoading(true)
-      console.log('🔐 Tentative de connexion avec:', credentials)
-      
       const response = await apiService.login(credentials)
-      console.log('📡 Réponse API:', response)
-      
+
       if (response.success && response.user) {
-        setUser(response.user as User)
-        console.log('✅ Connexion réussie:', response.user)
-        toast.success("Connexion réussie", {
-          description: `Bienvenue ${response.user.name}`,
-        })
+        const user = response.user as User
+        setUser(user)
         
-        // Redirection immédiate vers la page de sélection de boutique
-        console.log('🔄 Redirection vers /store-selection après connexion')
-        window.location.replace('/store-selection')
+        // Mettre en cache l'utilisateur avec TTL plus long
+        cache.set(CACHE_KEYS.USER, user, 60 * 60 * 1000) // 1 heure
+        localStorage.setItem("auth_last_check", Date.now().toString())
+        
+        toast.success("Connexion réussie", {
+          description: `Bienvenue ${user.name}`,
+        })
       } else {
-        console.error('❌ Échec de la connexion:', response)
         throw new Error(response.message || "Échec de la connexion")
       }
     } catch (error: any) {
-      console.error('🚨 Erreur de connexion:', error)
       toast.error("Erreur de connexion", {
         description: error.message || "Impossible de se connecter",
       })
@@ -97,11 +144,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await apiService.logout()
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error)
+      console.error("Erreur lors de la déconnexion:", error)
     } finally {
       setUser(null)
-      localStorage.removeItem('auth_token')
-      apiService.setToken('')
+      localStorage.removeItem("auth_token")
+      localStorage.removeItem("auth_last_check")
+      apiService.setToken("")
+      
+      // Nettoyer tous les caches
+      cache.clear()
+      
+      toast.success("Déconnexion réussie")
     }
   }
 
@@ -159,7 +212,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.success) {
         toast.success("MFA activé")
       }
-      return response
     } catch (error: any) {
       toast.error("Erreur MFA", {
         description: error.message || "Impossible d'activer MFA",
@@ -174,7 +226,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.success) {
         toast.success("MFA désactivé")
       }
-      return response
     } catch (error: any) {
       toast.error("Erreur MFA", {
         description: error.message || "Impossible de désactiver MFA",
@@ -199,6 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated: !!user,
     mfaRequired,
+    hasCheckedAuth,
     login,
     logout,
     register,
@@ -209,17 +261,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     regenerateBackupCodes,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider")
   }
   return context
 }

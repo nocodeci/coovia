@@ -9,41 +9,100 @@ import { SearchProvider } from "@/context/search-context"
 import { Overview } from "./components/overview"
 import { RecentSales } from "./components/recent-sales"
 import Paiement from "@/components/paiement"
-import { useEffect, useState } from "react"
 import { DashboardTopBar } from "./components/dashboard-top-bar"
-import apiService from "@/lib/api"
-import { useStore } from "@/context/store-context"
+import { useParams } from "@tanstack/react-router"
+import { useAuth } from "@/hooks/useAuthQuery"
+import { useStores, useStoreStats } from "@/hooks/useStores"
+import { CircleLoader } from "@/components/ui/circle-loader"
+
+interface StatsData {
+  revenue: {
+    current: number
+    previous: number
+    change: number
+  }
+  sales: {
+    current: number
+    previous: number
+    change: number
+  }
+  orders: {
+    current: number
+    previous: number
+    change: number
+  }
+  customers: {
+    current: number
+    previous: number
+    change: number
+  }
+}
 
 export default function Dashboard() {
-  const { currentStore } = useStore()
-  const [stats, setStats] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const params = useParams({ from: "/_authenticated/$storeId" })
+  const storeId = params.storeId
+  
+  // Hooks React Query pour les vraies données
+  const { data: user, isLoading: authLoading } = useAuth()
+  const { data: stores, isLoading: storesLoading } = useStores()
+  const { data: stats, isLoading: statsLoading } = useStoreStats(storeId || '')
+  
+  // État de chargement global
+  const isLoading = authLoading || storesLoading || statsLoading
 
-  // Charger les statistiques depuis le backend
-  useEffect(() => {
-    const loadStats = async () => {
-      if (!currentStore?.id) return
+  // Trouver la vraie boutique actuelle
+  const currentStore = stores?.find(store => store.id === storeId)
 
-      try {
-        setLoading(true)
-        const response = await apiService.getStoreStats(currentStore.id)
-        
-        if (response.success && response.data) {
-          setStats((response.data as any).stats)
-        } else {
-          setError('Erreur lors du chargement des statistiques')
-        }
-      } catch (err: any) {
-        console.error('Erreur lors du chargement des stats:', err)
-        setError(err.message || 'Erreur de connexion')
-      } finally {
-        setLoading(false)
-      }
+  // Données par défaut si pas encore chargées
+  const defaultStats: StatsData = {
+    revenue: {
+      current: 0,
+      previous: 0,
+      change: 0
+    },
+    sales: {
+      current: 0,
+      previous: 0,
+      change: 0
+    },
+    orders: {
+      current: 0,
+      previous: 0,
+      change: 0
+    },
+    customers: {
+      current: 0,
+      previous: 0,
+      change: 0
     }
+  }
 
-    loadStats()
-  }, [currentStore?.id])
+  // Utiliser les vraies données ou les données par défaut avec vérification de sécurité
+  const displayStats: StatsData = (stats as StatsData) || defaultStats
+
+  // Debug: Afficher les états de chargement
+  console.log('Dashboard Debug:', {
+    storeId,
+    isLoading,
+    authLoading,
+    storesLoading,
+    statsLoading,
+    hasStats: !!stats,
+    hasDisplayStats: !!displayStats
+  })
+
+  // Afficher le CircleLoader seulement pendant le chargement initial
+  if (authLoading || storesLoading) {
+    console.log('Affichage du CircleLoader - chargement auth/stores')
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <CircleLoader size="lg" message="Chargement du dashboard..." />
+      </div>
+    )
+  }
+
+  // Si les stats ne sont pas encore chargées, on affiche le dashboard avec les valeurs par défaut
+  console.log('Affichage du dashboard avec les données:', displayStats)
 
   const handleBack = () => {
     console.log("Retour en arrière")
@@ -54,13 +113,9 @@ export default function Dashboard() {
   }
 
   const handleAddProduct = () => {
-    // Utiliser le storeId de l'URL actuelle
-    const pathSegments = window.location.pathname.split('/')
-    const storeId = pathSegments[1] // Le storeId est le premier segment après le slash
     if (storeId) {
       window.location.href = `/${storeId}/produits/addproduit`
     } else {
-      // Fallback si pas de storeId
       window.location.href = "/stores"
     }
   }
@@ -69,78 +124,16 @@ export default function Dashboard() {
     console.log("Navigation vers:", section)
   }
 
-  if (loading) {
-    return (
-      <SearchProvider>
-        <DashboardTopBar
-          onBack={handleBack}
-          onExport={handleExport}
-          onAddProduct={handleAddProduct}
-          onNavigate={handleNavigate}
-        />
-        <Main>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <p className="text-muted-foreground">Chargement des statistiques...</p>
-            </div>
-          </div>
-        </Main>
-      </SearchProvider>
-    )
-  }
-
-  if (error) {
-    return (
-      <SearchProvider>
-        <DashboardTopBar
-          onBack={handleBack}
-          onExport={handleExport}
-          onAddProduct={handleAddProduct}
-          onNavigate={handleNavigate}
-        />
-        <Main>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <p className="text-red-500">Erreur: {error}</p>
-            </div>
-          </div>
-        </Main>
-      </SearchProvider>
-    )
-  }
-
-  if (!stats) {
-    return (
-      <SearchProvider>
-        <DashboardTopBar
-          onBack={handleBack}
-          onExport={handleExport}
-          onAddProduct={handleAddProduct}
-          onNavigate={handleNavigate}
-        />
-        <Main>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <p className="text-muted-foreground">Aucune donnée disponible</p>
-            </div>
-          </div>
-        </Main>
-      </SearchProvider>
-    )
-  }
-
   return (
     <SearchProvider>
-      {/* ===== TopBar avec recherche dynamique ===== */}
       <DashboardTopBar
         onBack={handleBack}
         onExport={handleExport}
         onAddProduct={handleAddProduct}
         onNavigate={handleNavigate}
       />
-
-      {/* ===== Main ===== */}
       <Main>
+        {/* Contenu du dashboard */}
         <div className="mb-6 flex items-center justify-between" style={{ paddingTop: "6rem" }}>
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Tableau de bord</h1>
@@ -161,6 +154,12 @@ export default function Dashboard() {
               <ClipboardPlus className="mr-2 h-4 w-4" />
               Ajouter un produit
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => console.log("Actualisation des données")}
+            >
+              Actualiser
+            </Button>
           </div>
         </div>
 
@@ -171,122 +170,59 @@ export default function Dashboard() {
                 Vue d'ensemble
               </TabsTrigger>
               <TabsTrigger value="analytics" disabled className="opacity-50">
-                Analyse
+                Analytics
               </TabsTrigger>
               <TabsTrigger value="reports" disabled className="opacity-50">
                 Rapports
               </TabsTrigger>
-              <TabsTrigger value="notifications" disabled className="opacity-50">
-                Notifications
-              </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <Card className="bg-[oklch(0.2274_0.0492_157.66)] text-[oklch(1_0_0)] border-none shadow-lg">
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card className="border-l-4" style={{ borderLeftColor: 'rgb(3, 35, 19)' }}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="text-[oklch(1_0_0)] h-4 w-4"
-                  >
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                  </svg>
+                  <CardTitle className="text-sm font-medium" style={{ color: 'rgb(3, 35, 19)' }}>Revenus totaux</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.revenue.current.toLocaleString()} CFA</div>
-                  <p className="text-[oklch(1_0_0)] text-xs opacity-80">
-                    {stats.revenue.growth >= 0 ? "+" : ""}
-                    {stats.revenue.growth.toFixed(1)}% du mois dernier
+                  <div className="text-2xl font-bold" style={{ color: 'rgb(3, 35, 19)' }}>
+                    {displayStats?.revenue?.current || 0} FCFA
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    +{displayStats?.revenue?.change || 0}% par rapport au mois dernier
                   </p>
                 </CardContent>
               </Card>
-
-              <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="text-muted-foreground h-4 w-4"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
+                  <CardTitle className="text-sm font-medium">Commandes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">+{stats.subscriptions.current}</div>
-                  <p className="text-muted-foreground text-xs">
-                    {stats.subscriptions.growth >= 0 ? "+" : ""}
-                    {stats.subscriptions.growth.toFixed(1)}% du mois dernier
-                  </p>
+                  <div className="text-2xl font-bold">{displayStats?.orders?.current || 0}</div>
+                  <p className="text-xs text-muted-foreground">+{displayStats?.orders?.change || 0}% par rapport au mois dernier</p>
                 </CardContent>
               </Card>
-
-              <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Ventes</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="text-muted-foreground h-4 w-4"
-                  >
-                    <rect width="20" height="14" x="2" y="5" rx="2" />
-                    <path d="M2 10h20" />
-                  </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">+{stats.sales.current}</div>
-                  <p className="text-muted-foreground text-xs">
-                    {stats.sales.growth >= 0 ? "+" : ""}
-                    {stats.sales.growth.toFixed(1)}% du mois dernier
-                  </p>
+                  <div className="text-2xl font-bold">{displayStats?.sales?.current || 0}</div>
+                  <p className="text-xs text-muted-foreground">+{displayStats?.sales?.change || 0}% par rapport au mois dernier</p>
                 </CardContent>
               </Card>
-
-              <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Actif maintenant</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="text-muted-foreground h-4 w-4"
-                  >
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                  </svg>
+                  <CardTitle className="text-sm font-medium">Transactions actives</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">+{stats.active.current}</div>
-                  <p className="text-muted-foreground text-xs">+{stats.active.recent} depuis la dernière heure</p>
+                  <div className="text-2xl font-bold">{displayStats?.customers?.current || 0}</div>
+                  <p className="text-xs text-muted-foreground">+{displayStats?.customers?.change || 0}% par rapport au mois dernier</p>
                 </CardContent>
               </Card>
             </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-7">
-              <Card className="col-span-1 lg:col-span-4 shadow-sm">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-4">
                 <CardHeader>
                   <CardTitle>Vue d'ensemble</CardTitle>
                 </CardHeader>
@@ -294,11 +230,10 @@ export default function Dashboard() {
                   <Overview />
                 </CardContent>
               </Card>
-
-              <Card className="col-span-1 lg:col-span-3 shadow-sm">
+              <Card className="col-span-3">
                 <CardHeader>
                   <CardTitle>Ventes récentes</CardTitle>
-                  <CardDescription>Vous avez réalisé {stats.sales.current} ventes ce mois-ci.</CardDescription>
+                  <CardDescription>Vous avez fait {displayStats?.sales?.current || 0} ventes ce mois.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <RecentSales />
