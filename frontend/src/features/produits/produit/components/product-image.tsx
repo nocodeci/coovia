@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { ImageIcon } from 'lucide-react'
 
 interface ProductImageProps {
-  images: string[] | null | undefined
+  images: any[] | null | undefined
   productName: string
   className?: string
 }
@@ -10,74 +11,56 @@ export function ProductImage({ images, productName, className = "h-10 w-10" }: P
   const [imageError, setImageError] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
 
+  // Prendre la première image du produit
   const firstImage = images?.[0]
 
-  // Debug: Afficher les informations sur l'image
-  console.log(`Image pour ${productName}:`, {
-    hasImages: !!images,
-    imagesLength: images?.length,
-    firstImage: firstImage?.substring(0, 100) + '...',
-    isBase64: firstImage?.startsWith('data:'),
-    isUrl: firstImage?.startsWith('http')
-  })
-
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error(`Erreur de chargement d'image pour ${productName}:`, e)
+  const handleImageError = () => {
     setImageError(true)
   }
 
   const handleImageLoad = () => {
-    console.log(`Image chargée avec succès pour ${productName}`)
     setImageLoaded(true)
   }
 
-  // Fonction pour valider et nettoyer l'image
-  const getValidImageSrc = (imageSrc: string) => {
-    // Si c'est déjà une URL valide
-    if (imageSrc.startsWith('http')) {
-      return imageSrc
+  // Si l'image est un objet média (depuis la bibliothèque média)
+  const getImageSrc = () => {
+    if (!firstImage) return null
+    
+    // Si c'est un objet média avec thumbnail
+    if (typeof firstImage === 'object' && firstImage.thumbnail) {
+      return `http://localhost:8000/storage/${firstImage.thumbnail}`
     }
     
-    // Si c'est un base64, vérifier qu'il est complet
-    if (imageSrc.startsWith('data:')) {
-      // Vérifier que le base64 n'est pas tronqué
-      if (imageSrc.length > 100) {
-        return imageSrc
-      }
+    // Si c'est un objet média avec url
+    if (typeof firstImage === 'object' && firstImage.url) {
+      return `http://localhost:8000/storage/${firstImage.url}`
+    }
+    
+    // Si c'est une chaîne (ancien format)
+    if (typeof firstImage === 'string') {
+      return firstImage
     }
     
     return null
   }
 
-  // Obtenir l'image valide
-  const validImageSrc = firstImage ? getValidImageSrc(firstImage) : null
-
-  // Si pas d'image ou erreur de chargement, afficher l'initiale
-  if (!validImageSrc || imageError) {
-    return (
-      <div className={`${className} bg-gray-200 rounded flex items-center justify-center overflow-hidden`}>
-        <span className="text-gray-500 text-xs font-medium">
-          {productName?.charAt(0)?.toUpperCase() || 'P'}
-        </span>
-      </div>
-    )
-  }
+  const imageSrc = getImageSrc()
 
   return (
-    <div className={`${className} bg-gray-200 rounded overflow-hidden relative`}>
-      <img 
-        src={validImageSrc} 
-        alt={productName}
-        className={`${className} object-cover rounded ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-        onError={handleImageError}
-        onLoad={handleImageLoad}
-        crossOrigin="anonymous"
-      />
-      {!imageLoaded && (
-        <div className={`${className} absolute inset-0 flex items-center justify-center`}>
-          <span className="text-gray-500 text-xs font-medium">
-            {productName?.charAt(0)?.toUpperCase() || 'P'}
-          </span>
+    <div className={`${className} bg-gray-200 rounded overflow-hidden relative flex items-center justify-center`}>
+      {imageSrc && !imageError ? (
+        <img 
+          src={imageSrc} 
+          alt={productName}
+          className={`${className} object-cover rounded ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+        />
+      ) : null}
+      
+      {(!imageSrc || imageError || !imageLoaded) && (
+        <div className="flex items-center justify-center">
+          <ImageIcon className="h-5 w-5 text-gray-400" />
         </div>
       )}
     </div>

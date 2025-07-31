@@ -36,7 +36,7 @@ class ProductController extends Controller
             ->select([
                 'id', 'name', 'description', 'price', 'sale_price', 
                 'sku', 'category', 'status', 'stock_quantity', 
-                'min_stock_level', 'created_at', 'updated_at'
+                'min_stock_level', 'images', 'files', 'created_at', 'updated_at'
             ])
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
