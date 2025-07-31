@@ -1,8 +1,9 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
 import { RouterProvider, createRouter } from "@tanstack/react-router"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { Toaster } from "sonner"
+import NotFound from "@/components/not-found"
+import { QueryClientProvider } from "@tanstack/react-query"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen"
@@ -12,20 +13,19 @@ import { AuthProvider } from "@/hooks/useAuth"
 import { ThemeProvider } from "@/context/theme-context"
 import { StoreProvider } from "@/context/store-context"
 
+// Import our configured QueryClient
+import { queryClient } from "@/lib/react-query-client"
+
 // Import styles
 import "./index.css"
-
-// Import auto token fix
-import "./utils/auto-token-fix"
-import "./utils/console-token-fix"
-import "./utils/cleanup-debug"
 
 // Create a new router instance
 const router = createRouter({
   routeTree,
   context: {
-    queryClient: new QueryClient(),
+    queryClient,
   },
+  defaultNotFoundComponent: NotFound,
 })
 
 // Register the router instance for type safety
@@ -34,17 +34,6 @@ declare module "@tanstack/react-router" {
     router: typeof router
   }
 }
-
-// Create a client for React Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-})
 
 // Render the app
 const rootElement = document.getElementById("root")!
@@ -57,23 +46,12 @@ if (!rootElement.innerHTML) {
           <AuthProvider>
             <StoreProvider>
               <RouterProvider router={router} />
-              <Toaster
-                position="top-right"
-                expand={true}
-                richColors
-                closeButton
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: "hsl(var(--background))",
-                    color: "hsl(var(--foreground))",
-                    border: "1px solid hsl(var(--border))",
-                  },
-                }}
-              />
             </StoreProvider>
           </AuthProvider>
         </ThemeProvider>
+        
+        {/* React Query DevTools - seulement en développement */}
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
     </React.StrictMode>,
   )

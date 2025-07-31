@@ -47,7 +47,7 @@ import { cn } from "@/lib/utils"
 
 interface Suggestion {
   id: string
-  type: "name" | "category" | "price" | "description" | "files" | "tip"
+  type: "name" | "category" | "price" | "description" | "files" | "tip" | "image"
   title: string
   description: string
   action: string
@@ -64,6 +64,7 @@ interface DynamicSearchBarProps {
   description?: string
   selectedType?: string
   uploadedFilesCount?: number
+  featuredImage?: string | null
   isFormValid?: boolean
   hasUnsavedChanges?: boolean
   onSave?: () => void
@@ -98,6 +99,7 @@ export function DynamicSearchBar({
   description = "",
   selectedType = "telechargeable",
   uploadedFilesCount = 0,
+  featuredImage,
   isFormValid = false,
   hasUnsavedChanges = false,
   onSave,
@@ -239,8 +241,22 @@ export function DynamicSearchBar({
       })
     }
 
+    // Suggestions pour l'image principale
+    if (!featuredImage) {
+      newSuggestions.push({
+        id: "image-required",
+        type: "image",
+        title: "Ajouter une image principale",
+        description: "L'image principale est requise pour publier le produit",
+        action: "Sélectionner une image",
+        icon: Upload,
+        color: "text-red-400",
+        priority: 9,
+      })
+    }
+
     // Conseils d'optimisation
-    if (productName && category && price && description) {
+    if (productName && category && price && description && featuredImage) {
       newSuggestions.push({
         id: "seo-tip",
         type: "tip",
@@ -264,11 +280,15 @@ export function DynamicSearchBar({
     } else if (!category) {
       setCurrentContext("Catégorie requise")
     } else if (!price) {
-      setCurrentContext("Prix suggéré")
+      setCurrentContext("Prix requis")
+    } else if (!description.trim()) {
+      setCurrentContext("Description requise")
+    } else if (!featuredImage) {
+      setCurrentContext("Image requise")
     } else {
       setCurrentContext("Presque fini")
     }
-  }, [productName, category, price, description, selectedType, uploadedFilesCount])
+  }, [productName, category, price, description, selectedType, uploadedFilesCount, featuredImage])
 
   const handleFocus = () => {
     setIsActive(true)

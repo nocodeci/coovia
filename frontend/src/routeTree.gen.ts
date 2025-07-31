@@ -51,10 +51,11 @@ import { Route as AuthenticatedStoreIdProduitsRouteImport } from './routes/_auth
 import { Route as AuthenticatedStoreIdDashboardRouteImport } from './routes/_authenticated/$storeId.dashboard'
 import { Route as AuthenticatedStoreIdClientsRouteImport } from './routes/_authenticated/$storeId.clients'
 import { Route as AuthenticatedStoreIdAppsRouteImport } from './routes/_authenticated/$storeId.apps'
-import { Route as AuthenticatedProduitsAddproduitIndexRouteImport } from './routes/_authenticated/produits/addproduit/index'
 import { Route as AuthenticatedMarketingAjouterIndexRouteImport } from './routes/_authenticated/marketing/ajouter/index'
 import { Route as AuthenticatedStoreIdProduitsIndexRouteImport } from './routes/_authenticated/$storeId/produits/index'
+import { Route as AuthenticatedStoreIdMediaIndexRouteImport } from './routes/_authenticated/$storeId/media/index'
 import { Route as AuthenticatedStoreIdProduitsAddproduitRouteImport } from './routes/_authenticated/$storeId/produits/addproduit'
+import { Route as AuthenticatedStoreIdMediaUploadRouteImport } from './routes/_authenticated/$storeId/media/upload'
 
 const StoreSelectionRoute = StoreSelectionRouteImport.update({
   id: '/store-selection',
@@ -281,12 +282,6 @@ const AuthenticatedStoreIdAppsRoute =
     path: '/apps',
     getParentRoute: () => AuthenticatedStoreIdRoute,
   } as any)
-const AuthenticatedProduitsAddproduitIndexRoute =
-  AuthenticatedProduitsAddproduitIndexRouteImport.update({
-    id: '/produits/addproduit/',
-    path: '/produits/addproduit/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedMarketingAjouterIndexRoute =
   AuthenticatedMarketingAjouterIndexRouteImport.update({
     id: '/marketing/ajouter/',
@@ -299,11 +294,23 @@ const AuthenticatedStoreIdProduitsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedStoreIdProduitsRoute,
   } as any)
+const AuthenticatedStoreIdMediaIndexRoute =
+  AuthenticatedStoreIdMediaIndexRouteImport.update({
+    id: '/media/',
+    path: '/media/',
+    getParentRoute: () => AuthenticatedStoreIdRoute,
+  } as any)
 const AuthenticatedStoreIdProduitsAddproduitRoute =
   AuthenticatedStoreIdProduitsAddproduitRouteImport.update({
     id: '/addproduit',
     path: '/addproduit',
     getParentRoute: () => AuthenticatedStoreIdProduitsRoute,
+  } as any)
+const AuthenticatedStoreIdMediaUploadRoute =
+  AuthenticatedStoreIdMediaUploadRouteImport.update({
+    id: '/media/upload',
+    path: '/media/upload',
+    getParentRoute: () => AuthenticatedStoreIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -347,10 +354,11 @@ export interface FileRoutesByFullPath {
   '/stores': typeof AuthenticatedStoresIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/$storeId/media/upload': typeof AuthenticatedStoreIdMediaUploadRoute
   '/$storeId/produits/addproduit': typeof AuthenticatedStoreIdProduitsAddproduitRoute
+  '/$storeId/media': typeof AuthenticatedStoreIdMediaIndexRoute
   '/$storeId/produits/': typeof AuthenticatedStoreIdProduitsIndexRoute
   '/marketing/ajouter': typeof AuthenticatedMarketingAjouterIndexRoute
-  '/produits/addproduit': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
 export interface FileRoutesByTo {
   '/create-store': typeof CreateStoreRoute
@@ -390,10 +398,11 @@ export interface FileRoutesByTo {
   '/stores': typeof AuthenticatedStoresIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/$storeId/media/upload': typeof AuthenticatedStoreIdMediaUploadRoute
   '/$storeId/produits/addproduit': typeof AuthenticatedStoreIdProduitsAddproduitRoute
+  '/$storeId/media': typeof AuthenticatedStoreIdMediaIndexRoute
   '/$storeId/produits': typeof AuthenticatedStoreIdProduitsIndexRoute
   '/marketing/ajouter': typeof AuthenticatedMarketingAjouterIndexRoute
-  '/produits/addproduit': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -439,10 +448,11 @@ export interface FileRoutesById {
   '/_authenticated/stores/': typeof AuthenticatedStoresIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/$storeId/media/upload': typeof AuthenticatedStoreIdMediaUploadRoute
   '/_authenticated/$storeId/produits/addproduit': typeof AuthenticatedStoreIdProduitsAddproduitRoute
+  '/_authenticated/$storeId/media/': typeof AuthenticatedStoreIdMediaIndexRoute
   '/_authenticated/$storeId/produits/': typeof AuthenticatedStoreIdProduitsIndexRoute
   '/_authenticated/marketing/ajouter/': typeof AuthenticatedMarketingAjouterIndexRoute
-  '/_authenticated/produits/addproduit/': typeof AuthenticatedProduitsAddproduitIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -487,10 +497,11 @@ export interface FileRouteTypes {
     | '/stores'
     | '/tasks'
     | '/users'
+    | '/$storeId/media/upload'
     | '/$storeId/produits/addproduit'
+    | '/$storeId/media'
     | '/$storeId/produits/'
     | '/marketing/ajouter'
-    | '/produits/addproduit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/create-store'
@@ -530,10 +541,11 @@ export interface FileRouteTypes {
     | '/stores'
     | '/tasks'
     | '/users'
+    | '/$storeId/media/upload'
     | '/$storeId/produits/addproduit'
+    | '/$storeId/media'
     | '/$storeId/produits'
     | '/marketing/ajouter'
-    | '/produits/addproduit'
   id:
     | '__root__'
     | '/_authenticated'
@@ -578,10 +590,11 @@ export interface FileRouteTypes {
     | '/_authenticated/stores/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/_authenticated/$storeId/media/upload'
     | '/_authenticated/$storeId/produits/addproduit'
+    | '/_authenticated/$storeId/media/'
     | '/_authenticated/$storeId/produits/'
     | '/_authenticated/marketing/ajouter/'
-    | '/_authenticated/produits/addproduit/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -897,13 +910,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStoreIdAppsRouteImport
       parentRoute: typeof AuthenticatedStoreIdRoute
     }
-    '/_authenticated/produits/addproduit/': {
-      id: '/_authenticated/produits/addproduit/'
-      path: '/produits/addproduit'
-      fullPath: '/produits/addproduit'
-      preLoaderRoute: typeof AuthenticatedProduitsAddproduitIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/marketing/ajouter/': {
       id: '/_authenticated/marketing/ajouter/'
       path: '/marketing/ajouter'
@@ -918,12 +924,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStoreIdProduitsIndexRouteImport
       parentRoute: typeof AuthenticatedStoreIdProduitsRoute
     }
+    '/_authenticated/$storeId/media/': {
+      id: '/_authenticated/$storeId/media/'
+      path: '/media'
+      fullPath: '/$storeId/media'
+      preLoaderRoute: typeof AuthenticatedStoreIdMediaIndexRouteImport
+      parentRoute: typeof AuthenticatedStoreIdRoute
+    }
     '/_authenticated/$storeId/produits/addproduit': {
       id: '/_authenticated/$storeId/produits/addproduit'
       path: '/addproduit'
       fullPath: '/$storeId/produits/addproduit'
       preLoaderRoute: typeof AuthenticatedStoreIdProduitsAddproduitRouteImport
       parentRoute: typeof AuthenticatedStoreIdProduitsRoute
+    }
+    '/_authenticated/$storeId/media/upload': {
+      id: '/_authenticated/$storeId/media/upload'
+      path: '/media/upload'
+      fullPath: '/$storeId/media/upload'
+      preLoaderRoute: typeof AuthenticatedStoreIdMediaUploadRouteImport
+      parentRoute: typeof AuthenticatedStoreIdRoute
     }
   }
 }
@@ -976,6 +996,8 @@ interface AuthenticatedStoreIdRouteChildren {
   AuthenticatedStoreIdProduitsRoute: typeof AuthenticatedStoreIdProduitsRouteWithChildren
   AuthenticatedStoreIdSettingsRoute: typeof AuthenticatedStoreIdSettingsRoute
   AuthenticatedStoreIdTasksRoute: typeof AuthenticatedStoreIdTasksRoute
+  AuthenticatedStoreIdMediaUploadRoute: typeof AuthenticatedStoreIdMediaUploadRoute
+  AuthenticatedStoreIdMediaIndexRoute: typeof AuthenticatedStoreIdMediaIndexRoute
 }
 
 const AuthenticatedStoreIdRouteChildren: AuthenticatedStoreIdRouteChildren = {
@@ -986,6 +1008,8 @@ const AuthenticatedStoreIdRouteChildren: AuthenticatedStoreIdRouteChildren = {
     AuthenticatedStoreIdProduitsRouteWithChildren,
   AuthenticatedStoreIdSettingsRoute: AuthenticatedStoreIdSettingsRoute,
   AuthenticatedStoreIdTasksRoute: AuthenticatedStoreIdTasksRoute,
+  AuthenticatedStoreIdMediaUploadRoute: AuthenticatedStoreIdMediaUploadRoute,
+  AuthenticatedStoreIdMediaIndexRoute: AuthenticatedStoreIdMediaIndexRoute,
 }
 
 const AuthenticatedStoreIdRouteWithChildren =
@@ -1005,7 +1029,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedMarketingAjouterIndexRoute: typeof AuthenticatedMarketingAjouterIndexRoute
-  AuthenticatedProduitsAddproduitIndexRoute: typeof AuthenticatedProduitsAddproduitIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1023,8 +1046,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedMarketingAjouterIndexRoute:
     AuthenticatedMarketingAjouterIndexRoute,
-  AuthenticatedProduitsAddproduitIndexRoute:
-    AuthenticatedProduitsAddproduitIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

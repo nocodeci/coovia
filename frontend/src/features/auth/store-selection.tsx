@@ -3,39 +3,43 @@ import { useNavigate } from "@tanstack/react-router"
 import { useAuth } from "@/hooks/useAuth"
 import { useStore } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
-import { Loader2, LogOut, Plus, Sparkles, Store, ArrowRight } from "lucide-react"
+import { LogOut, Plus, Sparkles, Store, ArrowRight, RefreshCw } from "lucide-react"
+import { CircleLoader } from "@/components/ui/circle-loader"
 import { toast } from "sonner"
 
 export function StoreSelection() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const { stores, setCurrentStore, isLoading, error } = useStore()
+  const { stores, setCurrentStore, isLoading, error, refreshStores } = useStore()
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
   const [hoveredStore, setHoveredStore] = useState<string | null>(null)
 
-  // Vérification d'authentification
+
+
+  // Vérification d'authentification et chargement forcé des boutiques
   useEffect(() => {
     const token = localStorage.getItem('auth_token')
     if (!token || !user) {
       navigate({ to: '/sign-in' })
       return
     }
-  }, [user, navigate])
+
+    // Forcer le chargement des boutiques si elles ne sont pas chargées après 1 seconde
+    const timeoutId = setTimeout(() => {
+      if (stores.length === 0 && !isLoading && !error) {
+        refreshStores()
+      }
+    }, 1000) // Réduit de 2s à 1s
+
+    return () => clearTimeout(timeoutId)
+  }, [user, navigate, stores.length, isLoading, error, refreshStores])
 
   // État de chargement pour l'authentification
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-border/20 max-w-md w-full">
-          <div className="text-center">
-            <div className="relative mb-6">
-              <div className="w-16 h-16 mx-auto bg-primary rounded-2xl flex items-center justify-center shadow-lg">
-                <Loader2 className="h-8 w-8 animate-spin text-primary-foreground" />
-              </div>
-              <div className="absolute -inset-2 bg-primary rounded-2xl opacity-20 blur-lg"></div>
-            </div>
-            <p className="text-muted-foreground font-medium">Vérification de l'authentification...</p>
-          </div>
+          <CircleLoader size="lg" message="Vérification de l'authentification..." />
         </div>
       </div>
     )
@@ -71,6 +75,15 @@ export function StoreSelection() {
     navigate({ to: "/sign-in" })
   }
 
+  const handleRefresh = async () => {
+    try {
+      await refreshStores()
+      toast.success("Boutiques rechargées")
+    } catch (error) {
+      toast.error("Erreur lors du rechargement")
+    }
+  }
+
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return "Bonjour"
@@ -94,20 +107,17 @@ export function StoreSelection() {
     return "🌙"
   }
 
+  // Si les boutiques sont déjà chargées, afficher directement le contenu
+  if (stores.length > 0 && !isLoading) {
+    
+  }
+
+  // Affichage du loader seulement si vraiment en cours de chargement
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-10 shadow-xl border border-border/20 max-w-md w-full">
-          <div className="text-center">
-            <div className="relative mb-8">
-              <div className="w-20 h-20 mx-auto bg-primary rounded-3xl flex items-center justify-center shadow-xl">
-                <Loader2 className="h-10 w-10 animate-spin text-primary-foreground" />
-              </div>
-              <div className="absolute -inset-3 bg-primary rounded-3xl opacity-20 blur-xl animate-pulse"></div>
-            </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">Chargement en cours</h3>
-            <p className="text-muted-foreground">Récupération de vos boutiques...</p>
-          </div>
+          <CircleLoader size="xl" message="Récupération de vos boutiques..." />
         </div>
       </div>
     )
@@ -174,14 +184,26 @@ export function StoreSelection() {
             </div>
           </div>
           
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="border-border hover:border-border/80 bg-card/70 backdrop-blur-sm hover:bg-card rounded-2xl px-4 py-2 transition-all duration-200 shadow-sm"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            <span className="font-medium">Déconnexion</span>
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              size="sm"
+              className="border-border hover:border-border/80 bg-card/70 backdrop-blur-sm hover:bg-card rounded-xl px-3 py-2 transition-all duration-200 shadow-sm"
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              <span className="font-medium">Actualiser</span>
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="border-border hover:border-border/80 bg-card/70 backdrop-blur-sm hover:bg-card rounded-2xl px-4 py-2 transition-all duration-200 shadow-sm"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              <span className="font-medium">Déconnexion</span>
+            </Button>
+          </div>
         </div>
 
         {/* Contenu principal avec scroll */}
@@ -239,7 +261,7 @@ export function StoreSelection() {
                     {/* Flèche ou loader */}
                     <div className="flex items-center">
                       {selectedStoreId === store.id ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        <CircleLoader size="sm" className="!flex-row" />
                       ) : (
                         <ArrowRight className={`h-5 w-5 transition-all duration-300 ${
                           hoveredStore === store.id 

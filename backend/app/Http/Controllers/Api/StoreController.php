@@ -8,36 +8,58 @@ use App\Http\Resources\StoreResource;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class StoreController extends Controller
 {
     /**
-     * Lister toutes les boutiques de l'utilisateur connecté
+     * Lister toutes les boutiques de l'utilisateur connecté - OPTIMISÉ
      */
     public function index(Request $request)
     {
         try {
             $user = $request->user();
+            $cacheKey = "user_stores_{$user->id}";
+            
+            // Vérifier le cache d'abord
+            $cachedStores = Cache::get($cacheKey);
+            if ($cachedStores && !$request->has('refresh')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Boutiques récupérées avec succès (cache)',
+                    'data' => $cachedStores
+                ]);
+            }
 
-            $stores = Store::where('owner_id', $user->id)
-                ->when($request->search, function ($query, $search) {
-                    return $query->where('name', 'like', "%{$search}%")
-                                ->orWhere('description', 'like', "%{$search}%");
-                })
-                ->when($request->status, function ($query, $status) {
-                    return $query->where('status', $status);
-                })
-                ->when($request->category, function ($query, $category) {
-                    return $query->where('category', $category);
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
+            // Requête optimisée avec select() pour ne récupérer que les colonnes nécessaires
+            $stores = Store::select([
+                'id', 'name', 'slug', 'description', 'category', 
+                'status', 'owner_id', 'created_at', 'updated_at'
+            ])
+            ->where('owner_id', $user->id)
+            ->when($request->search, function ($query, $search) {
+                return $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->when($request->status, function ($query, $status) {
+                return $query->where('status', $status);
+            })
+            ->when($request->category, function ($query, $category) {
+                return $query->where('category', $category);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+            $storeResources = StoreResource::collection($stores);
+            
+            // Mettre en cache pour 15 minutes
+            Cache::put($cacheKey, $storeResources, 15 * 60);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Boutiques récupérées avec succès',
-                'data' => StoreResource::collection($stores)
+                'data' => $storeResources
             ]);
 
         } catch (\Exception $e) {
@@ -83,6 +105,10 @@ class StoreController extends Controller
 
             Log::info('Boutique créée avec succès', ['store_id' => $store->id]);
 
+            // Invalider le cache des boutiques de l'utilisateur
+            $cacheKey = "user_stores_{$user->id}";
+            Cache::forget($cacheKey);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Boutique créée avec succès',
@@ -105,7 +131,7 @@ class StoreController extends Controller
     }
 
     /**
-     * Afficher une boutique spécifique
+     * Afficher une boutique spécifique - OPTIMISÉ
      */
     public function show(Request $request, Store $store)
     {
@@ -119,10 +145,26 @@ class StoreController extends Controller
                 ], 403);
             }
 
+            $cacheKey = "store_{$store->id}";
+            $cachedStore = Cache::get($cacheKey);
+            
+            if ($cachedStore && !$request->has('refresh')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Boutique récupérée avec succès (cache)',
+                    'data' => $cachedStore
+                ]);
+            }
+
+            $storeResource = new StoreResource($store);
+            
+            // Mettre en cache pour 10 minutes
+            Cache::put($cacheKey, $storeResource, 10 * 60);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Boutique récupérée avec succès',
-                'data' => new StoreResource($store)
+                'data' => $storeResource
             ]);
 
         } catch (\Exception $e) {
@@ -166,6 +208,10 @@ class StoreController extends Controller
 
             Log::info('Boutique mise à jour avec succès', ['store_id' => $store->id]);
 
+            // Invalider les caches
+            Cache::forget("store_{$store->id}");
+            Cache::forget("user_stores_{$request->user()->id}");
+
             return response()->json([
                 'success' => true,
                 'message' => 'Boutique mise à jour avec succès',
@@ -204,6 +250,10 @@ class StoreController extends Controller
             $store->delete();
 
             Log::info('Boutique supprimée avec succès', ['store_id' => $store->id]);
+
+            // Invalider les caches
+            Cache::forget("store_{$store->id}");
+            Cache::forget("user_stores_{$request->user()->id}");
 
             return response()->json([
                 'success' => true,

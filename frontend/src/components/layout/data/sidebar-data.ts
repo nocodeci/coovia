@@ -20,6 +20,8 @@ import {
   IconUsers,
   IconApps,
   IconListCheck,
+  IconPlus,
+  IconPhoto,
 } from "@tabler/icons-react"
 import { AudioWaveform, Command, GalleryVerticalEnd } from "lucide-react"
 import { ClerkLogo } from "@/assets/clerk-logo"
@@ -63,8 +65,19 @@ export const getSidebarData = (storeId?: string): SidebarData => {
           },
           {
             title: "Produits",
-            url: `${baseUrl}/produits` as any,
             icon: IconPackages,
+            items: [
+              {
+                title: "Liste des produits",
+                url: `${baseUrl}/produits` as any,
+                icon: IconListCheck,
+              },
+              {
+                title: "Ajouter un produit",
+                url: `${baseUrl}/produits/addproduit` as any,
+                icon: IconPlus,
+              },
+            ],
           },
           {
             title: "Applications",
@@ -80,6 +93,22 @@ export const getSidebarData = (storeId?: string): SidebarData => {
             title: "Tâches",
             url: `${baseUrl}/tasks` as any,
             icon: IconListCheck,
+          },
+          {
+            title: "Media",
+            icon: IconPhoto,
+            items: [
+              {
+                title: "Bibliothèque Media",
+                url: `${baseUrl}/media` as any,
+                icon: IconPhoto,
+              },
+              {
+                title: "Ajouter Media",
+                url: `${baseUrl}/media/upload` as any,
+                icon: IconPlus,
+              },
+            ],
           },
         ],
       },

@@ -10,6 +10,7 @@ interface TopBarProps {
   description?: string
   selectedType?: string
   uploadedFilesCount?: number
+  featuredImage?: string | null
   isFormValid?: boolean
   hasUnsavedChanges?: boolean
   onSave?: () => void
@@ -25,6 +26,7 @@ export function TopBar({
   description = "",
   selectedType = "telechargeable",
   uploadedFilesCount = 0,
+  featuredImage = null,
   isFormValid = false,
   hasUnsavedChanges = false,
   onSave,
@@ -67,6 +69,7 @@ export function TopBar({
           description={description}
           selectedType={selectedType}
           uploadedFilesCount={uploadedFilesCount}
+          featuredImage={featuredImage}
           isFormValid={isFormValid}
           hasUnsavedChanges={hasUnsavedChanges}
           onSave={onSave}
