@@ -21,7 +21,6 @@ import { Badge } from "@/components/ui/badge"
 import { useStore } from "@/context/store-context"
 import apiService from "@/lib/api"
 import { ProductImage } from "./product-image"
-import { ProductImageDebug } from "./product-image-debug"
 
 type TabType = "tous" | "actifs" | "brouillons" | "archives"
 
@@ -286,7 +285,7 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
             <TableRow key={product.id}>
               <TableCell>
                 <div className="flex items-center space-x-3">
-                  <ProductImageDebug 
+                  <ProductImage 
                     images={product.images} 
                     productName={product.name}
                     className="h-10 w-10"

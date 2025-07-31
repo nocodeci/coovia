@@ -47,6 +47,8 @@ import { toast } from "sonner"
 import { TopBar } from "./components/top-bar-simple"
 import { useNavigate } from "@tanstack/react-router"
 import apiService from "@/lib/api"
+import MediaSelectorDialog from "@/components/MediaSelectorDialog"
+import { MediaItem } from "@/services/mediaService"
 
 
 const productTypes = [
@@ -180,6 +182,13 @@ interface UploadedFile {
   file?: File
 }
 
+// États pour les médias sélectionnés
+interface MediaState {
+  productFiles: MediaItem[]
+  productImages: MediaItem[]
+  featuredImage: MediaItem | null
+}
+
 interface AddProductProps {
   storeId: string
 }
@@ -205,6 +214,17 @@ export default function AddProduct({ storeId }: AddProductProps) {
   const [videoUrl, setVideoUrl] = useState("")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [isFeatured, setIsFeatured] = useState(false)
+  
+  // États pour les médias sélectionnés
+  const [selectedMedia, setSelectedMedia] = useState<MediaState>({
+    productFiles: [],
+    productImages: [],
+    featuredImage: null
+  })
+  
+  // États pour les modals de sélection de médias
+  const [isMediaSelectorOpen, setIsMediaSelectorOpen] = useState(false)
+  const [mediaSelectorType, setMediaSelectorType] = useState<'files' | 'images' | 'featured'>('files')
 
   // États pour les combobox
   const [openCategory, setOpenCategory] = useState(false)
@@ -237,7 +257,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
     selectedType && 
     price && 
     description.trim() && 
-    featuredImage
+    selectedMedia.featuredImage
   )
 
   // Validation pour le brouillon (nom et type requis)
@@ -254,8 +274,8 @@ export default function AddProduct({ storeId }: AddProductProps) {
       sku ||
       stockQuantity ||
       minStockLevel ||
-      uploadedFiles.length > 0 ||
-      featuredImage
+          selectedMedia.productFiles.length > 0 ||
+    selectedMedia.featuredImage
     setHasUnsavedChanges(!!hasChanges)
   }, [
     productName,
@@ -266,8 +286,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
     sku,
     stockQuantity,
     minStockLevel,
-    uploadedFiles,
-    featuredImage,
+    selectedMedia,
   ])
 
   // Générer automatiquement le SKU basé sur le nom du produit
@@ -401,8 +420,8 @@ export default function AddProduct({ storeId }: AddProductProps) {
         stock_quantity: Number.parseInt(stockQuantity) || 0,
         min_stock_level: Number.parseInt(minStockLevel) || 0,
         status: "active",
-        images: featuredImage ? [featuredImage] : [],
-        files: uploadedFiles.map(file => file.name),
+        images: selectedMedia.featuredImage ? [selectedMedia.featuredImage] : [],
+        files: selectedMedia.productFiles,
         inventory: {
           quantity: Number.parseInt(stockQuantity) || 0,
           min_level: Number.parseInt(minStockLevel) || 0,
@@ -465,8 +484,8 @@ export default function AddProduct({ storeId }: AddProductProps) {
         stock_quantity: Number.parseInt(stockQuantity) || 0,
         min_stock_level: Number.parseInt(minStockLevel) || 0,
         status: "draft",
-        images: featuredImage ? [featuredImage] : [],
-        files: uploadedFiles.map(file => file.name),
+        images: selectedMedia.featuredImage ? [selectedMedia.featuredImage] : [],
+        files: selectedMedia.productFiles,
         inventory: {
           quantity: Number.parseInt(stockQuantity) || 0,
           min_level: Number.parseInt(minStockLevel) || 0,
@@ -564,6 +583,66 @@ export default function AddProduct({ storeId }: AddProductProps) {
     reader.readAsDataURL(file)
   }
 
+  // Fonctions pour gérer la sélection de médias
+  const openMediaSelector = (type: 'files' | 'images' | 'featured') => {
+    setMediaSelectorType(type)
+    setIsMediaSelectorOpen(true)
+  }
+
+  const handleMediaSelect = (media: MediaItem) => {
+    switch (mediaSelectorType) {
+      case 'files':
+        setSelectedMedia(prev => ({
+          ...prev,
+          productFiles: [...prev.productFiles, media]
+        }))
+        break
+      case 'images':
+        setSelectedMedia(prev => ({
+          ...prev,
+          productImages: [...prev.productImages, media]
+        }))
+        break
+      case 'featured':
+        setSelectedMedia(prev => ({
+          ...prev,
+          featuredImage: media
+        }))
+        // Mettre à jour l'image featured pour la compatibilité
+        // Utiliser la thumbnail si disponible, sinon l'URL du fichier
+        const imageUrl = media.thumbnail 
+          ? `http://localhost:8000/storage/${media.thumbnail}`
+          : `http://localhost:8000/storage/${media.url}`
+        setFeaturedImage(imageUrl)
+        break
+    }
+    setIsMediaSelectorOpen(false)
+  }
+
+  const removeSelectedMedia = (mediaId: string, type: 'files' | 'images' | 'featured') => {
+    switch (type) {
+      case 'files':
+        setSelectedMedia(prev => ({
+          ...prev,
+          productFiles: prev.productFiles.filter(m => m.id !== mediaId)
+        }))
+        break
+      case 'images':
+        setSelectedMedia(prev => ({
+          ...prev,
+          productImages: prev.productImages.filter(m => m.id !== mediaId)
+        }))
+        break
+      case 'featured':
+        setSelectedMedia(prev => ({
+          ...prev,
+          featuredImage: null
+        }))
+        setFeaturedImage(null)
+        break
+    }
+  }
+
 
 
   return (
@@ -575,8 +654,8 @@ export default function AddProduct({ storeId }: AddProductProps) {
         price={price}
         description={description}
         selectedType={selectedType}
-        uploadedFilesCount={uploadedFiles.length}
-        featuredImage={featuredImage}
+        uploadedFilesCount={selectedMedia.productFiles.length}
+        featuredImage={selectedMedia.featuredImage ? `http://localhost:8000/storage/${selectedMedia.featuredImage.thumbnail || selectedMedia.featuredImage.url}` : null}
         isFormValid={canPublish}
         hasUnsavedChanges={hasUnsavedChanges}
         onSave={handleSave}
@@ -889,56 +968,44 @@ export default function AddProduct({ storeId }: AddProductProps) {
                 </CardContent>
               </Card>
 
-              {/* Fichiers */}
+              {/* Fichiers du produit */}
               <Card className="shadow-sm">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg">Fichiers du produit</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div
-                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-                      isDragging
-                        ? "border-primary bg-primary/5 scale-[1.02]"
-                        : "border-muted-foreground/25 hover:border-primary/50"
-                    }`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                  >
+                  <div className="border-2 border-dashed rounded-xl p-8 text-center transition-all border-muted-foreground/25 hover:border-primary/50">
                     <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Glissez vos fichiers ici</h3>
-                    <p className="text-sm text-muted-foreground mb-4">ou cliquez pour sélectionner</p>
+                    <h3 className="text-lg font-medium mb-2">Sélectionner des fichiers</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Choisissez des fichiers depuis votre bibliothèque média</p>
                     <Button
                       variant="outline"
-                      onClick={() => {
-                        const input = document.createElement("input")
-                        input.type = "file"
-                        input.multiple = true
-                        input.onchange = (e) => {
-                          const target = e.target as HTMLInputElement
-                          handleFileUpload(target.files)
-                        }
-                        input.click()
-                      }}
+                      onClick={() => openMediaSelector('files')}
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Choisir des fichiers
+                      Sélectionner des fichiers
                     </Button>
                   </div>
 
-                  {uploadedFiles.length > 0 && (
+                  {selectedMedia.productFiles.length > 0 && (
                     <div className="space-y-3">
-                      <h4 className="font-medium">Fichiers ajoutés ({uploadedFiles.length})</h4>
+                      <h4 className="font-medium">Fichiers sélectionnés ({selectedMedia.productFiles.length})</h4>
                       <div className="grid gap-3">
-                        {uploadedFiles.map((file) => (
+                        {selectedMedia.productFiles.map((file) => (
                           <div
                             key={file.id}
                             className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
                           >
                             <div className="flex items-center gap-3">
-                              {file.preview ? (
+                              {file.thumbnail ? (
                                 <img
-                                  src={file.preview || "/placeholder.svg"}
+                                  src={`http://localhost:8000/storage/${file.thumbnail}`}
+                                  alt={file.name}
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                              ) : file.type === 'image' ? (
+                                <img
+                                  src={`http://localhost:8000/storage/${file.url}`}
                                   alt={file.name}
                                   className="w-12 h-12 object-cover rounded"
                                 />
@@ -949,7 +1016,9 @@ export default function AddProduct({ storeId }: AddProductProps) {
                               )}
                               <div>
                                 <p className="font-medium">{file.name}</p>
-                                <p className="text-sm text-muted-foreground">{formatFileSize(file.size)}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {(file.size / 1024 / 1024).toFixed(1)} MB
+                                </p>
                               </div>
                             </div>
                             <AlertDialog>
@@ -967,13 +1036,13 @@ export default function AddProduct({ storeId }: AddProductProps) {
                                   <AlertDialogTitle>Supprimer ce fichier ?</AlertDialogTitle>
                                   <AlertDialogDescription>
                                     Cette action ne peut pas être annulée. Le fichier "{file.name}" sera définitivement
-                                    supprimé.
+                                    supprimé de la sélection.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Annuler</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => removeFile(file.id)}
+                                    onClick={() => removeSelectedMedia(file.id, 'files')}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
                                     Supprimer
@@ -998,12 +1067,12 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   <CardTitle className="text-lg">Image du produit <span className="text-destructive">*</span></CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {featuredImage ? (
-                    <div className="relative group">
+                  {selectedMedia.featuredImage ? (
+                    <div className="relative group w-full h-64 rounded-lg overflow-hidden">
                       <img
-                        src={featuredImage || "/placeholder.svg"}
+                        src={`http://localhost:8000/storage/${selectedMedia.featuredImage.thumbnail || selectedMedia.featuredImage.url}`}
                         alt="Image du produit"
-                        className="w-full h-48 object-cover rounded-lg"
+                        className="w-full h-full object-cover rounded-lg"
                       />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                         <AlertDialog>
@@ -1023,10 +1092,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => {
-                                  setFeaturedImage(null)
-                                  setFeaturedImageFile(null)
-                                }}
+                                onClick={() => removeSelectedMedia(selectedMedia.featuredImage!.id, 'featured')}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
                                 Supprimer
@@ -1040,24 +1106,13 @@ export default function AddProduct({ storeId }: AddProductProps) {
                     <div className="space-y-2">
                       <Button
                         variant="outline"
-                        className="w-full h-48 border-dashed bg-muted/30 hover:bg-muted/50 transition-colors"
-                        onClick={() => {
-                          const input = document.createElement("input")
-                          input.type = "file"
-                          input.accept = "image/*"
-                          input.onchange = (e) => {
-                            const file = (e.target as HTMLInputElement).files?.[0]
-                            if (file) {
-                              handleFeaturedImageUpload(file)
-                            }
-                          }
-                          input.click()
-                        }}
+                        className="w-full h-64 border-dashed bg-muted/30 hover:bg-muted/50 transition-colors"
+                        onClick={() => openMediaSelector('featured')}
                       >
                         <div className="text-center">
                           <ImageIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                          <div className="font-medium">Ajouter une image</div>
-                          <div className="text-sm text-muted-foreground mt-1">Cliquez pour sélectionner</div>
+                          <div className="font-medium">Sélectionner une image</div>
+                          <div className="text-sm text-muted-foreground mt-1">Choisissez depuis votre bibliothèque média</div>
                         </div>
                       </Button>
                       <p className="text-xs text-destructive">L'image principale est requise pour publier le produit</p>
@@ -1095,7 +1150,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
                           {!category && <li className="text-destructive">• Catégorie</li>}
                           {!price && <li className="text-destructive">• Prix de vente</li>}
                           {!description.trim() && <li className="text-destructive">• Description</li>}
-                          {!featuredImage && <li className="text-destructive">• Image principale</li>}
+                          {!selectedMedia.featuredImage && <li className="text-destructive">• Image principale</li>}
                         </ul>
                       </div>
                     )}
@@ -1216,7 +1271,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Fichiers :</span>
-                    <span className="font-medium">{uploadedFiles.length}</span>
+                    <span className="font-medium">{selectedMedia.productFiles.length}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -1224,6 +1279,22 @@ export default function AddProduct({ storeId }: AddProductProps) {
           </div>
         </div>
       </main>
+
+      {/* Sélecteur de médias */}
+      <MediaSelectorDialog
+        isOpen={isMediaSelectorOpen}
+        onClose={() => setIsMediaSelectorOpen(false)}
+        onSelect={handleMediaSelect}
+        storeId={storeId}
+        title={
+          mediaSelectorType === 'files' 
+            ? "Sélectionner des fichiers" 
+            : mediaSelectorType === 'images'
+            ? "Sélectionner des images"
+            : "Sélectionner une image principale"
+        }
+        allowMultiple={mediaSelectorType !== 'featured'}
+      />
     </div>
   )
 } 
