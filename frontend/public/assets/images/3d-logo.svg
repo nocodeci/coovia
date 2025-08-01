@@ -1,0 +1,25 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond avec gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#16a34a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#15803d;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Formes géométriques 3D -->
+  <rect x="50" y="100" width="80" height="80" rx="12" fill="url(#bgGradient)" stroke="#d97706" stroke-width="2"/>
+  <rect x="140" y="80" width="80" height="80" rx="12" fill="url(#bgGradient)" stroke="#d97706" stroke-width="2"/>
+  <rect x="230" y="120" width="80" height="80" rx="12" fill="url(#bgGradient)" stroke="#d97706" stroke-width="2"/>
+  
+  <!-- Éléments décoratifs -->
+  <circle cx="90" cy="140" r="8" fill="#ffffff" opacity="0.8"/>
+  <circle cx="180" cy="120" r="8" fill="#ffffff" opacity="0.8"/>
+  <circle cx="270" cy="160" r="8" fill="#ffffff" opacity="0.8"/>
+  
+  <!-- Lignes de connexion -->
+  <path d="M130 140 L140 120" stroke="#ffffff" stroke-width="3" opacity="0.6"/>
+  <path d="M220 120 L230 160" stroke="#ffffff" stroke-width="3" opacity="0.6"/>
+  
+
+</svg> 

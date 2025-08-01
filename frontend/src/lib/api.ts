@@ -341,7 +341,7 @@ class ApiService {
   }
 
   async updateProduct(productId: string, productData: any) {
-    const response = await this.request(`/products/${productId}`, {
+    const response = await this.request(`/public/products/${productId}`, {
       method: 'PUT',
       body: JSON.stringify(productData),
     })
@@ -355,7 +355,7 @@ class ApiService {
   }
 
   async deleteProduct(productId: string) {
-    const response = await this.request(`/products/${productId}`, {
+    const response = await this.request(`/public/products/${productId}`, {
       method: 'DELETE',
     })
     

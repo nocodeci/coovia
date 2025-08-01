@@ -29,15 +29,18 @@ export function TeamSwitcher({
 }) {
   const { isMobile } = useSidebar()
   const navigate = useNavigate()
-  const { stores, currentStore } = useStore()
+  const { stores, currentStore, isLoading } = useStore()
   const [activeStore, setActiveStore] = React.useState(currentStore || stores[0])
 
   // Mettre à jour la boutique active quand currentStore change
   React.useEffect(() => {
     if (currentStore) {
       setActiveStore(currentStore)
+    } else if (stores.length > 0 && !activeStore) {
+      // Si pas de boutique active mais des boutiques disponibles
+      setActiveStore(stores[0])
     }
-  }, [currentStore])
+  }, [currentStore, stores, activeStore])
 
   const handleStoreSelect = (store: any) => {
     setActiveStore(store)
@@ -52,15 +55,26 @@ export function TeamSwitcher({
     return (
       <SidebarMenu>
         <SidebarMenuItem>
+          <div className="flex items-center mb-6">
+            <img 
+              src="/assets/images/logo.svg" 
+              alt="coovia" 
+              width="120" 
+              height="32" 
+              className="h-8 w-auto"
+            />
+          </div>
           <SidebarMenuButton size='lg' onClick={handleBackToStoreSelection}>
             <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
               <Store className='size-4' />
             </div>
             <div className='grid flex-1 text-left text-sm leading-tight'>
               <span className='truncate font-semibold'>
-                Sélectionner une boutique
+                {isLoading ? 'Chargement...' : 'Sélectionner une boutique'}
               </span>
-              <span className='truncate text-xs'>Cliquez pour choisir</span>
+              <span className='truncate text-xs'>
+                {isLoading ? 'Vérification des boutiques' : 'Cliquez pour choisir'}
+              </span>
             </div>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -71,6 +85,15 @@ export function TeamSwitcher({
   return (
     <SidebarMenu>
       <SidebarMenuItem>
+                  <div className="flex items-center mb-6">
+            <img 
+              src="/assets/images/logo.svg" 
+              alt="coovia" 
+              width="120" 
+              height="32" 
+              className="h-8 w-auto"
+            />
+          </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton

@@ -25,19 +25,22 @@ export function AuthenticatedLayout({ children }: Props) {
   const isStandalonePage = location.pathname === '/store-selection' || location.pathname === '/create-store'
   const isLoading = authLoading || storesLoading || !hasCheckedAuth || !hasLoaded
   
+  // Afficher le sidebar même pendant le chargement pour éviter le flash
+  const shouldShowSidebar = !isStandalonePage && (hasCheckedAuth || !authLoading)
+  
   return (
     <StoreProvider>
       <SearchProvider>
         <SidebarProvider defaultOpen={defaultOpen}>
           <SkipToMain />
-          {!isStandalonePage && !isLoading && <AppSidebar />}
+          {shouldShowSidebar && <AppSidebar />}
           <div
             id='content'
             className={cn(
               isStandalonePage || isLoading ? 'w-full' : 'ml-auto w-full max-w-full',
-              !isStandalonePage && !isLoading && 'peer-data-[state=collapsed]:w-[calc(100%-var(--sidebar-width-icon)-1rem)]',
-              !isStandalonePage && !isLoading && 'peer-data-[state=expanded]:w-[calc(100%-var(--sidebar-width))]',
-              !isStandalonePage && !isLoading && 'sm:transition-[width] sm:duration-200 sm:ease-linear',
+              shouldShowSidebar && 'peer-data-[state=collapsed]:w-[calc(100%-var(--sidebar-width-icon)-1rem)]',
+              shouldShowSidebar && 'peer-data-[state=expanded]:w-[calc(100%-var(--sidebar-width))]',
+              shouldShowSidebar && 'sm:transition-[width] sm:duration-200 sm:ease-linear',
               'flex h-svh flex-col',
               'group-data-[scroll-locked=1]/body:h-full',
               'has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh'

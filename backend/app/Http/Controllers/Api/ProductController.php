@@ -147,6 +147,36 @@ class ProductController extends Controller
         ]);
     }
 
+    // Méthodes publiques pour le développement (sans autorisation)
+    public function updatePublic(ProductRequest $request, Product $product): JsonResponse
+    {
+        $product->update($request->validated());
+
+        // Invalider les caches
+        Cache::forget("product_{$product->id}");
+        $this->invalidateStoreProductsCache($product->store_id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Produit mis à jour avec succès',
+            'product' => new ProductResource($product),
+        ]);
+    }
+
+    public function destroyPublic(Product $product): JsonResponse
+    {
+        $product->delete();
+
+        // Invalider les caches
+        Cache::forget("product_{$product->id}");
+        $this->invalidateStoreProductsCache($product->store_id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Produit supprimé avec succès',
+        ]);
+    }
+
     /**
      * Invalider tous les caches de produits d'une boutique
      */

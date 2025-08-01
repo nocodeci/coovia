@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { MoreHorizontal, Edit, Trash2, Eye, Copy, Archive, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,7 +75,7 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
         )
         
         if (response.success && response.data) {
-          let filteredProducts = response.data.data || response.data // Support des deux formats
+          let filteredProducts = (response.data as any).data || response.data // Support des deux formats
           
           // Debug: Afficher les données des produits (une seule fois)
           if (filteredProducts.length > 0) {
@@ -106,7 +107,7 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
           if (filters.searchTerm) {
             filteredProducts = filteredProducts.filter((product: any) =>
               product.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-              product.description?.toLowerCase().includes(filters.searchTerm.toLowerCase())
+              stripHtml(product.description)?.toLowerCase().includes(filters.searchTerm.toLowerCase())
             )
           }
 
@@ -129,12 +130,12 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
           setProducts(filteredProducts)
           
           // Mettre à jour la pagination si disponible
-          if (response.data.pagination) {
+          if ((response.data as any).pagination) {
             setPagination(prev => ({
               ...prev,
-              total: response.data.pagination.total,
-              totalPages: response.data.pagination.last_page,
-              currentPage: response.data.pagination.current_page
+              total: (response.data as any).pagination.total,
+              totalPages: (response.data as any).pagination.last_page,
+              currentPage: (response.data as any).pagination.current_page
             }))
           }
         } else {
@@ -189,26 +190,104 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
     }))
   }
 
-  const handleAction = (action: string, product: any) => {
+  // Fonction pour nettoyer le HTML et extraire le texte
+  const stripHtml = (html: string) => {
+    if (!html) return ''
+    // Créer un élément temporaire pour extraire le texte
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = html
+    return tempDiv.textContent || tempDiv.innerText || ''
+  }
+
+  const handleAction = async (action: string, product: any) => {
     console.log(`${action} pour le produit:`, product.name)
+    
+    // Sauvegarder l'état initial pour pouvoir revenir en arrière en cas d'erreur
+    const originalProducts = [...products]
     
     switch (action) {
       case "view":
-        // Naviguer vers la page de détail
+        // Naviguer vers la page de détail du produit
+        window.location.href = `/${currentStore?.id}/produits/${product.id}`
         break
       case "edit":
         // Naviguer vers la page d'édition
+        window.location.href = `/${currentStore?.id}/produits/${product.id}/edit`
         break
       case "duplicate":
         // Dupliquer le produit
+        try {
+          const duplicatedProduct = {
+            ...product,
+            name: `${product.name} (Copie)`,
+            sku: `${product.sku}-copy-${Date.now()}`,
+            status: 'draft'
+          }
+          delete duplicatedProduct.id
+          delete duplicatedProduct.created_at
+          delete duplicatedProduct.updated_at
+          
+          const response = await apiService.createProduct(currentStore?.id!, duplicatedProduct)
+          if (response.success && response.data) {
+            // Ajouter le nouveau produit à l'état local immédiatement
+            const newProduct = {
+              ...(response.data as any),
+              id: (response.data as any).id || `temp-${Date.now()}`,
+              name: `${product.name} (Copie)`,
+              status: 'draft'
+            }
+            setProducts(prevProducts => [newProduct, ...prevProducts])
+            toast.success("Produit dupliqué avec succès")
+          } else {
+            toast.error("Erreur lors de la duplication")
+          }
+        } catch (error) {
+          console.error("Erreur lors de la duplication:", error)
+          toast.error("Erreur lors de la duplication")
+        }
         break
       case "archive":
         // Archiver le produit
+        try {
+          const response = await apiService.updateProduct(product.id, {
+            status: 'archived'
+          })
+          if (response.success) {
+            // Mettre à jour l'état local immédiatement
+            setProducts(prevProducts => 
+              prevProducts.map(p => 
+                p.id === product.id 
+                  ? { ...p, status: 'archived' }
+                  : p
+              )
+            )
+            toast.success("Produit archivé avec succès")
+          } else {
+            toast.error("Erreur lors de l'archivage")
+          }
+        } catch (error) {
+          console.error("Erreur lors de l'archivage:", error)
+          toast.error("Erreur lors de l'archivage")
+        }
         break
       case "delete":
         // Supprimer le produit
-        if (confirm(`Êtes-vous sûr de vouloir supprimer "${product.name}" ?`)) {
-          console.log("Suppression du produit:", product.id)
+        if (confirm(`Êtes-vous sûr de vouloir supprimer "${product.name}" ? Cette action est irréversible.`)) {
+          try {
+            const response = await apiService.deleteProduct(product.id)
+            if (response.success) {
+              // Supprimer le produit de l'état local immédiatement
+              setProducts(prevProducts => 
+                prevProducts.filter(p => p.id !== product.id)
+              )
+              toast.success("Produit supprimé avec succès")
+            } else {
+              toast.error("Erreur lors de la suppression")
+            }
+          } catch (error) {
+            console.error("Erreur lors de la suppression:", error)
+            toast.error("Erreur lors de la suppression")
+          }
         }
         break
     }
@@ -293,8 +372,8 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
                   <div>
                     <div className="font-medium">{product.name}</div>
                     <div className="text-sm text-muted-foreground">
-                      {product.description?.substring(0, 50)}
-                      {product.description?.length > 50 && "..."}
+                      {stripHtml(product.description)?.substring(0, 50)}
+                      {stripHtml(product.description)?.length > 50 && "..."}
                     </div>
                   </div>
                 </div>

@@ -201,6 +201,7 @@ class AuthController extends Controller
             if ($token) {
                 Cache::forget("user_token_{$token}");
             }
+
         }
 
         return response()->json([
