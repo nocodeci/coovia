@@ -14,15 +14,76 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-
       // fix loading all icon chunks in dev mode
-      // https://github.com/tabler/tabler-icons/issues/1233
       '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
     },
   },
+  
+  // Optimisations de build
+  build: {
+    target: 'esnext',
+    minify: 'terser',
+    sourcemap: false,
+    
+    // Code splitting optimisé
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendors séparés
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          'query-vendor': ['@tanstack/react-query', '@tanstack/react-query-devtools'],
+          'router-vendor': ['@tanstack/react-router'],
+          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'animation-vendor': ['framer-motion'],
+          'icons-vendor': ['lucide-react', '@tabler/icons-react'],
+          
+          // Features par domaine
+          'product-features': [
+            '@/features/produits',
+            '@/components/ui/optimized/product-card',
+          ],
+          'media-features': [
+            '@/features/media',
+            '@/components/MediaSelectorDialog',
+          ],
+          'cart-features': [
+            '@/features/panier',
+            '@/hooks/use-optimized-products',
+          ],
+        },
+        
+        // Optimisation des assets
+        assetFileNames: (assetInfo) => {
+          if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name || '')) {
+            return `assets/images/[name]-[hash][extname]`
+          }
+          if (/\.(woff2?|eot|ttf|otf)$/i.test(assetInfo.name || '')) {
+            return `assets/fonts/[name]-[hash][extname]`
+          }
+          return `assets/[name]-[hash][extname]`
+        },
+      },
+    },
+    
+    // Optimisations Terser
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+      },
+    },
+    
+    // Chunk size warnings
+    chunkSizeWarningLimit: 1000,
+  },
+  
+  // Optimisations de développement
   server: {
     watch: {
       ignored: [
@@ -31,5 +92,18 @@ export default defineConfig({
         '**/.git/**',
       ],
     },
+    
+    // Préchargement des modules critiques
+    hmr: {
+      overlay: false,
+    },
   },
+  
+  // Optimisations CSS
+  css: {
+    devSourcemap: false,
+  },
+  
+  // Optimisations d'assets
+  assetsInclude: ['**/*.webp', '**/*.avif'],
 })

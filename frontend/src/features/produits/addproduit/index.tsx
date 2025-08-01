@@ -196,6 +196,15 @@ interface AddProductProps {
 export default function AddProduct({ storeId }: AddProductProps) {
   const navigate = useNavigate()
 
+  // Fonction pour nettoyer le HTML et extraire le texte
+  const stripHtml = (html: string) => {
+    if (!html) return ''
+    // Créer un élément temporaire pour extraire le texte
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = html
+    return tempDiv.textContent || tempDiv.innerText || ''
+  }
+
   // États locaux uniquement (pas d'appels API)
   const [productName, setProductName] = useState("")
   const [selectedType, setSelectedType] = useState("telechargeable")
@@ -434,7 +443,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
         },
         seo: {
           meta_title: productName,
-          meta_description: description.substring(0, 160),
+          meta_description: stripHtml(description).substring(0, 160),
         },
       }
 
@@ -498,7 +507,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
         },
         seo: {
           meta_title: productName,
-          meta_description: description.substring(0, 160),
+          meta_description: stripHtml(description).substring(0, 160),
         },
       }
 

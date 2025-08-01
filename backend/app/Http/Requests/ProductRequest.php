@@ -13,10 +13,10 @@ class ProductRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
+        $rules = [
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['sometimes', 'required', 'string'],
+            'price' => ['sometimes', 'required', 'numeric', 'min:0'],
             'compare_price' => ['nullable', 'numeric', 'min:0'],
             'sale_price' => ['nullable', 'numeric', 'min:0'],
             'sku' => ['nullable', 'string', 'max:255'],
@@ -26,14 +26,25 @@ class ProductRequest extends FormRequest
             'images.*' => ['nullable'],
             'files' => ['nullable', 'array'],
             'files.*' => ['nullable'],
-            'category' => ['required', 'string'],
+            'category' => ['sometimes', 'required', 'string'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string'],
-            'status' => ['required', 'in:active,inactive,draft'],
+            'status' => ['sometimes', 'required', 'in:active,inactive,draft,archived'],
             'inventory' => ['nullable', 'array'],
             'attributes' => ['nullable', 'array'],
             'seo' => ['nullable', 'array'],
         ];
+
+        // Si c'est une création (POST), rendre certains champs obligatoires
+        if ($this->isMethod('POST')) {
+            $rules['name'] = ['required', 'string', 'max:255'];
+            $rules['description'] = ['required', 'string'];
+            $rules['price'] = ['required', 'numeric', 'min:0'];
+            $rules['category'] = ['required', 'string'];
+            $rules['status'] = ['required', 'in:active,inactive,draft,archived'];
+        }
+
+        return $rules;
     }
 
     public function withValidator($validator)

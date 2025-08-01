@@ -226,6 +226,13 @@ Route::prefix('public/stores/{storeId}/media')->group(function () {
     Route::delete('/{mediaId}', [MediaController::class, 'destroy']);
 });
 
+// Routes publiques pour les produits (développement seulement)
+Route::prefix('public')->group(function () {
+    Route::get('/products/{product}', [ProductController::class, 'show']);
+    Route::put('/products/{product}', [ProductController::class, 'updatePublic']);
+    Route::delete('/products/{product}', [ProductController::class, 'destroyPublic']);
+});
+
 // Route de debug (développement seulement)
 if (app()->environment('local')) {
     Route::get('/debug/routes', function () {

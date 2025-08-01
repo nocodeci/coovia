@@ -10,6 +10,15 @@ import type { Produit } from "../data/schema"
 import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { PriceRangeFilter } from "./price-range-filter"
 
+// Fonction pour nettoyer le HTML et extraire le texte
+const stripHtml = (html: string) => {
+  if (!html) return ''
+  // Créer un élément temporaire pour extraire le texte
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = html
+  return tempDiv.textContent || tempDiv.innerText || ''
+}
+
 export const columns: ColumnDef<Produit>[] = [
   {
     id: "select",
@@ -63,8 +72,8 @@ export const columns: ColumnDef<Produit>[] = [
               {produit.nom}
             </span>
             {produit.description && (
-              <span className="text-xs text-muted-foreground truncate max-w-[300px]" title={produit.description}>
-                {produit.description}
+              <span className="text-xs text-muted-foreground truncate max-w-[300px]" title={stripHtml(produit.description)}>
+                {stripHtml(produit.description)}
               </span>
             )}
           </div>

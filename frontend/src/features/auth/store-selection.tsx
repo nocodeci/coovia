@@ -148,8 +148,12 @@ export function StoreSelection() {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-10 shadow-xl border border-border/20 max-w-lg w-full">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 mx-auto mb-6 bg-primary rounded-3xl flex items-center justify-center shadow-lg">
-              <Store className="h-10 w-10 text-primary-foreground" />
+            <div className="w-24 h-24 mx-auto mb-6 bg-white rounded-3xl flex items-center justify-center shadow-lg">
+              <img 
+                src="/assets/images/logo.svg" 
+                alt="Coovia Logo" 
+                className="h-12 w-auto"
+              />
             </div>
             <h2 className="text-3xl font-bold text-foreground mb-3">Commencez votre aventure</h2>
             <p className="text-muted-foreground text-lg">Créez votre première boutique et commencez à vendre en ligne</p>
@@ -172,16 +176,16 @@ export function StoreSelection() {
         {/* Header avec logo et déconnexion */}
         <div className="flex justify-between items-center p-8 pb-6 border-b border-border">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
-              <Sparkles className="h-6 w-6 text-primary-foreground" />
+            <div className="flex flex-col items-start justify-start w-full mb-6 max-w-xs">
+              <img 
+                src="/assets/images/logo.svg" 
+                alt="coovia" 
+                width="100" 
+                height="16" 
+                className="h-8 w-auto"
+              />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Coovia</h1>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-muted-foreground">Preview</span>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              </div>
-            </div>
+
           </div>
           
           <div className="flex items-center space-x-2">

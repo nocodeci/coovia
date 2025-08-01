@@ -2,12 +2,12 @@
 
 import { useEffect } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { UserAuthForm } from "./components/user-auth-form"
 import { ModernAuthForm } from "./components/modern-auth-form"
 import { MfaForm } from "./components/mfa-form"
 import { useAuth } from "@/hooks/useAuth"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export default function SignIn() {
+export default function ModernSignIn() {
   const { isAuthenticated, mfaRequired } = useAuth()
   const navigate = useNavigate()
 
@@ -21,7 +21,7 @@ export default function SignIn() {
     <main className="bg-white h-screen w-full flex flex-row">
       {/* Section gauche avec image de fond */}
       <div 
-        className="w-2/5 bg-primary md:flex hidden flex-col items-center justify-center px-10 bg-no-repeat bg-bottom bg-contain"
+        className="w-2/5 bg-yellow-500 md:flex hidden flex-col items-center justify-center px-10 bg-no-repeat bg-bottom bg-contain"
         style={{ 
           backgroundImage: "url('/assets/images/3d-logo.svg')",
           backgroundSize: 'contain',
@@ -33,14 +33,15 @@ export default function SignIn() {
             La force de Coovia, c'est l'accompagnement personnalisé de chaque marchand. Que vous débutiez ou que vous soyez un vendeur expérimenté, nous sommes là pour vous aider à atteindre vos objectifs.
           </div>
           <div className="flex flex-row items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">YK</span>
-            </div>
+            <Avatar className="h-12 w-12">
+              <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face" alt="Yohan Kouakou" />
+              <AvatarFallback>YK</AvatarFallback>
+            </Avatar>
             <div>
               <div className="text-neutral-900 text-lg font-bold">Yohan Kouakou</div>
               <div className="text-neutral-500 text-sm">Lead Developer chez Coovia</div>
             </div>
-        </div>
+          </div>
         </div>
       </div>
 
@@ -54,8 +55,8 @@ export default function SignIn() {
             height="16"
             className="h-8 w-auto"
           />
-          </div>
-
+        </div>
+        
         <div className="w-full max-w-xs">
           {mfaRequired ? (
             <div className="text-center">
@@ -74,4 +75,4 @@ export default function SignIn() {
       </div>
     </main>
   )
-}
+} 

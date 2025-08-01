@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { SignUpForm } from "./components/sign-up-form"
+import { ModernSignUpForm } from "./components/modern-sign-up-form"
 import { useAuth } from "@/hooks/useAuth"
 
 export default function SignUp() {
@@ -16,51 +17,48 @@ export default function SignUp() {
   }, [isAuthenticated, navigate])
 
   return (
-    <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-        <div className="absolute inset-0 bg-zinc-900" />
-        <div className="relative z-20 flex items-center text-lg font-medium">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-2 h-6 w-6"
-          >
-            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-          </svg>
-          Coovia
-        </div>
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2">
-            <p className="text-lg">
-              "Rejoignez des milliers de commerçants qui font confiance à notre plateforme pour développer leur
-              activité."
-            </p>
-            <footer className="text-sm">Alex Johnson</footer>
-          </blockquote>
-        </div>
-      </div>
-      <div className="lg:p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">Créer un compte</h1>
-            <p className="text-sm text-muted-foreground">Entrez vos informations ci-dessous pour créer votre compte</p>
+    <main className="bg-white h-screen w-full flex flex-row">
+      {/* Section gauche avec image de fond */}
+      <div 
+        className="w-2/5 bg-primary md:flex hidden flex-col items-center justify-center px-10 bg-no-repeat bg-bottom bg-contain"
+        style={{ 
+          backgroundImage: "url('/assets/images/3d-logo.svg')",
+          backgroundSize: 'contain',
+          backgroundPosition: 'bottom'
+        }}
+      >
+        <div className="bg-white rounded-[12px] p-6 max-w-sm mx-auto shadow-xl">
+          <div className="text-neutral-900 text-2xl font-semibold mb-8">
+            Rejoignez des milliers de commerçants qui font confiance à notre plateforme pour développer leur activité. Commencez votre voyage entrepreneurial dès aujourd'hui.
           </div>
-
-          <SignUpForm />
-
-          <p className="px-8 text-center text-sm text-muted-foreground">
-            Déjà un compte ?{" "}
-            <Link to="/sign-in" className="underline underline-offset-4 hover:text-primary">
-              Se connecter
-            </Link>
-          </p>
+          <div className="flex flex-row items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg">AJ</span>
+            </div>
+            <div>
+              <div className="text-neutral-900 text-lg font-bold">Alex Johnson</div>
+              <div className="text-neutral-500 text-sm">CEO chez Coovia</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Section droite avec formulaire */}
+      <div className="flex flex-col items-center justify-center w-full flex-1 md:p-0 p-4 relative overflow-y-auto h-screen">
+        <div className="flex flex-col items-start justify-start w-full mb-6 max-w-xs">
+          <img 
+            src="/assets/images/logo.svg" 
+            alt="coovia" 
+            width="100" 
+            height="16"
+            className="h-8 w-auto"
+          />
+        </div>
+        
+        <div className="w-full max-w-xs">
+          <ModernSignUpForm />
+        </div>
+      </div>
+    </main>
   )
 }
