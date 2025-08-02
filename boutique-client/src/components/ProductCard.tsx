@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, ShoppingBag, Star, Zap } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Zap, Eye } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -21,9 +21,10 @@ interface ProductCardProps {
   isFavorite: boolean;
   onToggleFavorite: (productId: string) => void;
   formatPrice: (price: number) => string;
+  storeId?: string;
 }
 
-function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice }: ProductCardProps) {
+function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice, storeId }: ProductCardProps) {
   const calculateDiscount = () => {
     if (product.original_price && product.original_price > product.price) {
       return Math.round(((product.original_price - product.price) / product.original_price) * 100);
@@ -33,6 +34,12 @@ function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice }: Pro
 
   const discount = calculateDiscount();
 
+  const handleViewDetails = () => {
+    if (storeId) {
+      window.location.href = `/${storeId}/products/${product.id}`;
+    }
+  };
+
   return (
     <div className="group relative bg-white rounded-2xl border border-slate-200/50 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/30 transition-all duration-500 hover:-translate-y-2 hover:border-slate-300/60 min-w-0">
       {/* Image Container */}
@@ -40,7 +47,8 @@ function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice }: Pro
         <img 
           src={product.images?.[0] || 'https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=500'} 
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out cursor-pointer"
+          onClick={handleViewDetails}
         />
         
         {/* Gradient Overlay */}
@@ -65,6 +73,7 @@ function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice }: Pro
         <button
           onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             onToggleFavorite(product.id);
           }}
           className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 group/fav border border-white/20"
@@ -80,10 +89,23 @@ function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice }: Pro
 
         {/* Quick Action Overlay */}
         <div className="absolute inset-x-4 bottom-4 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
-          <button className="w-full bg-white/95 backdrop-blur-md text-slate-900 font-semibold py-3 px-4 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/20 flex items-center justify-center space-x-2">
-            <ShoppingBag className="w-4 h-4" />
-            <span>Aperçu rapide</span>
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleViewDetails();
+              }}
+              className="flex-1 bg-white/95 backdrop-blur-md text-slate-900 font-semibold py-3 px-4 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/20 flex items-center justify-center space-x-2"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Voir détails</span>
+            </button>
+            <button className="flex-1 bg-emerald-500/95 backdrop-blur-md text-white font-semibold py-3 px-4 rounded-xl hover:bg-emerald-500 transition-all duration-200 shadow-lg border border-emerald-500/20 flex items-center justify-center space-x-2">
+              <ShoppingBag className="w-4 h-4" />
+              <span>Acheter</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -97,7 +119,10 @@ function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice }: Pro
         </div>
 
         {/* Product Name */}
-        <h3 className="font-bold text-slate-900 text-base leading-tight mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors duration-300 min-h-[2.5rem]">
+        <h3 
+          className="font-bold text-slate-900 text-base leading-tight mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors duration-300 min-h-[2.5rem] cursor-pointer"
+          onClick={handleViewDetails}
+        >
           {product.name}
         </h3>
 
@@ -135,14 +160,26 @@ function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice }: Pro
           )}
         </div>
 
-        {/* Buy Button */}
-        <button className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-emerald-200 shadow-lg hover:shadow-emerald-200/50 relative overflow-hidden group/btn">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative flex items-center justify-center space-x-2">
-            <ShoppingBag className="w-4 h-4" />
-            <span>Acheter maintenant</span>
-          </div>
-        </button>
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <button 
+            onClick={handleViewDetails}
+            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-slate-200 shadow-lg hover:shadow-slate-200/50 relative overflow-hidden group/btn"
+          >
+            <div className="relative flex items-center justify-center space-x-2">
+              <Eye className="w-4 h-4" />
+              <span>Voir détails</span>
+            </div>
+          </button>
+          
+          <button className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-emerald-200 shadow-lg hover:shadow-emerald-200/50 relative overflow-hidden group/btn">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative flex items-center justify-center space-x-2">
+              <ShoppingBag className="w-4 h-4" />
+              <span>Acheter</span>
+            </div>
+          </button>
+        </div>
 
         {/* Trust Indicators */}
         <div className="flex items-center justify-center space-x-4 mt-3 text-xs text-slate-500">
