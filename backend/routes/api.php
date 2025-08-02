@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\BoutiqueController;
 //use App\Http\Controllers\Api\StatsController;
 
 /*
@@ -231,6 +232,24 @@ Route::prefix('public')->group(function () {
     Route::get('/products/{product}', [ProductController::class, 'show']);
     Route::put('/products/{product}', [ProductController::class, 'updatePublic']);
     Route::delete('/products/{product}', [ProductController::class, 'destroyPublic']);
+});
+
+// Routes publiques pour les boutiques clientes
+Route::prefix('boutique')->group(function () {
+    // Récupérer le slug d'une boutique par son ID
+    Route::get('/slug/{storeId}', [BoutiqueController::class, 'getStoreSlug']);
+    
+    // Récupérer une boutique par son slug
+    Route::get('/{slug}', [BoutiqueController::class, 'getStoreBySlug']);
+    
+    // Récupérer les produits d'une boutique
+    Route::get('/{storeId}/products', [BoutiqueController::class, 'getStoreProducts']);
+    
+    // Récupérer un produit spécifique
+    Route::get('/{storeId}/products/{productId}', [BoutiqueController::class, 'getProduct']);
+    
+    // Récupérer les catégories d'une boutique
+    Route::get('/{storeId}/categories', [BoutiqueController::class, 'getStoreCategories']);
 });
 
 // Route de debug (développement seulement)

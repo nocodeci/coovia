@@ -1,6 +1,6 @@
 "use client"
 
-import { ClipboardPlus } from "lucide-react"
+import { ClipboardPlus, Store } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -10,7 +10,7 @@ import { Overview } from "./components/overview"
 import { RecentSales } from "./components/recent-sales"
 import Paiement from "@/components/paiement"
 import { DashboardTopBar } from "./components/dashboard-top-bar"
-import { useParams } from "@tanstack/react-router"
+import { useParams, useNavigate } from "@tanstack/react-router"
 import { useAuth } from "@/hooks/useAuthQuery"
 import { useStores, useStoreStats } from "@/hooks/useStores"
 import { CircleLoader } from "@/components/ui/circle-loader"
@@ -31,6 +31,7 @@ interface StatsData {
     previous: number
     change: number
   }
+  
   customers: {
     current: number
     previous: number
@@ -40,6 +41,7 @@ interface StatsData {
 
 export default function Dashboard() {
   const params = useParams({ from: "/_authenticated/$storeId" })
+  const navigate = useNavigate()
   const storeId = params.storeId
   
   // Hooks React Query pour les vraies données
@@ -83,12 +85,15 @@ export default function Dashboard() {
   // Debug: Afficher les états de chargement
   console.log('Dashboard Debug:', {
     storeId,
+    storeIdType: typeof storeId,
+    storeIdLength: storeId?.length,
     isLoading,
     authLoading,
     storesLoading,
     statsLoading,
     hasStats: !!stats,
-    hasDisplayStats: !!displayStats
+    hasDisplayStats: !!displayStats,
+    stores: stores?.map(s => ({ id: s.id, name: s.name }))
   })
 
   // Afficher le CircleLoader seulement pendant le chargement initial
@@ -154,12 +159,45 @@ export default function Dashboard() {
               <ClipboardPlus className="mr-2 h-4 w-4" />
               Ajouter un produit
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => console.log("Actualisation des données")}
-            >
-              Actualiser
-            </Button>
+                    <Button
+          variant="outline"
+          onClick={async () => {
+            console.log('Navigating to boutique-client with storeId:', storeId)
+            console.log('Current URL:', window.location.href)
+            if (!storeId) {
+              console.error('storeId is undefined or null')
+              return
+            }
+            
+            try {
+              // Récupérer le slug de la boutique depuis l'API
+              const response = await fetch(`http://localhost:8000/api/boutique/slug/${storeId}`)
+              if (response.ok) {
+                const storeData = await response.json()
+                const storeSlug = storeData.slug
+                console.log('Store slug from API:', storeSlug)
+                
+                // Rediriger vers l'application boutique-client
+                const boutiqueClientUrl = `http://localhost:3000/${storeSlug}`
+                console.log('Boutique Client URL:', boutiqueClientUrl)
+                
+                // Ouvrir dans un nouvel onglet
+                window.open(boutiqueClientUrl, '_blank')
+              } else {
+                console.error('Erreur lors de la récupération du slug de la boutique')
+                // Fallback vers store-123
+                window.open('http://localhost:3000/store-123', '_blank')
+              }
+            } catch (error) {
+              console.error('Erreur lors de la récupération du slug:', error)
+              // Fallback vers store-123
+              window.open('http://localhost:3000/store-123', '_blank')
+            }
+          }}
+        >
+          <Store className="mr-2 h-4 w-4" />
+          Voir la boutique
+        </Button>
           </div>
         </div>
 
