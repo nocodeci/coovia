@@ -14,6 +14,7 @@ import { Route as CreateStoreRouteImport } from './routes/create-store'
 import { Route as ClerkRouteRouteImport } from './routes/clerk/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as BoutiqueStoreIdRouteImport } from './routes/boutique/$storeId'
 import { Route as AuthenticatedStoreIdRouteImport } from './routes/_authenticated/$storeId'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
@@ -80,6 +81,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const BoutiqueStoreIdRoute = BoutiqueStoreIdRouteImport.update({
+  id: '/boutique/$storeId',
+  path: '/boutique/$storeId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedStoreIdRoute = AuthenticatedStoreIdRouteImport.update({
   id: '/$storeId',
@@ -330,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/$storeId': typeof AuthenticatedStoreIdRouteWithChildren
+  '/boutique/$storeId': typeof BoutiqueStoreIdRoute
   '/': typeof AuthenticatedIndexRoute
   '/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
   '/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
@@ -375,6 +382,7 @@ export interface FileRoutesByTo {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/$storeId': typeof AuthenticatedStoreIdRouteWithChildren
+  '/boutique/$storeId': typeof BoutiqueStoreIdRoute
   '/': typeof AuthenticatedIndexRoute
   '/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
   '/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
@@ -424,6 +432,7 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/$storeId': typeof AuthenticatedStoreIdRouteWithChildren
+  '/boutique/$storeId': typeof BoutiqueStoreIdRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
   '/_authenticated/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
@@ -473,6 +482,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/$storeId'
+    | '/boutique/$storeId'
     | '/'
     | '/$storeId/apps'
     | '/$storeId/clients'
@@ -518,6 +528,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/$storeId'
+    | '/boutique/$storeId'
     | '/'
     | '/$storeId/apps'
     | '/$storeId/clients'
@@ -566,6 +577,7 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/$storeId'
+    | '/boutique/$storeId'
     | '/_authenticated/'
     | '/_authenticated/$storeId/apps'
     | '/_authenticated/$storeId/clients'
@@ -612,6 +624,7 @@ export interface RootRouteChildren {
   errors404Route: typeof errors404Route
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
+  BoutiqueStoreIdRoute: typeof BoutiqueStoreIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -650,6 +663,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/boutique/$storeId': {
+      id: '/boutique/$storeId'
+      path: '/boutique/$storeId'
+      fullPath: '/boutique/$storeId'
+      preLoaderRoute: typeof BoutiqueStoreIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/$storeId': {
       id: '/_authenticated/$storeId'
@@ -1109,6 +1129,7 @@ const rootRouteChildren: RootRouteChildren = {
   errors404Route: errors404Route,
   errors500Route: errors500Route,
   errors503Route: errors503Route,
+  BoutiqueStoreIdRoute: BoutiqueStoreIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

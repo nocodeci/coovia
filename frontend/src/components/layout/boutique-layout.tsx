@@ -1,15 +1,14 @@
 import React from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useStore } from '@/context/store-context'
-import { Header } from '@/components/layout/header'
 import { Badge } from '@/components/ui/badge'
 
-interface StoreLayoutProps {
+interface BoutiqueLayoutProps {
   children: React.ReactNode
 }
 
-export function StoreLayout({ children }: StoreLayoutProps) {
-  const { storeId } = useParams({ from: '/_authenticated/$storeId' })
+export function BoutiqueLayout({ children }: BoutiqueLayoutProps) {
+  const { storeId } = useParams({ from: '/boutique/$storeId' })
   const { stores, currentStore, setCurrentStore } = useStore()
 
   // Charger la boutique depuis l'URL
@@ -36,22 +35,26 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <Header fixed>
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-2xl font-bold">{currentStore.name}</h1>
-            <p className="text-sm text-muted-foreground">Dashboard</p>
+    <div className="min-h-screen bg-background">
+      {/* Header simple pour la boutique */}
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between px-4">
+          <div className="flex items-center space-x-4">
+            <div>
+              <h1 className="text-xl font-bold">{currentStore.name}</h1>
+              <p className="text-sm text-muted-foreground">Boutique</p>
+            </div>
+            <Badge variant={currentStore.status === 'active' ? 'default' : 'secondary'}>
+              {currentStore.status === 'active' ? 'Actif' : 'Inactif'}
+            </Badge>
           </div>
-          <Badge variant={currentStore.status === 'active' ? 'default' : 'secondary'}>
-            {currentStore.status === 'active' ? 'Actif' : 'Inactif'}
-          </Badge>
         </div>
-      </Header>
+      </header>
       
-      <div className="flex-1">
+      {/* Contenu principal */}
+      <main className="flex-1">
         {children}
-      </div>
+      </main>
     </div>
   )
 } 
