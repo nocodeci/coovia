@@ -52,12 +52,16 @@ export interface Product {
   price: number;
   original_price?: number;
   images: string[];
+  files?: string[]; // Fichiers pour les produits numériques
   category: string;
   tags: string[];
   in_stock: boolean;
   rating: number;
   review_count: number;
   store_id: string;
+  status?: 'active' | 'draft' | 'archived';
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CartItem {
@@ -99,8 +103,17 @@ export const storeService = {
 
   // Récupérer un produit spécifique
   getProduct: async (slug: string, productId: string): Promise<Product> => {
-    const response = await api.get(`/boutique/${slug}/products/${productId}`);
-    return response.data;
+    console.log('🔍 Fetching product:', productId, 'from store:', slug);
+    console.log('🌐 API URL:', `${API_BASE_URL}/boutique/${slug}/products/${productId}`);
+    try {
+      const response = await api.get(`/boutique/${slug}/products/${productId}`);
+      console.log('✅ Product data received:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error fetching product:', error);
+      console.error('❌ Error details:', error.response?.data);
+      throw error;
+    }
   },
 
   // Récupérer les catégories d'une boutique
@@ -125,6 +138,59 @@ export const cartService = {
   // Vider le panier
   clearCart: () => {
     localStorage.removeItem('cart');
+  },
+
+  // Ajouter un produit au panier
+  addToCart: (product: Product, quantity: number = 1) => {
+    const cart = cartService.getCart();
+    const existingItem = cart.find(item => item.product.id === product.id);
+    
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      cart.push({ product, quantity });
+    }
+    
+    cartService.saveCart(cart);
+    return cart;
+  },
+
+  // Retirer un produit du panier
+  removeFromCart: (productId: string) => {
+    const cart = cartService.getCart();
+    const updatedCart = cart.filter(item => item.product.id !== productId);
+    cartService.saveCart(updatedCart);
+    return updatedCart;
+  },
+
+  // Mettre à jour la quantité d'un produit
+  updateQuantity: (productId: string, quantity: number) => {
+    const cart = cartService.getCart();
+    const item = cart.find(item => item.product.id === productId);
+    
+    if (item) {
+      if (quantity <= 0) {
+        return cartService.removeFromCart(productId);
+      } else {
+        item.quantity = quantity;
+        cartService.saveCart(cart);
+        return cart;
+      }
+    }
+    
+    return cart;
+  },
+
+  // Calculer le total du panier
+  getCartTotal: (): number => {
+    const cart = cartService.getCart();
+    return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+  },
+
+  // Calculer le nombre total d'articles
+  getCartItemCount: (): number => {
+    const cart = cartService.getCart();
+    return cart.reduce((total, item) => total + item.quantity, 0);
   },
 };
 
