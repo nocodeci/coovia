@@ -1,38 +1,32 @@
 "use client"
 
 import { Bell, Menu } from "lucide-react"
-import { DynamicSearchBar } from "./dynamic-search-bar"
+import { AddProductSearchBar } from "./add-product-search-bar"
 
 interface TopBarProps {
   productName?: string
-  category?: string
-  price?: string
-  description?: string
-  selectedType?: string
-  uploadedFilesCount?: number
-  featuredImage?: string | null
   isFormValid?: boolean
-  hasUnsavedChanges?: boolean
   onSave?: () => void
   onDiscard?: () => void
   onBack?: () => void
-  onSuggestionApply?: (type: string, value: string) => void
+  formData?: {
+    productName?: string
+    category?: string
+    price?: string
+    description?: string
+    selectedType?: string
+    stockQuantity?: string
+    images?: string[]
+  }
 }
 
 export function TopBar({
   productName = "Produit sans titre",
-  category = "",
-  price = "",
-  description = "",
-  selectedType = "telechargeable",
-  uploadedFilesCount = 0,
-  featuredImage = null,
   isFormValid = false,
-  hasUnsavedChanges = false,
   onSave,
   onDiscard,
   onBack,
-  onSuggestionApply,
+  formData,
 }: TopBarProps = {}) {
   return (
     <header
@@ -62,20 +56,13 @@ export function TopBar({
       <div className="flex items-center gap-2"></div>
 
       <div className="flex-1 flex items-center justify-center max-w-md mx-auto">
-        <DynamicSearchBar
+        <AddProductSearchBar
           productName={productName}
-          category={category}
-          price={price}
-          description={description}
-          selectedType={selectedType}
-          uploadedFilesCount={uploadedFilesCount}
-          featuredImage={featuredImage}
           isFormValid={isFormValid}
-          hasUnsavedChanges={hasUnsavedChanges}
           onSave={onSave}
           onDiscard={onDiscard}
           onBack={onBack}
-          onSuggestionApply={onSuggestionApply}
+          formData={formData}
           className="w-full max-w-lg"
         />
       </div>

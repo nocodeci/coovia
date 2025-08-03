@@ -1,6 +1,0 @@
-import { createFileRoute } from '@tanstack/react-router'
-import CheckoutSuccessPage from '@/features/boutique/checkout/success'
-
-export const Route = createFileRoute('/_authenticated/boutique/$storeId/checkout/success')({
-  component: CheckoutSuccessPage,
-}) 

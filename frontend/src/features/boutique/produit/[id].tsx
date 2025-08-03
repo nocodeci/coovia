@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Star, Heart, Share2, Truck, Shield, RotateCcw, ShoppingCart, Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -31,7 +31,7 @@ interface Product {
 }
 
 export default function ProductDetailPage() {
-  const { id, storeId } = useParams({ from: '/_authenticated/$storeId/boutique/produit/$id' })
+  const { id, storeId } = useParams({ from: '/_authenticated/$storeId/produits/$id' })
   const navigate = useNavigate()
   const { addToCart, getItemQuantity } = useCart()
   

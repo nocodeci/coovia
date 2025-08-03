@@ -71,7 +71,6 @@ export function ClientsDynamicSearchBar({
   totalClients,
   onSearchChange,
   onFilterChange,
-  onClearFilters,
   onBack,
   onExport,
   onAddClient,
@@ -323,8 +322,6 @@ export function ClientsDynamicSearchBar({
     return "bg-gray-500/20 text-gray-300 border-gray-400/30"
   }
 
-  const hasActiveFilters = searchTerm || selectedClients.length > 0
-
   return (
     <div className={cn("relative flex flex-col items-center", className)} ref={containerRef} >
       {/* Barre de recherche fixe */}
@@ -355,7 +352,6 @@ export function ClientsDynamicSearchBar({
               onFocus={handleFocus}
               currentContext={currentContext}
               getContextBadgeColor={getContextBadgeColor}
-              hasActiveFilters={true}
               selectedClients={selectedClients}
               onBack={onBack}
               onExport={onExport}
@@ -414,7 +410,6 @@ interface IdleStateProps {
   onFocus: () => void
   currentContext: string
   getContextBadgeColor: () => string
-  hasActiveFilters: boolean
   selectedClients: string[]
   onBack: () => void
   onExport?: () => void
@@ -426,7 +421,6 @@ const IdleState = ({
   onFocus,
   currentContext,
   getContextBadgeColor,
-  hasActiveFilters,
   selectedClients,
   onBack,
   onExport,
@@ -453,7 +447,7 @@ const IdleState = ({
     <div
       className={cn(
         "w-1.5 h-1.5 rounded-full flex-shrink-0 mr-2",
-        selectedClients.length > 0 ? "bg-blue-400" : hasActiveFilters ? "bg-green-400" : "bg-gray-500",
+        selectedClients.length > 0 ? "bg-blue-400" : "bg-gray-500",
       )}
     />
 

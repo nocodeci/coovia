@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ProductsTopBar } from "./components/products-top-bar"
 import { ProductsHeader } from "./components/products-header"
-import { ProductsTable } from "./components/products-table"
+import { ProductListTable } from "./components/product-list-table"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { useAuth } from "@/hooks/useAuthQuery"
 import { useStores } from "@/hooks/useStores"
 import { useParams } from "@tanstack/react-router"
 import { CircleLoader } from "@/components/ui/circle-loader"
+import apiService from "@/lib/api"
 
 type TabType = "tous" | "actifs" | "brouillons" | "archives"
 
@@ -35,6 +36,47 @@ export default function Produits() {
     searchTerm: "",
     category: "",
   })
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Charger les produits
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (!currentStore?.id) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        const response = await apiService.getStoreProducts(currentStore.id)
+        
+        if (response.success && response.data) {
+          let productsData = (response.data as any).data || response.data
+          
+          // Filtrer par onglet
+          if (activeTab !== "tous") {
+            const statusMap = {
+              "actifs": "active",
+              "brouillons": "draft", 
+              "archives": "archived"
+            }
+            productsData = productsData.filter((product: any) => 
+              product.status === statusMap[activeTab as keyof typeof statusMap]
+            )
+          }
+
+          setProducts(productsData)
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des produits:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadProducts()
+  }, [currentStore?.id, activeTab])
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab)
@@ -67,7 +109,7 @@ export default function Produits() {
   }
 
   // États de chargement et d'erreur
-  const isLoading = authLoading || storesLoading
+  const isLoading = authLoading || storesLoading || loading
   const isError = authError || storesError
 
   // Vérifications avant affichage
@@ -145,7 +187,7 @@ export default function Produits() {
 
       {/* Contenu principal avec padding-top pour compenser le TopBar fixe */}
       <div className="polaris-frame" style={{ paddingTop: "6rem" }}>
-        <main className="flex-1 space-y-4 p-4 md:p-6" style={{ backgroundColor: "var(--p-color-bg)" }}>
+        <main className="flex-1 space-y-6 p-4 md:p-6" style={{ backgroundColor: "var(--p-color-bg)" }}>
           <ProductsHeader />
 
           {/* Bouton Ajouter un produit */}
@@ -159,63 +201,8 @@ export default function Produits() {
             </Button>
           </div>
 
-          <div className="polaris-card">
-            {/* Onglets simplifiés - maintenant gérés par le TopBar mais gardés pour l'interface */}
-            <div style={{ borderBottom: "var(--p-border-width-025) solid var(--p-color-border)" }}>
-              <div className="flex items-center justify-between p-4">
-                <div className="polaris-tabs">
-                  <div className="flex">
-                    <button
-                      className={`polaris-tab ${activeTab === "tous" ? "active" : ""}`}
-                      onClick={() => handleTabChange("tous")}
-                    >
-                      Tous
-                    </button>
-                    <button
-                      className={`polaris-tab ${activeTab === "actifs" ? "active" : ""}`}
-                      onClick={() => handleTabChange("actifs")}
-                    >
-                      Actifs
-                    </button>
-                    <button
-                      className={`polaris-tab ${activeTab === "brouillons" ? "active" : ""}`}
-                      onClick={() => handleTabChange("brouillons")}
-                    >
-                      Brouillons
-                    </button>
-                    <button
-                      className={`polaris-tab ${activeTab === "archives" ? "active" : ""}`}
-                      onClick={() => handleTabChange("archives")}
-                    >
-                      Archivés
-                    </button>
-                  </div>
-                </div>
-
-                {/* Indicateurs de filtres actifs */}
-                <div className="flex items-center gap-2">
-                  {(filters.searchTerm || filters.category) && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Filtres actifs:</span>
-                      {filters.searchTerm && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
-                          Recherche: "{filters.searchTerm}"
-                        </span>
-                      )}
-                      {filters.category && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
-                          Catégorie: {filters.category}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <span className="text-sm text-gray-500">Tri: {sortOrder === "asc" ? "A-Z" : "Z-A"}</span>
-                </div>
-              </div>
-            </div>
-
-            <ProductsTable activeTab={activeTab} sortOrder={sortOrder} filters={filters} />
-          </div>
+          {/* Table des produits */}
+          <ProductListTable productData={products} />
 
           <div
             className="text-center"

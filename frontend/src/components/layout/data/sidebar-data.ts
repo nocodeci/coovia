@@ -22,6 +22,7 @@ import {
   IconListCheck,
   IconPlus,
   IconPhoto,
+  IconShoppingCart,
 } from "@tabler/icons-react"
 import { AudioWaveform, Command, GalleryVerticalEnd } from "lucide-react"
 import { ClerkLogo } from "@/assets/clerk-logo"
@@ -75,6 +76,22 @@ export const getSidebarData = (storeId?: string): SidebarData => {
               {
                 title: "Ajouter un produit",
                 url: `${baseUrl}/produits/addproduit` as any,
+                icon: IconPlus,
+              },
+            ],
+          },
+          {
+            title: "Commandes",
+            icon: IconShoppingCart,
+            items: [
+              {
+                title: "Liste des commandes",
+                url: `${baseUrl}/commandes` as any,
+                icon: IconListCheck,
+              },
+              {
+                title: "Nouvelle commande",
+                url: `${baseUrl}/commandes/nouvelle` as any,
                 icon: IconPlus,
               },
             ],

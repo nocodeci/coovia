@@ -293,7 +293,7 @@ function ClientDetailsSheet({ client }: { client: Client }) {
 
 // Composant principal
 export default function ClientsPageClient() {
-  const [clients, setClients] = useState<Client[]>(mockClients)
+  const [clients] = useState<Client[]>(mockClients)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedClients, setSelectedClients] = useState<string[]>([])
   const [filters, setFilters] = useState<any>({})

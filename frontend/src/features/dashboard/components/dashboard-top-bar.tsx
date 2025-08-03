@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { Bell, Menu } from "lucide-react"
-import { DashboardDynamicSearchBar } from "./dashboard-dynamic-dearch-bar"
+import { DashboardDynamicSearchBar } from "./dashboard-dynamic-search-bar"
 import { useStore } from "@/context/store-context"
 
 interface DashboardTopBarProps {
@@ -10,9 +10,29 @@ interface DashboardTopBarProps {
   onExport?: () => void
   onAddProduct?: () => void
   onNavigate?: (section: string) => void
+  // Props pour contrôler le Dynamic Island depuis l'extérieur
+  currentView?: "idle" | "search" | "filter" | "actions" | "analytics" | "notifications"
+  onViewChange?: (view: "idle" | "search" | "filter" | "actions" | "analytics" | "notifications") => void
+  onSearchTrigger?: () => void
+  onFilterTrigger?: () => void
+  onActionsTrigger?: () => void
+  onAnalyticsTrigger?: () => void
+  onNotificationsTrigger?: () => void
 }
 
-export function DashboardTopBar({ onBack, onExport, onAddProduct, onNavigate }: DashboardTopBarProps) {
+export function DashboardTopBar({ 
+  onBack, 
+  onExport, 
+  onAddProduct, 
+  onNavigate,
+  currentView,
+  onViewChange,
+  onSearchTrigger,
+  onFilterTrigger,
+  onActionsTrigger,
+  onAnalyticsTrigger,
+  onNotificationsTrigger,
+}: DashboardTopBarProps) {
   const { currentStore } = useStore()
   return (
     <header
@@ -47,6 +67,13 @@ export function DashboardTopBar({ onBack, onExport, onAddProduct, onNavigate }: 
           onExport={onExport}
           onAddProduct={onAddProduct}
           onNavigate={onNavigate}
+          currentView={currentView}
+          onViewChange={onViewChange}
+          onSearchTrigger={onSearchTrigger}
+          onFilterTrigger={onFilterTrigger}
+          onActionsTrigger={onActionsTrigger}
+          onAnalyticsTrigger={onAnalyticsTrigger}
+          onNotificationsTrigger={onNotificationsTrigger}
           className="w-full max-w-sm"
         />
       </div>

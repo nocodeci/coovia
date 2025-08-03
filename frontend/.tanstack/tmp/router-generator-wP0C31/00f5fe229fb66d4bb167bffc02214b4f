@@ -1,6 +1,0 @@
-import { createFileRoute } from '@tanstack/react-router'
-import ProductDetailPage from '@/features/boutique/produit/[id]'
-
-export const Route = createFileRoute('/_authenticated/boutique/$storeId/produit/$id')({
-  component: ProductDetailPage,
-}) 
