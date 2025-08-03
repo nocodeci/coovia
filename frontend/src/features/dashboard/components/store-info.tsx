@@ -70,17 +70,17 @@ export function StoreInfo() {
         <CardHeader>
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={currentStore.logo || "/placeholder.svg"} alt={currentStore.name} />
+              <AvatarImage src={(currentStore as any).logo || "/placeholder.svg"} alt={currentStore.name} />
               <AvatarFallback className="text-lg">{currentStore.name.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <CardTitle className="text-2xl">{currentStore.name}</CardTitle>
-                <Badge className={getStatusColor(currentStore.status)}>
-                  {getStatusText(currentStore.status)}
+                <Badge className={getStatusColor((currentStore as any).status)}>
+                  {getStatusText((currentStore as any).status)}
                 </Badge>
-                <Badge className={getPlanColor(currentStore.plan)}>
-                  {getPlanText(currentStore.plan)}
+                <Badge className={getPlanColor((currentStore as any).plan)}>
+                  {getPlanText((currentStore as any).plan)}
                 </Badge>
               </div>
               <CardDescription className="text-base">{currentStore.description}</CardDescription>
@@ -92,28 +92,28 @@ export function StoreInfo() {
             <div className="flex items-center gap-2">
               <Package className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">{currentStore.stats.totalProducts}</p>
+                <p className="text-sm font-medium">{(currentStore as any).stats?.totalProducts || 0}</p>
                 <p className="text-xs text-muted-foreground">Produits</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <ShoppingCart className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">{currentStore.stats.totalOrders}</p>
+                <p className="text-sm font-medium">{(currentStore as any).stats?.totalOrders || 0}</p>
                 <p className="text-xs text-muted-foreground">Commandes</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">{currentStore.stats.totalCustomers}</p>
+                <p className="text-sm font-medium">{(currentStore as any).stats?.totalCustomers || 0}</p>
                 <p className="text-xs text-muted-foreground">Clients</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">{currentStore.stats.conversionRate}%</p>
+                <p className="text-sm font-medium">{(currentStore as any).stats?.conversionRate || 0}%</p>
                 <p className="text-xs text-muted-foreground">Taux de conversion</p>
               </div>
             </div>
@@ -129,9 +129,9 @@ export function StoreInfo() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currentStore.stats.totalRevenue.toLocaleString()} FCFA</div>
+            <div className="text-2xl font-bold">{(currentStore as any).stats?.totalRevenue?.toLocaleString() || '0'} FCFA</div>
             <p className="text-xs text-muted-foreground">
-              Valeur moyenne: {currentStore.stats.averageOrderValue.toLocaleString()} FCFA
+              Valeur moyenne: {(currentStore as any).stats?.averageOrderValue?.toLocaleString() || '0'} FCFA
             </p>
           </CardContent>
         </Card>
@@ -142,7 +142,7 @@ export function StoreInfo() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currentStore.stats.conversionRate}%</div>
+            <div className="text-2xl font-bold">{(currentStore as any).stats?.conversionRate || 0}%</div>
             <p className="text-xs text-muted-foreground">Taux de conversion</p>
           </CardContent>
         </Card>
@@ -154,10 +154,10 @@ export function StoreInfo() {
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
-              <p className="text-sm">{currentStore.contact.email}</p>
-              <p className="text-sm">{currentStore.contact.phone}</p>
+              <p className="text-sm">{(currentStore as any).contact?.email || 'Non renseigné'}</p>
+              <p className="text-sm">{(currentStore as any).contact?.phone || 'Non renseigné'}</p>
               <p className="text-xs text-muted-foreground">
-                {currentStore.contact.address.city}, {currentStore.contact.address.country}
+                {(currentStore as any).contact?.address?.city || 'Ville'}, {(currentStore as any).contact?.address?.country || 'Pays'}
               </p>
             </div>
           </CardContent>

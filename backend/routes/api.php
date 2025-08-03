@@ -12,6 +12,11 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\BoutiqueController;
+use App\Http\Controllers\MonerooController;
+use App\Http\Controllers\TestMonerooController;
+use App\Http\Controllers\Api\MonerooConfigController;
+use App\Http\Controllers\Api\MonerooTestController;
+use App\Http\Controllers\Api\MonerooWebhookController;
 //use App\Http\Controllers\Api\StatsController;
 
 /*
@@ -91,6 +96,38 @@ Route::get('/ping', function () {
         'message' => 'pong',
         'timestamp' => now()
     ]);
+});
+
+// Routes Moneroo (publiques)
+Route::prefix('moneroo')->group(function () {
+    Route::post('create-payment', [MonerooController::class, 'createPayment']);
+    Route::get('payment-status/{paymentId}', [MonerooController::class, 'checkPaymentStatus']);
+    Route::post('webhook', [MonerooWebhookController::class, 'handleWebhook']);
+    Route::get('payment-success', [MonerooController::class, 'paymentSuccess'])->name('payment.success');
+    Route::get('payment-failed', [MonerooController::class, 'paymentFailed'])->name('payment.failed');
+});
+
+// Routes de test Moneroo
+Route::prefix('test-moneroo')->group(function () {
+    Route::get('test-payment', [TestMonerooController::class, 'testPayment']);
+    Route::post('custom-payment', [TestMonerooController::class, 'customPayment']);
+    Route::get('direct-payment', [TestMonerooController::class, 'directPayment']);
+});
+
+// Routes de test API officielle Moneroo (publiques pour les tests)
+Route::prefix('moneroo-api-test')->group(function () {
+    Route::get('test-payment', [MonerooTestController::class, 'testPayment']);
+    Route::post('custom-payment', [MonerooTestController::class, 'customPayment']);
+    Route::get('check-status/{paymentId}', [MonerooTestController::class, 'checkPaymentStatus']);
+    Route::get('curl-example', [MonerooTestController::class, 'curlExample']);
+});
+
+// Routes de configuration Moneroo (publiques pour les tests)
+Route::prefix('moneroo-config')->group(function () {
+    Route::post('store', [MonerooConfigController::class, 'store']);
+    Route::get('show', [MonerooConfigController::class, 'show']);
+    Route::post('test', [MonerooConfigController::class, 'test']);
+    Route::delete('destroy', [MonerooConfigController::class, 'destroy']);
 });
 
 // Routes d'authentification (publiques)

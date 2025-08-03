@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { ClipboardPlus, Store } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -54,6 +55,9 @@ export default function Dashboard() {
 
   // Trouver la vraie boutique actuelle
   const currentStore = stores?.find(store => store.id === storeId)
+
+  // État du Dynamic Island
+  const [dynamicIslandView, setDynamicIslandView] = useState<"idle" | "search" | "filter" | "actions" | "analytics" | "notifications">("idle")
 
   // Données par défaut si pas encore chargées
   const defaultStats: StatsData = {
@@ -129,6 +133,34 @@ export default function Dashboard() {
     console.log("Navigation vers:", section)
   }
 
+  // Handlers pour le Dynamic Island
+  const handleDynamicIslandViewChange = (view: "idle" | "search" | "filter" | "actions" | "analytics" | "notifications") => {
+    setDynamicIslandView(view)
+  }
+
+  const handleSearchTrigger = () => {
+    const searchInput = document.querySelector('input[placeholder*="Rechercher"]') as HTMLInputElement
+    if (searchInput) {
+      searchInput.focus()
+    }
+  }
+
+  const handleFilterTrigger = () => {
+    console.log("Filtres déclenchés")
+  }
+
+  const handleActionsTrigger = () => {
+    console.log("Actions déclenchées")
+  }
+
+  const handleAnalyticsTrigger = () => {
+    console.log("Analytics déclenchés")
+  }
+
+  const handleNotificationsTrigger = () => {
+    console.log("Notifications déclenchées")
+  }
+
   return (
     <SearchProvider>
       <DashboardTopBar
@@ -136,6 +168,13 @@ export default function Dashboard() {
         onExport={handleExport}
         onAddProduct={handleAddProduct}
         onNavigate={handleNavigate}
+        currentView={dynamicIslandView}
+        onViewChange={handleDynamicIslandViewChange}
+        onSearchTrigger={handleSearchTrigger}
+        onFilterTrigger={handleFilterTrigger}
+        onActionsTrigger={handleActionsTrigger}
+        onAnalyticsTrigger={handleAnalyticsTrigger}
+        onNotificationsTrigger={handleNotificationsTrigger}
       />
       <Main>
         {/* Contenu du dashboard */}

@@ -50,13 +50,16 @@ import { Route as AuthenticatedStoreIdTasksRouteImport } from './routes/_authent
 import { Route as AuthenticatedStoreIdSettingsRouteImport } from './routes/_authenticated/$storeId.settings'
 import { Route as AuthenticatedStoreIdProduitsRouteImport } from './routes/_authenticated/$storeId/produits'
 import { Route as AuthenticatedStoreIdDashboardRouteImport } from './routes/_authenticated/$storeId.dashboard'
+import { Route as AuthenticatedStoreIdCommandesRouteImport } from './routes/_authenticated/$storeId/commandes'
 import { Route as AuthenticatedStoreIdClientsRouteImport } from './routes/_authenticated/$storeId.clients'
 import { Route as AuthenticatedStoreIdAppsRouteImport } from './routes/_authenticated/$storeId.apps'
 import { Route as AuthenticatedMarketingAjouterIndexRouteImport } from './routes/_authenticated/marketing/ajouter/index'
 import { Route as AuthenticatedStoreIdProduitsIndexRouteImport } from './routes/_authenticated/$storeId/produits/index'
 import { Route as AuthenticatedStoreIdMediaIndexRouteImport } from './routes/_authenticated/$storeId/media/index'
+import { Route as AuthenticatedStoreIdCommandesIndexRouteImport } from './routes/_authenticated/$storeId/commandes/index'
 import { Route as AuthenticatedStoreIdProduitsAddproduitRouteImport } from './routes/_authenticated/$storeId/produits/addproduit'
 import { Route as AuthenticatedStoreIdMediaUploadRouteImport } from './routes/_authenticated/$storeId/media/upload'
+import { Route as AuthenticatedStoreIdCommandesNouvelleRouteImport } from './routes/_authenticated/$storeId/commandes/nouvelle'
 
 const StoreSelectionRoute = StoreSelectionRouteImport.update({
   id: '/store-selection',
@@ -276,6 +279,12 @@ const AuthenticatedStoreIdDashboardRoute =
     path: '/dashboard',
     getParentRoute: () => AuthenticatedStoreIdRoute,
   } as any)
+const AuthenticatedStoreIdCommandesRoute =
+  AuthenticatedStoreIdCommandesRouteImport.update({
+    id: '/commandes',
+    path: '/commandes',
+    getParentRoute: () => AuthenticatedStoreIdRoute,
+  } as any)
 const AuthenticatedStoreIdClientsRoute =
   AuthenticatedStoreIdClientsRouteImport.update({
     id: '/clients',
@@ -306,6 +315,12 @@ const AuthenticatedStoreIdMediaIndexRoute =
     path: '/media/',
     getParentRoute: () => AuthenticatedStoreIdRoute,
   } as any)
+const AuthenticatedStoreIdCommandesIndexRoute =
+  AuthenticatedStoreIdCommandesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedStoreIdCommandesRoute,
+  } as any)
 const AuthenticatedStoreIdProduitsAddproduitRoute =
   AuthenticatedStoreIdProduitsAddproduitRouteImport.update({
     id: '/addproduit',
@@ -317,6 +332,12 @@ const AuthenticatedStoreIdMediaUploadRoute =
     id: '/media/upload',
     path: '/media/upload',
     getParentRoute: () => AuthenticatedStoreIdRoute,
+  } as any)
+const AuthenticatedStoreIdCommandesNouvelleRoute =
+  AuthenticatedStoreIdCommandesNouvelleRouteImport.update({
+    id: '/nouvelle',
+    path: '/nouvelle',
+    getParentRoute: () => AuthenticatedStoreIdCommandesRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -340,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
   '/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
+  '/$storeId/commandes': typeof AuthenticatedStoreIdCommandesRouteWithChildren
   '/$storeId/dashboard': typeof AuthenticatedStoreIdDashboardRoute
   '/$storeId/produits': typeof AuthenticatedStoreIdProduitsRouteWithChildren
   '/$storeId/settings': typeof AuthenticatedStoreIdSettingsRoute
@@ -361,8 +383,10 @@ export interface FileRoutesByFullPath {
   '/stores': typeof AuthenticatedStoresIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/$storeId/commandes/nouvelle': typeof AuthenticatedStoreIdCommandesNouvelleRoute
   '/$storeId/media/upload': typeof AuthenticatedStoreIdMediaUploadRoute
   '/$storeId/produits/addproduit': typeof AuthenticatedStoreIdProduitsAddproduitRoute
+  '/$storeId/commandes/': typeof AuthenticatedStoreIdCommandesIndexRoute
   '/$storeId/media': typeof AuthenticatedStoreIdMediaIndexRoute
   '/$storeId/produits/': typeof AuthenticatedStoreIdProduitsIndexRoute
   '/marketing/ajouter': typeof AuthenticatedMarketingAjouterIndexRoute
@@ -406,8 +430,10 @@ export interface FileRoutesByTo {
   '/stores': typeof AuthenticatedStoresIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/$storeId/commandes/nouvelle': typeof AuthenticatedStoreIdCommandesNouvelleRoute
   '/$storeId/media/upload': typeof AuthenticatedStoreIdMediaUploadRoute
   '/$storeId/produits/addproduit': typeof AuthenticatedStoreIdProduitsAddproduitRoute
+  '/$storeId/commandes': typeof AuthenticatedStoreIdCommandesIndexRoute
   '/$storeId/media': typeof AuthenticatedStoreIdMediaIndexRoute
   '/$storeId/produits': typeof AuthenticatedStoreIdProduitsIndexRoute
   '/marketing/ajouter': typeof AuthenticatedMarketingAjouterIndexRoute
@@ -436,6 +462,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
   '/_authenticated/$storeId/clients': typeof AuthenticatedStoreIdClientsRoute
+  '/_authenticated/$storeId/commandes': typeof AuthenticatedStoreIdCommandesRouteWithChildren
   '/_authenticated/$storeId/dashboard': typeof AuthenticatedStoreIdDashboardRoute
   '/_authenticated/$storeId/produits': typeof AuthenticatedStoreIdProduitsRouteWithChildren
   '/_authenticated/$storeId/settings': typeof AuthenticatedStoreIdSettingsRoute
@@ -457,8 +484,10 @@ export interface FileRoutesById {
   '/_authenticated/stores/': typeof AuthenticatedStoresIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/$storeId/commandes/nouvelle': typeof AuthenticatedStoreIdCommandesNouvelleRoute
   '/_authenticated/$storeId/media/upload': typeof AuthenticatedStoreIdMediaUploadRoute
   '/_authenticated/$storeId/produits/addproduit': typeof AuthenticatedStoreIdProduitsAddproduitRoute
+  '/_authenticated/$storeId/commandes/': typeof AuthenticatedStoreIdCommandesIndexRoute
   '/_authenticated/$storeId/media/': typeof AuthenticatedStoreIdMediaIndexRoute
   '/_authenticated/$storeId/produits/': typeof AuthenticatedStoreIdProduitsIndexRoute
   '/_authenticated/marketing/ajouter/': typeof AuthenticatedMarketingAjouterIndexRoute
@@ -486,6 +515,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$storeId/apps'
     | '/$storeId/clients'
+    | '/$storeId/commandes'
     | '/$storeId/dashboard'
     | '/$storeId/produits'
     | '/$storeId/settings'
@@ -507,8 +537,10 @@ export interface FileRouteTypes {
     | '/stores'
     | '/tasks'
     | '/users'
+    | '/$storeId/commandes/nouvelle'
     | '/$storeId/media/upload'
     | '/$storeId/produits/addproduit'
+    | '/$storeId/commandes/'
     | '/$storeId/media'
     | '/$storeId/produits/'
     | '/marketing/ajouter'
@@ -552,8 +584,10 @@ export interface FileRouteTypes {
     | '/stores'
     | '/tasks'
     | '/users'
+    | '/$storeId/commandes/nouvelle'
     | '/$storeId/media/upload'
     | '/$storeId/produits/addproduit'
+    | '/$storeId/commandes'
     | '/$storeId/media'
     | '/$storeId/produits'
     | '/marketing/ajouter'
@@ -581,6 +615,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/$storeId/apps'
     | '/_authenticated/$storeId/clients'
+    | '/_authenticated/$storeId/commandes'
     | '/_authenticated/$storeId/dashboard'
     | '/_authenticated/$storeId/produits'
     | '/_authenticated/$storeId/settings'
@@ -602,8 +637,10 @@ export interface FileRouteTypes {
     | '/_authenticated/stores/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/_authenticated/$storeId/commandes/nouvelle'
     | '/_authenticated/$storeId/media/upload'
     | '/_authenticated/$storeId/produits/addproduit'
+    | '/_authenticated/$storeId/commandes/'
     | '/_authenticated/$storeId/media/'
     | '/_authenticated/$storeId/produits/'
     | '/_authenticated/marketing/ajouter/'
@@ -916,6 +953,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStoreIdDashboardRouteImport
       parentRoute: typeof AuthenticatedStoreIdRoute
     }
+    '/_authenticated/$storeId/commandes': {
+      id: '/_authenticated/$storeId/commandes'
+      path: '/commandes'
+      fullPath: '/$storeId/commandes'
+      preLoaderRoute: typeof AuthenticatedStoreIdCommandesRouteImport
+      parentRoute: typeof AuthenticatedStoreIdRoute
+    }
     '/_authenticated/$storeId/clients': {
       id: '/_authenticated/$storeId/clients'
       path: '/clients'
@@ -951,6 +995,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStoreIdMediaIndexRouteImport
       parentRoute: typeof AuthenticatedStoreIdRoute
     }
+    '/_authenticated/$storeId/commandes/': {
+      id: '/_authenticated/$storeId/commandes/'
+      path: '/'
+      fullPath: '/$storeId/commandes/'
+      preLoaderRoute: typeof AuthenticatedStoreIdCommandesIndexRouteImport
+      parentRoute: typeof AuthenticatedStoreIdCommandesRoute
+    }
     '/_authenticated/$storeId/produits/addproduit': {
       id: '/_authenticated/$storeId/produits/addproduit'
       path: '/addproduit'
@@ -964,6 +1015,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$storeId/media/upload'
       preLoaderRoute: typeof AuthenticatedStoreIdMediaUploadRouteImport
       parentRoute: typeof AuthenticatedStoreIdRoute
+    }
+    '/_authenticated/$storeId/commandes/nouvelle': {
+      id: '/_authenticated/$storeId/commandes/nouvelle'
+      path: '/nouvelle'
+      fullPath: '/$storeId/commandes/nouvelle'
+      preLoaderRoute: typeof AuthenticatedStoreIdCommandesNouvelleRouteImport
+      parentRoute: typeof AuthenticatedStoreIdCommandesRoute
     }
   }
 }
@@ -991,6 +1049,24 @@ const AuthenticatedSettingsRouteRouteWithChildren =
     AuthenticatedSettingsRouteRouteChildren,
   )
 
+interface AuthenticatedStoreIdCommandesRouteChildren {
+  AuthenticatedStoreIdCommandesNouvelleRoute: typeof AuthenticatedStoreIdCommandesNouvelleRoute
+  AuthenticatedStoreIdCommandesIndexRoute: typeof AuthenticatedStoreIdCommandesIndexRoute
+}
+
+const AuthenticatedStoreIdCommandesRouteChildren: AuthenticatedStoreIdCommandesRouteChildren =
+  {
+    AuthenticatedStoreIdCommandesNouvelleRoute:
+      AuthenticatedStoreIdCommandesNouvelleRoute,
+    AuthenticatedStoreIdCommandesIndexRoute:
+      AuthenticatedStoreIdCommandesIndexRoute,
+  }
+
+const AuthenticatedStoreIdCommandesRouteWithChildren =
+  AuthenticatedStoreIdCommandesRoute._addFileChildren(
+    AuthenticatedStoreIdCommandesRouteChildren,
+  )
+
 interface AuthenticatedStoreIdProduitsRouteChildren {
   AuthenticatedStoreIdProduitsAddproduitRoute: typeof AuthenticatedStoreIdProduitsAddproduitRoute
   AuthenticatedStoreIdProduitsIndexRoute: typeof AuthenticatedStoreIdProduitsIndexRoute
@@ -1012,6 +1088,7 @@ const AuthenticatedStoreIdProduitsRouteWithChildren =
 interface AuthenticatedStoreIdRouteChildren {
   AuthenticatedStoreIdAppsRoute: typeof AuthenticatedStoreIdAppsRoute
   AuthenticatedStoreIdClientsRoute: typeof AuthenticatedStoreIdClientsRoute
+  AuthenticatedStoreIdCommandesRoute: typeof AuthenticatedStoreIdCommandesRouteWithChildren
   AuthenticatedStoreIdDashboardRoute: typeof AuthenticatedStoreIdDashboardRoute
   AuthenticatedStoreIdProduitsRoute: typeof AuthenticatedStoreIdProduitsRouteWithChildren
   AuthenticatedStoreIdSettingsRoute: typeof AuthenticatedStoreIdSettingsRoute
@@ -1023,6 +1100,8 @@ interface AuthenticatedStoreIdRouteChildren {
 const AuthenticatedStoreIdRouteChildren: AuthenticatedStoreIdRouteChildren = {
   AuthenticatedStoreIdAppsRoute: AuthenticatedStoreIdAppsRoute,
   AuthenticatedStoreIdClientsRoute: AuthenticatedStoreIdClientsRoute,
+  AuthenticatedStoreIdCommandesRoute:
+    AuthenticatedStoreIdCommandesRouteWithChildren,
   AuthenticatedStoreIdDashboardRoute: AuthenticatedStoreIdDashboardRoute,
   AuthenticatedStoreIdProduitsRoute:
     AuthenticatedStoreIdProduitsRouteWithChildren,

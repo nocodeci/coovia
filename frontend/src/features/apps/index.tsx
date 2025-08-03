@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Main } from "@/components/layout/main"
 import { apps } from "./data/apps"
 import { AppsTopBar } from "./components/apps-top-bar"
+import { AppCard } from "./components/app-card"
 
 const appText = new Map<string, string>([
   ["all", "Toutes les applications"],
@@ -21,12 +22,23 @@ export default function Apps() {
   const [appType, setAppType] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
 
+  // Pour Moneroo, l'état de connexion sera géré dynamiquement dans AppCard
   const filteredApps = apps
     .sort((a, b) => (sort === "ascending" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))
-    .filter((app) => (appType === "connected" ? app.connected : appType === "notConnected" ? !app.connected : true))
+    .filter((app) => {
+      if (appType === "connected") {
+        // Pour Moneroo, on ne filtre pas car l'état est dynamique
+        return app.name === 'Moneroo' ? true : app.connected
+      } else if (appType === "notConnected") {
+        // Pour Moneroo, on ne filtre pas car l'état est dynamique
+        return app.name === 'Moneroo' ? true : !app.connected
+      }
+      return true
+    })
     .filter((app) => app.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
-  const connectedApps = apps.filter((app) => app.connected).length
+  // Compter les apps connectées (sans Moneroo car c'est dynamique)
+  const connectedApps = apps.filter((app) => app.name !== 'Moneroo' && app.connected).length
   const totalApps = apps.length
 
   const handleBack = () => {
@@ -55,6 +67,16 @@ export default function Apps() {
 
   const handleBulkAction = (action: string) => {
     console.log("Action en lot:", action)
+  }
+
+  const handleConnect = (appName: string) => {
+    console.log("Connexion de l'app:", appName)
+    // Ici vous pouvez ajouter la logique de connexion
+  }
+
+  const handleDisconnect = (appName: string) => {
+    console.log("Déconnexion de l'app:", appName)
+    // Ici vous pouvez ajouter la logique de déconnexion
   }
 
   return (
@@ -149,25 +171,12 @@ export default function Apps() {
 
         <ul className="faded-bottom no-scrollbar grid gap-4 overflow-auto pt-4 pb-16 md:grid-cols-2 lg:grid-cols-3">
           {filteredApps.map((app) => (
-            <li key={app.name} className="rounded-lg border p-4 hover:shadow-md">
-              <div className="mb-8 flex items-center justify-between">
-                <div className={`bg-muted flex size-10 items-center justify-center rounded-lg p-2`}>{app.logo}</div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={`${
-                    app.connected
-                      ? "border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900"
-                      : ""
-                  }`}
-                >
-                  {app.connected ? "Connectée" : "Connecter"}
-                </Button>
-              </div>
-              <div>
-                <h2 className="mb-1 font-semibold">{app.name}</h2>
-                <p className="line-clamp-2 text-gray-500">{app.desc}</p>
-              </div>
+            <li key={app.name}>
+              <AppCard
+                app={app}
+                onConnect={handleConnect}
+                onDisconnect={handleDisconnect}
+              />
             </li>
           ))}
         </ul>

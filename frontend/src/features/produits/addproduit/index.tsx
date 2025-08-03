@@ -659,18 +659,19 @@ export default function AddProduct({ storeId }: AddProductProps) {
       {/* TopBar avec recherche dynamique - maintenant au niveau racine */}
       <TopBar
         productName={productName || "Produit sans titre"}
-        category={category}
-        price={price}
-        description={description}
-        selectedType={selectedType}
-        uploadedFilesCount={selectedMedia.productFiles.length}
-        featuredImage={selectedMedia.featuredImage ? `http://localhost:8000/storage/${selectedMedia.featuredImage.thumbnail || selectedMedia.featuredImage.url}` : null}
         isFormValid={canPublish}
-        hasUnsavedChanges={hasUnsavedChanges}
         onSave={handleSave}
         onDiscard={handleDiscard}
         onBack={handleBack}
-        onSuggestionApply={handleSuggestionApply}
+        formData={{
+          productName,
+          category,
+          price,
+          description,
+          selectedType,
+          stockQuantity,
+          images: [] // Ajouter les images quand elles seront disponibles
+        }}
       />
 
       {/* Contenu principal avec padding-top pour compenser le TopBar sticky */}
