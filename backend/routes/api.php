@@ -239,6 +239,15 @@ Route::middleware('auth.api')->group(function () {
         Route::post('verify', [PaymentController::class, 'verifyPayment']);
     });
 
+    // Routes de paiement centralisées
+    Route::prefix('payments')->group(function () {
+        Route::post('create', [App\Http\Controllers\Api\PaymentController::class, 'createPayment']);
+        Route::post('check-status', [App\Http\Controllers\Api\PaymentController::class, 'checkPaymentStatus']);
+        Route::get('stats', [App\Http\Controllers\Api\PaymentController::class, 'getPaymentStats']);
+        Route::get('history', [App\Http\Controllers\Api\PaymentController::class, 'getPaymentHistory']);
+        Route::get('detect-gateway', [App\Http\Controllers\Api\PaymentController::class, 'detectGateway']);
+    });
+
     // Gestion des médias
     Route::prefix('stores/{storeId}/media')->group(function () {
         Route::get('/', [MediaController::class, 'index']);
@@ -287,6 +296,20 @@ Route::prefix('boutique')->group(function () {
     
     // Récupérer les catégories d'une boutique
     Route::get('/{storeId}/categories', [BoutiqueController::class, 'getStoreCategories']);
+});
+
+// Routes PayDunya
+Route::prefix('paydunya')->group(function () {
+    Route::post('create-invoice', [App\Http\Controllers\Api\PayDunyaController::class, 'createInvoice']);
+    Route::post('check-status', [App\Http\Controllers\Api\PayDunyaController::class, 'checkStatus']);
+    Route::post('orange-money-qr', [App\Http\Controllers\Api\PayDunyaController::class, 'payWithOrangeMoneyQR']);
+    Route::post('orange-money-otp', [App\Http\Controllers\Api\PayDunyaController::class, 'payWithOrangeMoneyOTP']);
+    Route::post('free-money', [App\Http\Controllers\Api\PayDunyaController::class, 'payWithFreeMoney']);
+    Route::post('wave', [App\Http\Controllers\Api\PayDunyaController::class, 'payWithWave']);
+    Route::post('card', [App\Http\Controllers\Api\PayDunyaController::class, 'payWithCard']);
+    Route::get('validate-keys', [App\Http\Controllers\Api\PayDunyaController::class, 'validateApiKeys']);
+    Route::get('supported-methods', [App\Http\Controllers\Api\PayDunyaController::class, 'getSupportedMethods']);
+    Route::post('webhook', [App\Http\Controllers\Api\PayDunyaController::class, 'webhook']);
 });
 
 // Route de debug (développement seulement)
