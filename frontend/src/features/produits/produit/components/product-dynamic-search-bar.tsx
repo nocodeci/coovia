@@ -443,16 +443,16 @@ export function ProductsDynamicSearchBar({
     const newSuggestions: Suggestion[] = []
 
     // Suggestions de recherche
-    newSuggestions.push({
-      id: "search-products",
-      type: "search",
-      title: "Rechercher des produits",
-      description: "Rechercher par nom, description ou SKU",
-      action: "Commencer la recherche",
-      icon: Search,
-      color: "text-blue-400",
-      priority: 10,
-    })
+      newSuggestions.push({
+        id: "search-products",
+        type: "search",
+        title: "Rechercher des produits",
+        description: "Rechercher par nom, description ou SKU",
+        action: "Commencer la recherche",
+        icon: Search,
+        color: "text-blue-400",
+        priority: 10,
+      })
 
     // Actions rapides
     newSuggestions.push({
@@ -549,7 +549,7 @@ export function ProductsDynamicSearchBar({
       priority: 2,
     })
 
-    newSuggestions.push({
+      newSuggestions.push({
       id: "settings",
       type: "navigation",
       title: "Paramètres produits",

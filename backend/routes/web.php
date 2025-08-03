@@ -6,39 +6,28 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
 */
 
 Route::get('/', function () {
-    return response()->json([
-        'message' => 'Laravel API Backend',
-        'version' => '1.0.0',
-        'timestamp' => now(),
-        'api_url' => url('/api'),
-        'available_endpoints' => [
-            'GET /api/test',
-            'GET /api/health',
-            'GET /api/status',
-            'GET /api/ping',
-            'GET /api/debug/routes',
-            'GET /api/stores',
-            'GET /api/users',
-            'GET /api/products'
-        ]
-    ]);
+    return view('welcome');
 });
 
-// Route de test pour vérifier que Laravel fonctionne
-Route::get('/test', function () {
-    return response()->json([
-        'message' => 'Laravel Web Route fonctionne',
-        'timestamp' => now()
-    ]);
+// Routes PayDunya Web
+Route::prefix('paydunya')->group(function () {
+    Route::post('webhook', function () {
+        return app(\App\Http\Controllers\Api\PayDunyaController::class)->webhook(request());
+    })->name('paydunya.webhook');
+    
+    Route::get('success', function () {
+        return response()->json(['message' => 'Paiement réussi']);
+    })->name('paydunya.success');
+    
+    Route::get('cancel', function () {
+        return response()->json(['message' => 'Paiement annulé']);
+    })->name('paydunya.cancel');
 });
-
-// Redirection pour les routes d'authentification vers l'API
-Route::get('/login', function () {
-    return response()->json([
-        'error' => 'Cette route est pour les API',
-        'message' => 'Utilisez /api/auth/login pour l\'authentification'
-    ], 404);
-})->name('login');
