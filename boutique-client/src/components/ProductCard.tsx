@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Heart, ShoppingBag, Star, Zap, Eye } from 'lucide-react';
 
 interface Product {
@@ -25,10 +25,37 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice, storeId }: ProductCardProps) {
-  const calculateDiscount = () => {
-    if (product.original_price && product.original_price > product.price) {
-      return Math.round(((product.original_price - product.price) / product.original_price) * 100);
+  console.log('🏪 ProductCard - StoreId reçu:', storeId);
+  console.log('📦 ProductCard - Produit:', product.name);
+  console.log('💰 ProductCard - Prix actuel:', product.price);
+  console.log('💰 ProductCard - Prix original:', product.original_price);
+  console.log('💰 ProductCard - Type prix original:', typeof product.original_price);
+  
+  // État pour gérer les erreurs d'images
+  const [imageError, setImageError] = useState(false);
+  
+  // Images de fallback fiables
+  const fallbackImage = 'https://images.unsplash.com/photo-1559028012-481c04fa702d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2536&q=80';
+  
+  // Obtenir l'image du produit ou l'image de fallback
+  const getProductImage = () => {
+    if (imageError || !product.images || product.images.length === 0) {
+      return fallbackImage;
     }
+    return product.images[0];
+  };
+  
+  const calculateDiscount = () => {
+    console.log('🧮 ProductCard - Calcul de réduction...');
+    console.log('🧮 ProductCard - original_price existe:', !!product.original_price);
+    console.log('🧮 ProductCard - original_price > price:', product.original_price && product.original_price > product.price);
+    
+    if (product.original_price && product.original_price > product.price) {
+      const discount = Math.round(((product.original_price - product.price) / product.original_price) * 100);
+      console.log('🧮 ProductCard - Réduction calculée:', discount + '%');
+      return discount;
+    }
+    console.log('🧮 ProductCard - Pas de réduction');
     return 0;
   };
 
@@ -36,166 +63,125 @@ function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice, store
 
   const handleViewDetails = () => {
     if (storeId) {
-      window.location.href = `/${storeId}/products/${product.id}`;
+      // Utiliser le nouveau design de page produit
+      window.location.href = `/${storeId}/product/${product.id}`;
+    }
+  };
+
+  const handleBuy = () => {
+    console.log('🛒 handleBuy appelé');
+    console.log('🏪 StoreId dans handleBuy:', storeId);
+    console.log('📦 Produit dans handleBuy:', product.name);
+    
+    if (storeId) {
+      // Rediriger vers le checkout avec les informations du produit
+      const checkoutData = {
+        productId: product.id,
+        productName: product.name,
+        price: product.price,
+        storeId: storeId
+      };
+      
+      console.log('🛒 Données de checkout à stocker:', checkoutData);
+      
+      // Stocker les données du produit pour le checkout
+      sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+      
+      // Vérifier que les données ont été stockées
+      const stored = sessionStorage.getItem('checkoutData');
+      console.log('💾 Données stockées:', stored);
+      
+      // Rediriger vers le checkout avec le nom de la boutique
+      const checkoutUrl = `/${storeId}/checkout`;
+      console.log('🔗 Redirection vers:', checkoutUrl);
+      
+      // Utiliser window.location.href pour la redirection
+      window.location.href = checkoutUrl;
+    } else {
+      console.error('❌ StoreId manquant pour le checkout');
+      alert('Erreur: Impossible de déterminer la boutique');
     }
   };
 
   return (
-    <div className="group relative bg-white rounded-2xl border border-slate-200/50 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/30 transition-all duration-500 hover:-translate-y-2 hover:border-slate-300/60 min-w-0">
-      {/* Image Container */}
-      <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
+    <div 
+      className="group relative bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col cursor-pointer"
+      onClick={handleViewDetails}
+    >
+      <div className="w-full h-64 overflow-hidden flex-shrink-0">
         <img 
-          src={product.images?.[0] || 'https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=500'} 
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out cursor-pointer"
-          onClick={handleViewDetails}
+          className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          src={getProductImage()}
+          onError={() => setImageError(true)}
         />
-        
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        
-        {/* Discount Badge */}
-        {discount > 0 && (
-          <div className="absolute top-4 left-4 z-10">
-            <div className="relative">
-              <div className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm">
-                <div className="flex items-center space-x-1">
-                  <Zap className="w-3 h-3" />
-                  <span>-{discount}%</span>
-                </div>
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full blur-md opacity-40 animate-pulse"></div>
-            </div>
-          </div>
-        )}
-        
-        {/* Favorite Button */}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onToggleFavorite(product.id);
-          }}
-          className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 group/fav border border-white/20"
-        >
-          <Heart 
-            className={`w-4 h-4 transition-all duration-300 ${
-              isFavorite 
-                ? 'text-rose-500 fill-rose-500 scale-110' 
-                : 'text-slate-400 group-hover/fav:text-rose-500 group-hover/fav:scale-110'
-            }`} 
-          />
-        </button>
-
-        {/* Quick Action Overlay */}
-        <div className="absolute inset-x-4 bottom-4 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
-          <div className="flex gap-2">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute bottom-0 left-0 right-0 p-4">
             <button 
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleViewDetails();
+                handleBuy();
               }}
-              className="flex-1 bg-white/95 backdrop-blur-md text-slate-900 font-semibold py-3 px-4 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/20 flex items-center justify-center space-x-2"
+              className="w-full bg-white text-gray-900 font-medium py-2 rounded-lg flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
             >
-              <Eye className="w-4 h-4" />
-              <span>Voir détails</span>
-            </button>
-            <button className="flex-1 bg-emerald-500/95 backdrop-blur-md text-white font-semibold py-3 px-4 rounded-xl hover:bg-emerald-500 transition-all duration-200 shadow-lg border border-emerald-500/20 flex items-center justify-center space-x-2">
-              <ShoppingBag className="w-4 h-4" />
-              <span>Acheter</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shopping-cart" aria-hidden="true">
+                <circle cx="8" cy="21" r="1"></circle>
+                <circle cx="19" cy="21" r="1"></circle>
+                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+              </svg>
+              <span>Acheter maintenant</span>
             </button>
           </div>
         </div>
       </div>
-
-      {/* Content */}
-      <div className="p-4">
-        {/* Category Badge */}
-        <div className="mb-2">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-            {product.category}
-          </span>
+      <div className="p-4 flex-1 flex flex-col">
+        <div className="flex items-center mb-2">
+          <div className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star text-gray-200" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star text-gray-200" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star text-gray-200" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star text-gray-200" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star text-gray-200" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+          </div>
+          <span className="ml-1 text-xs text-gray-500">{product.rating || 0}</span>
         </div>
-
-        {/* Product Name */}
-        <h3 
-          className="font-bold text-slate-900 text-base leading-tight mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors duration-300 min-h-[2.5rem] cursor-pointer"
-          onClick={handleViewDetails}
-        >
+        <h3 className="text-sm font-medium text-gray-900 mb-1 group-hover:text-blue-600 transition-colors flex-1">
           {product.name}
         </h3>
-
-        {/* Description */}
-        <p className="text-slate-600 text-sm leading-relaxed mb-3 line-clamp-2 min-h-[2.5rem]">
-          {product.description.replace(/<[^>]*>/g, '')}
-        </p>
-
-        {/* Price Section */}
-        <div className="flex items-center justify-between mb-4">
+        <p className="text-xs text-gray-500 mb-2">{product.category}</p>
+        <div className="flex justify-between items-center mt-auto">
           <div className="flex flex-col">
             <div className="flex items-baseline space-x-2">
-              <span className="text-lg font-bold text-slate-900">
-                {formatPrice(product.price)}
-              </span>
-              {product.original_price && product.original_price > product.price && (
-                <span className="text-sm text-slate-500 line-through font-medium">
-                  {formatPrice(product.original_price)}
-                </span>
-              )}
+              <span className="text-sm font-bold text-gray-900">{formatPrice(product.price)}</span>
+              {(() => {
+                console.log('🎨 ProductCard - Affichage prix original:', product.original_price && product.original_price > product.price);
+                return product.original_price && product.original_price > product.price ? (
+                  <span className="text-xs text-gray-500 line-through">{formatPrice(product.original_price)}</span>
+                ) : null;
+              })()}
             </div>
-            {product.original_price && product.original_price > product.price && (
-              <div className="text-xs text-emerald-600 font-medium mt-1">
-                Prix en promo
-              </div>
-            )}
-          </div>
-          
-          {discount > 0 && (
-            <div className="text-right">
-              <div className="text-xs font-bold text-emerald-600">
-                -{discount}%
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <button 
-            onClick={handleViewDetails}
-            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-slate-200 shadow-lg hover:shadow-slate-200/50 relative overflow-hidden group/btn"
-          >
-            <div className="relative flex items-center justify-center space-x-2">
-              <Eye className="w-4 h-4" />
-              <span>Voir détails</span>
-            </div>
-          </button>
-          
-          <button className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-emerald-200 shadow-lg hover:shadow-emerald-200/50 relative overflow-hidden group/btn">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-            <div className="relative flex items-center justify-center space-x-2">
-              <ShoppingBag className="w-4 h-4" />
-              <span>Acheter</span>
-            </div>
-          </button>
-        </div>
-
-        {/* Trust Indicators */}
-        <div className="flex items-center justify-center space-x-4 mt-3 text-xs text-slate-500">
-          <div className="flex items-center space-x-1">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-            <span>Instantané</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span>Support</span>
+            {(() => {
+              console.log('🎨 ProductCard - Affichage pourcentage:', product.original_price && product.original_price > product.price);
+              return product.original_price && product.original_price > product.price ? (
+                <div className="text-xs text-green-600 font-medium mt-1">
+                  -{discount}%
+                </div>
+              ) : null;
+            })()}
           </div>
         </div>
       </div>
-
-      {/* Hover Glow Effect */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
     </div>
   );
 }

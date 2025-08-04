@@ -164,8 +164,24 @@ function ProductDetail({ storeId, productId }: ProductDetailProps) {
 
   // Gérer l'achat immédiat
   const handleBuyNow = () => {
-    handleAddToCart();
-    window.location.href = '/checkout';
+    // Stocker les données du produit pour le checkout
+    const checkoutData = {
+      productId: product?.id,
+      productName: product?.name,
+      price: product?.price,
+      storeId: storeId
+    };
+    
+    console.log('🛒 ProductDetail - Données de checkout à stocker:', checkoutData);
+    
+    // Stocker les données du produit pour le checkout
+    sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+    
+    // Rediriger vers le checkout avec le nom de la boutique
+    const checkoutUrl = `/${storeId}/checkout`;
+    console.log('🔗 ProductDetail - Redirection vers:', checkoutUrl);
+    
+    window.location.href = checkoutUrl;
   };
 
   // Gérer le téléchargement

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\PaymentController as MainPaymentController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\BoutiqueController;
@@ -310,6 +311,13 @@ Route::prefix('paydunya')->group(function () {
     Route::get('validate-keys', [App\Http\Controllers\Api\PayDunyaController::class, 'validateApiKeys']);
     Route::get('supported-methods', [App\Http\Controllers\Api\PayDunyaController::class, 'getSupportedMethods']);
     Route::post('webhook', [App\Http\Controllers\Api\PayDunyaController::class, 'webhook']);
+});
+
+// Routes de paiement principales
+Route::prefix('payment')->group(function () {
+    Route::post('initialize', [MainPaymentController::class, 'initializePayment']);
+    Route::post('webhook', [MainPaymentController::class, 'webhook']);
+    Route::get('check-status', [MainPaymentController::class, 'checkStatus']);
 });
 
 // Route de debug (développement seulement)
