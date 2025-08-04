@@ -10,7 +10,7 @@ return [
     |
     */
 
-    'environment' => env('PAYDUNYA_ENVIRONMENT', 'live'), // Changé de 'test' à 'live'
+    'environment' => env('PAYDUNYA_ENVIRONMENT', 'test'), // Environnement de test pour le développement
 
     // Clés de production PayDunya
     'master_key' => env('PAYDUNYA_MASTER_KEY', '4fhx3AZI-ZycL-s9v5-mLbW-jzGmb5ibuzeD'),
@@ -18,8 +18,9 @@ return [
     'public_key' => env('PAYDUNYA_PUBLIC_KEY', 'live_public_Sii5AvDzUkVgFhvpUM0yIlopF9E'),
     'token' => env('PAYDUNYA_TOKEN', 'r7qGblLaOZKlqYCJdTa2'),
 
-    // URLs de webhook
-    'webhook_url' => env('PAYDUNYA_WEBHOOK_URL', 'http://localhost:8000/api/paydunya/webhook'),
+    // URLs de webhook et callback
+    'webhook_url' => env('PAYDUNYA_WEBHOOK_URL', 'http://localhost:8000/api/payment/webhook'),
+    'callback_url' => env('PAYDUNYA_CALLBACK_URL', 'http://localhost:8000/api/payment/webhook'),
     'success_url' => env('PAYDUNYA_SUCCESS_URL', 'http://localhost:5173/payment/success'),
     'cancel_url' => env('PAYDUNYA_CANCEL_URL', 'http://localhost:5173/payment/cancel'),
 
