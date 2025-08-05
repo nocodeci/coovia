@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-interface MoovCIFormProps {
+interface ExpressoSenegalFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
@@ -11,7 +11,7 @@ interface MoovCIFormProps {
   onError?: (error: any) => void;
 }
 
-const MoovCIForm: React.FC<MoovCIFormProps> = ({
+const ExpressoSenegalForm: React.FC<ExpressoSenegalFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
@@ -30,7 +30,7 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
     setMessage('');
 
     try {
-      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-moov-ci-payment`;
+      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-expresso-senegal-payment`;
 
       const response = await axios.post(laravelApiUrl, {
         phone_number: phone,
@@ -39,17 +39,16 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
         customer_email: customerEmail
       });
 
-      // Moov CI finalise directement le paiement (pas de redirection)
+      // Expresso Sénégal finalise directement le paiement
       if (response.data.success) {
         setStatus('success');
         setMessage(response.data.message);
         onSuccess?.(response.data);
       } else {
         setStatus('error');
-        const errorMessage = response.data.message || 'Une erreur est survenue lors du paiement Moov CI.';
+        const errorMessage = response.data.message || 'Une erreur est survenue lors du paiement Expresso Sénégal.';
         setMessage(errorMessage);
         
-        // Créer un objet d'erreur plus informatif
         const errorObject = {
           message: errorMessage,
           paydunya_response: response.data.paydunya_response,
@@ -63,7 +62,6 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
       const errorMessage = error.response?.data?.message || error.message || 'Une erreur critique est survenue.';
       setMessage(errorMessage);
       
-      // Créer un objet d'erreur plus informatif pour les erreurs réseau
       const errorObject = {
         message: errorMessage,
         status: error.response?.status,
@@ -75,7 +73,7 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
   };
 
   const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('fr-CI', {
+    return new Intl.NumberFormat('fr-SN', {
       style: 'currency',
       currency: currency
     }).format(amount);
@@ -91,8 +89,13 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-green-800">Paiement Moov CI Réussi !</h3>
+            <h3 className="text-sm font-medium text-green-800">Paiement Expresso Sénégal Réussi !</h3>
             <p className="text-sm text-green-700 mt-1">{message}</p>
+            <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-md">
+              <p className="text-sm text-purple-800">
+                <strong>Important :</strong> Votre paiement est en cours de traitement. Merci de valider le paiement après réception du SMS pour le compléter.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -105,15 +108,14 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
         <div className="flex items-center mb-4">
           <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
             <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
             </svg>
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Paiement par Moov Money
+              Paiement par Expresso
             </h3>
-            <p className="text-sm text-gray-600">Côte d'Ivoire</p>
+            <p className="text-sm text-gray-600">Sénégal</p>
           </div>
         </div>
         
@@ -129,12 +131,15 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-purple-800">Instructions Moov Money</h3>
+              <h3 className="text-sm font-medium text-purple-800">
+                Instructions Expresso Sénégal
+              </h3>
               <div className="mt-2 text-sm text-purple-700 space-y-1">
-                <p>1. Assurez-vous d'avoir l'application Moov Money installée</p>
-                <p>2. Vérifiez que votre compte Moov Money a suffisamment de fonds</p>
-                <p>3. Entrez votre numéro de téléphone Moov ci-dessous</p>
-                <p>4. Le paiement sera débité directement de votre compte</p>
+                <p>1. Assurez-vous d'avoir un compte Expresso actif</p>
+                <p>2. Vérifiez que votre compte a suffisamment de fonds</p>
+                <p>3. Entrez votre numéro de téléphone Expresso ci-dessous</p>
+                <p>4. Après validation, vous recevrez un SMS de confirmation</p>
+                <p>5. Suivez les instructions du SMS pour finaliser le paiement</p>
               </div>
             </div>
           </div>
@@ -144,23 +149,26 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-            Numéro de téléphone Moov
+            Numéro de téléphone Expresso
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 text-sm">+225</span>
+              <span className="text-gray-500 text-sm">+221</span>
             </div>
             <input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="01xxxxxxxx"
+              placeholder="7xxxxxxxx"
               required
               disabled={status === 'loading'}
               className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Format : 7xxxxxxxx (numéro Expresso Sénégal)
+          </p>
         </div>
 
         <button
@@ -179,10 +187,9 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
           ) : (
             <>
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
               </svg>
-              Payer avec Moov Money {formatAmount(amount, currency)}
+              Payer avec Expresso {formatAmount(amount, currency)}
             </>
           )}
         </button>
@@ -207,4 +214,4 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
   );
 };
 
-export default MoovCIForm; 
+export default ExpressoSenegalForm; 
