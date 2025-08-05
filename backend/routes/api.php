@@ -316,6 +316,56 @@ Route::prefix('paydunya')->group(function () {
 // Route SOFTPAY Orange Money CI
 Route::post('/process-paydunya-payment', [App\Http\Controllers\PaymentController::class, 'handlePayment']);
 
+// Route SOFTPAY Wave CI
+Route::post('/process-wave-ci-payment', [App\Http\Controllers\PaymentController::class, 'handleWaveCIPayment']);
+
+// Route SOFTPAY Moov CI
+Route::post('/process-moov-ci-payment', [App\Http\Controllers\PaymentController::class, 'handleMoovCIPayment']);
+
+// Route SOFTPAY Orange Money Burkina Faso
+Route::post('/process-orange-money-burkina-payment', [App\Http\Controllers\PaymentController::class, 'handleOrangeMoneyBurkinaPayment']);
+
+// Routes SOFTPAY Orange Money Sénégal
+Route::post('/process-orange-money-senegal-qr-payment', [App\Http\Controllers\PaymentController::class, 'handleOrangeMoneySenegalQRPayment']);
+Route::post('/process-orange-money-senegal-otp-payment', [App\Http\Controllers\PaymentController::class, 'handleOrangeMoneySenegalOTPPayment']);
+
+// Route SOFTPAY Free Money Sénégal
+Route::post('/process-free-money-senegal-payment', [App\Http\Controllers\PaymentController::class, 'handleFreeMoneySenegalPayment']);
+
+// Route SOFTPAY Expresso Sénégal
+Route::post('/process-expresso-senegal-payment', [App\Http\Controllers\PaymentController::class, 'handleExpressoSenegalPayment']);
+
+// Route SOFTPAY Wave Sénégal
+Route::post('/process-wave-senegal-payment', [App\Http\Controllers\PaymentController::class, 'handleWaveSenegalPayment']);
+
+// Routes SOFTPAY Wizall Sénégal
+Route::post('/process-wizall-senegal-payment', [App\Http\Controllers\PaymentController::class, 'handleWizallSenegalPayment']);
+Route::post('/process-wizall-senegal-confirm', [App\Http\Controllers\PaymentController::class, 'handleWizallSenegalConfirm']);
+
+// Route SOFTPAY MTN Money CI
+Route::post('/process-mtn-ci-payment', [App\Http\Controllers\PaymentController::class, 'handleMTNCIPayment']);
+
+// Route SOFTPAY Moov Burkina Faso
+Route::post('/process-moov-burkina-payment', [App\Http\Controllers\PaymentController::class, 'handleMoovBurkinaPayment']);
+
+// Route SOFTPAY Moov Bénin
+Route::post('/process-moov-benin-payment', [App\Http\Controllers\PaymentController::class, 'handleMoovBeninPayment']);
+
+// Route SOFTPAY MTN Bénin
+Route::post('/process-mtn-benin-payment', [App\Http\Controllers\PaymentController::class, 'handleMTNBeninPayment']);
+
+// Route SOFTPAY T-Money Togo
+Route::post('/process-t-money-togo-payment', [App\Http\Controllers\PaymentController::class, 'handleTMoneyTogoPayment']);
+
+// Route SOFTPAY Moov Togo
+Route::post('/process-moov-togo-payment', [App\Http\Controllers\PaymentController::class, 'handleMoovTogoPayment']);
+
+// Route SOFTPAY Orange Money Mali
+Route::post('/process-orange-money-mali-payment', [App\Http\Controllers\PaymentController::class, 'handleOrangeMoneyMaliPayment']);
+
+// Route SOFTPAY Moov Mali
+Route::post('/process-moov-mali-payment', [App\Http\Controllers\PaymentController::class, 'handleMoovMaliPayment']);
+
 // Routes de paiement principales
 Route::prefix('payment')->group(function () {
     Route::post('initialize', [MainPaymentController::class, 'initializePayment']);

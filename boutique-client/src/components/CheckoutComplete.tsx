@@ -367,7 +367,21 @@ export default function CheckoutComplete({
 
   const handlePaydunyaError = (error: any) => {
     console.error('Erreur Paydunya:', error)
-    alert(`Erreur de paiement: ${error.message || 'Erreur inconnue'}`)
+    
+    // Extraire le message d'erreur de manière plus robuste
+    let errorMessage = 'Erreur inconnue'
+    
+    if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message
+    } else if (error?.message) {
+      errorMessage = error.message
+    } else if (typeof error === 'string') {
+      errorMessage = error
+    } else if (error?.paydunya_response?.message) {
+      errorMessage = error.paydunya_response.message
+    }
+    
+    alert(`Erreur de paiement: ${errorMessage}`)
   }
 
   if (isSubmitted) {

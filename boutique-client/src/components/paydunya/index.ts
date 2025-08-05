@@ -1,5 +1,17 @@
 // Export des formulaires Paydunya personnalisés
 export { default as OrangeMoneyCIForm } from './OrangeMoneyCIForm';
+export { default as OrangeMoneyBurkinaForm } from './OrangeMoneyBurkinaForm';
+export { default as OrangeMoneySenegalForm } from './OrangeMoneySenegalForm';
+export { default as FreeMoneySenegalForm } from './FreeMoneySenegalForm';
+export { default as ExpressoSenegalForm } from './ExpressoSenegalForm';
+export { default as WaveSenegalForm } from './WaveSenegalForm';
+export { default as MTNCIMoneyForm } from './MTNCIMoneyForm';
+export { default as MoovBurkinaForm } from './MoovBurkinaForm';
+export { default as MoovBeninForm } from './MoovBeninForm';
+export { default as MTNBeninForm } from './MTNBeninForm';
+export { default as TMoneyTogoForm } from './TMoneyTogoForm';
+export { default as OrangeMoneyMaliForm } from './OrangeMoneyMaliForm';
+export { default as MoovMaliForm } from './MoovMaliForm';
 export { default as WaveCIForm } from './WaveCIForm';
 export { default as MTNCIForm } from './MTNCIForm';
 export { default as MoovCIForm } from './MoovCIForm';

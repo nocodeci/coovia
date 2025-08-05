@@ -30,7 +30,7 @@ const WaveCIForm: React.FC<WaveCIFormProps> = ({
     setMessage('');
 
     try {
-      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-paydunya-payment`;
+      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-wave-ci-payment`;
 
       const response = await axios.post(laravelApiUrl, {
         phone_number: phone,
@@ -39,20 +39,43 @@ const WaveCIForm: React.FC<WaveCIFormProps> = ({
         customer_email: customerEmail
       });
 
-      if (response.data.success) {
+      // Vérifier si la réponse contient une URL de redirection (succès)
+      if (response.data.success && response.data.redirect_url) {
         setStatus('success');
-        setMessage(response.data.message);
+        setMessage('Redirection vers Wave CI...');
+        
+        // Rediriger l'utilisateur vers l'URL de paiement Wave
+        window.location.href = response.data.redirect_url;
+        
+        // Appeler le callback de succès avec les données
         onSuccess?.(response.data);
       } else {
         setStatus('error');
-        setMessage(response.data.message);
-        onError?.(response.data);
+        const errorMessage = response.data.message || 'Une erreur est survenue lors de l\'initiation du paiement Wave CI.';
+        setMessage(errorMessage);
+        
+        // Créer un objet d'erreur plus informatif
+        const errorObject = {
+          message: errorMessage,
+          paydunya_response: response.data.paydunya_response,
+          status: response.status,
+          data: response.data
+        };
+        onError?.(errorObject);
       }
     } catch (error: any) {
       setStatus('error');
-      const errorMessage = error.response?.data?.message || 'Une erreur critique est survenue.';
+      const errorMessage = error.response?.data?.message || error.message || 'Une erreur critique est survenue.';
       setMessage(errorMessage);
-      onError?.(error);
+      
+      // Créer un objet d'erreur plus informatif pour les erreurs réseau
+      const errorObject = {
+        message: errorMessage,
+        status: error.response?.status,
+        data: error.response?.data,
+        networkError: true
+      };
+      onError?.(errorObject);
     }
   };
 
@@ -116,6 +139,7 @@ const WaveCIForm: React.FC<WaveCIFormProps> = ({
                 <p>1. Assurez-vous d'avoir l'application Wave installée</p>
                 <p>2. Vérifiez que votre compte Wave a suffisamment de fonds</p>
                 <p>3. Entrez votre numéro de téléphone Wave ci-dessous</p>
+                <p>4. Une notification s'affichera sur votre téléphone</p>
               </div>
             </div>
           </div>
@@ -155,7 +179,7 @@ const WaveCIForm: React.FC<WaveCIFormProps> = ({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Redirection vers Wave...
+              Traitement en cours...
             </>
           ) : (
             <>
