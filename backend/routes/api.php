@@ -313,6 +313,9 @@ Route::prefix('paydunya')->group(function () {
     Route::post('webhook', [App\Http\Controllers\Api\PayDunyaController::class, 'webhook']);
 });
 
+// Route SOFTPAY Orange Money CI
+Route::post('/process-paydunya-payment', [App\Http\Controllers\PaymentController::class, 'handlePayment']);
+
 // Routes de paiement principales
 Route::prefix('payment')->group(function () {
     Route::post('initialize', [MainPaymentController::class, 'initializePayment']);

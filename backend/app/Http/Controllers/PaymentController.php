@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Services\PaydunyaService;
+use App\Services\PaydunyaOfficialService;
 
 class PaymentController extends Controller
 {
@@ -149,11 +150,11 @@ class PaymentController extends Controller
      */
     private function initializeWaveCIPayment(array $data): array
     {
-        Log::info('PaymentController - Début initializeWaveCIPayment', [
+                Log::info('PaymentController - Début initializeWaveCIPayment', [
             'data' => $data
         ]);
-        
-        $paydunyaService = new PaydunyaService();
+
+        $paydunyaService = new PaydunyaOfficialService();
         
         Log::info('PaymentController - PaydunyaService instancié');
         
@@ -223,7 +224,7 @@ class PaymentController extends Controller
      */
     private function initializeOrangeMoneyCIPayment(array $data): array
     {
-        $paydunyaService = new PaydunyaService();
+        $paydunyaService = new PaydunyaOfficialService();
         
         // Préparer les données complètes pour Paydunya
         $paydunyaData = [
@@ -269,10 +270,10 @@ class PaymentController extends Controller
         if ($paymentResult['success']) {
             return [
                 'success' => true,
-                'payment_url' => $paymentResult['url'],
+                'payment_url' => $paymentResult['url'] ?? $paymentResult['payment_url'] ?? null,
                 'token' => $paymentResult['token'] ?? null,
-                'fees' => $paymentResult['fees'],
-                'currency' => $paymentResult['currency']
+                'fees' => $paymentResult['fees'] ?? 100,
+                'currency' => $paymentResult['currency'] ?? 'XOF'
             ];
         } else {
             return [
@@ -287,7 +288,7 @@ class PaymentController extends Controller
      */
     private function initializeMTNCIPayment(array $data): array
     {
-        $paydunyaService = new PaydunyaService();
+        $paydunyaService = new PaydunyaOfficialService();
         
         // Préparer les données complètes pour Paydunya
         $paydunyaData = [
@@ -351,7 +352,7 @@ class PaymentController extends Controller
      */
     private function initializeMoovCIPayment(array $data): array
     {
-        $paydunyaService = new PaydunyaService();
+        $paydunyaService = new PaydunyaOfficialService();
         
         // Préparer les données complètes pour Paydunya
         $paydunyaData = [
@@ -699,8 +700,8 @@ class PaymentController extends Controller
             }
 
             // Utiliser le service Paydunya pour vérifier le statut
-            $paydunyaService = new PaydunyaService();
-            $statusResult = $paydunyaService->checkPaymentStatus($token);
+                    $paydunyaService = new PaydunyaOfficialService();
+        $statusResult = $paydunyaService->checkPaymentStatus($token);
             
             Log::info('Résultat vérification statut', [
                 'token' => $token,
@@ -728,6 +729,76 @@ class PaymentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la vérification du statut'
+            ], 500);
+        }
+    }
+
+    /**
+     * Gérer le paiement SOFTPAY Orange Money CI
+     */
+    public function handlePayment(Request $request): JsonResponse
+    {
+        Log::info('PaymentController - handlePayment appelé', [
+            'request_data' => $request->all()
+        ]);
+
+        $validatedData = $request->validate([
+            'phone_number' => 'required|string|min:10',
+            'otp' => 'required|string|min:4',
+            'payment_token' => 'required|string',
+            'customer_name' => 'required|string',
+            'customer_email' => 'required|email',
+        ]);
+
+        $payload = [
+            "orange_money_ci_customer_fullname" => $validatedData['customer_name'],
+            "orange_money_ci_email" => $validatedData['customer_email'],
+            "orange_money_ci_phone_number" => $validatedData['phone_number'],
+            "orange_money_ci_otp" => $validatedData['otp'],
+            "payment_token" => $validatedData['payment_token']
+        ];
+
+        try {
+            Log::info('PaymentController - Tentative d\'appel Paydunya SOFTPAY', [
+                'payload' => $payload,
+                'headers' => [
+                    'PAYDUNYA-MASTER-KEY' => config('paydunya.master_key'),
+                    'PAYDUNYA-PRIVATE-KEY' => config('paydunya.private_key'),
+                    'PAYDUNYA-TOKEN' => config('paydunya.token'),
+                ]
+            ]);
+
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'PAYDUNYA-MASTER-KEY' => config('paydunya.master_key'),
+                'PAYDUNYA-PRIVATE-KEY' => config('paydunya.private_key'),
+                'PAYDUNYA-TOKEN' => config('paydunya.token'),
+            ])->post('https://app.paydunya.com/api/v1/softpay/orange-money-ci', $payload);
+
+            Log::info('PaymentController - Réponse Paydunya reçue', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            $paydunyaResponse = $response->json();
+
+            if ($response->successful() && isset($paydunyaResponse['success']) && $paydunyaResponse['success'] === true) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $paydunyaResponse['message'] ?? 'Paiement effectué avec succès.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $paydunyaResponse['message'] ?? 'Une erreur est survenue lors du paiement.'
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('Paydunya SOFTPAY Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de communication avec le service de paiement.'
             ], 500);
         }
     }

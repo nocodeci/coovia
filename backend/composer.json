@@ -17,6 +17,7 @@
         "laravel/tinker": "^2.10.1",
         "laravel/ui": "^4.6",
         "moneroo/moneroo-laravel": "^0.1.2",
+        "paydunya/paydunya": "^1.0",
         "pragmarx/google2fa": "^8.0"
     },
     "require-dev": {
