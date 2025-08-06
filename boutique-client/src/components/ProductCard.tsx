@@ -164,21 +164,15 @@ function ProductCard({ product, isFavorite, onToggleFavorite, formatPrice, store
           <div className="flex flex-col">
             <div className="flex items-baseline space-x-2">
               <span className="text-sm font-bold text-gray-900">{formatPrice(product.price)}</span>
-              {(() => {
-                console.log('🎨 ProductCard - Affichage prix original:', product.original_price && product.original_price > product.price);
-                return product.original_price && product.original_price > product.price ? (
-                  <span className="text-xs text-gray-500 line-through">{formatPrice(product.original_price)}</span>
-                ) : null;
-              })()}
+              {product.original_price && product.original_price > product.price && (
+                <span className="text-xs text-gray-500 line-through">{formatPrice(product.original_price)}</span>
+              )}
             </div>
-            {(() => {
-              console.log('🎨 ProductCard - Affichage pourcentage:', product.original_price && product.original_price > product.price);
-              return product.original_price && product.original_price > product.price ? (
-                <div className="text-xs text-green-600 font-medium mt-1">
-                  -{discount}%
-                </div>
-              ) : null;
-            })()}
+            {product.original_price && product.original_price > product.price && (
+              <div className="text-xs text-green-600 font-medium mt-1">
+                -{discount}%
+              </div>
+            )}
           </div>
         </div>
       </div>

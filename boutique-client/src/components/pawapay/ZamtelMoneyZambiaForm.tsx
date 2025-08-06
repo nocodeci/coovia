@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 
 
-interface TogocelTogoFormProps {
+interface ZamtelMoneyZambiaFormProps {
   paymentToken: string
   customerName: string
   customerEmail: string
@@ -12,7 +12,7 @@ interface TogocelTogoFormProps {
   onError: (error: any) => void
 }
 
-export default function TogocelTogoForm({ 
+export default function ZamtelMoneyZambiaForm({ 
   paymentToken,
   customerName,
   customerEmail,
@@ -21,8 +21,8 @@ export default function TogocelTogoForm({
   currency,
   onSuccess, 
   onError 
-}: TogocelTogoFormProps) {
-  const [phone, setPhone] = useState(customerPhone.replace('+228', ''))
+}: ZamtelMoneyZambiaFormProps) {
+  const [phone, setPhone] = useState(customerPhone.replace('+260', ''))
   const [isLoading, setIsLoading] = useState(false)
 
 
@@ -31,13 +31,13 @@ export default function TogocelTogoForm({
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/process-togocel-togo-payment', {
+      const response = await fetch('/api/pawapay/process/ZMB/zamtel-money-zambia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phone_number: `+228${phone}`,
+          phone_number: `+260${phone}`,
           amount: amount,
           customer_name: customerName,
           customer_email: customerEmail
@@ -47,24 +47,24 @@ export default function TogocelTogoForm({
       const data = await response.json()
 
       if (data.success) {
-        alert('Paiement Togocel Togo réussi ! ' + data.message)
+        alert('Paiement Zamtel Money Zambia réussi ! ' + data.message)
         onSuccess(data)
       } else {
-        const errorMessage = data.message || 'Erreur lors du paiement Togocel Togo'
-        alert('Erreur de paiement Togocel Togo: ' + errorMessage)
-        onError(errorMessage)
+        const errorMessage = data.message || 'Erreur lors du paiement Zamtel Money Zambia'
+        alert('Erreur de paiement Zamtel Money Zambia: ' + errorMessage)
+        onError({ message: errorMessage })
       }
     } catch (error: any) {
-      const errorMessage = error.message || 'Erreur de communication avec Togocel Togo'
-      alert('Erreur de paiement Togocel Togo: ' + errorMessage)
-      onError(errorMessage)
+      const errorMessage = error.message || 'Erreur de communication avec Zamtel Money Zambia'
+      alert('Erreur de paiement Zamtel Money Zambia: ' + errorMessage)
+              onError({ message: errorMessage })
     } finally {
       setIsLoading(false)
     }
   }
 
   const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('fr-TG', {
+    return new Intl.NumberFormat('en-ZM', {
       style: 'currency',
       currency: currency
     }).format(amount)
@@ -74,13 +74,13 @@ export default function TogocelTogoForm({
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center mb-6">
         <img 
-          src="https://assets.cdn.moneroo.io/icons/circle/togocel.svg" 
-          alt="Togocel Togo" 
+          src="https://assets.cdn.moneroo.io/icons/circle/zamtel_money.svg" 
+          alt="Zamtel Money Zambia" 
           className="w-8 h-8 mr-3"
         />
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Togocel Togo</h3>
-          <p className="text-sm text-gray-600">Paiement mobile via Togocel Money</p>
+          <h3 className="text-lg font-semibold text-gray-900">Zamtel Money Zambia</h3>
+          <p className="text-sm text-gray-600">Paiement mobile via Zamtel Money</p>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ export default function TogocelTogoForm({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-            Numéro de téléphone Togocel
+            Numéro de téléphone Zamtel Money
           </label>
           <div className="flex">
             <button
@@ -102,11 +102,11 @@ export default function TogocelTogoForm({
               className="flex items-center space-x-2 px-4 py-3 bg-white border-2 border-r-0 border-gray-200 rounded-l-lg hover:border-gray-300 transition-all duration-200"
             >
               <img 
-                src="https://react-circle-flags.pages.dev/tg.svg" 
-                alt="Togo" 
+                src="https://react-circle-flags.pages.dev/zm.svg" 
+                alt="Zambia" 
                 className="w-4 h-4 rounded-full"
               />
-              <span className="text-sm font-medium text-gray-900">+228</span>
+              <span className="text-sm font-medium text-gray-900">+260</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down w-3 h-3 text-gray-400">
                 <path d="m6 9 6 6 6-6"></path>
               </svg>
@@ -137,10 +137,10 @@ export default function TogocelTogoForm({
             <div className="text-sm text-green-800">
               <p className="font-medium mb-1">Instructions de paiement :</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>Assurez-vous d'avoir un compte Togocel Money actif</li>
+                <li>Assurez-vous d'avoir un compte Zamtel Money actif</li>
                 <li>Vous recevrez un SMS de confirmation</li>
-                <li>Entrez votre code PIN Togocel Money pour confirmer</li>
-                <li>Le montant sera débité de votre compte Togocel Money</li>
+                <li>Entrez votre code PIN Zamtel Money pour confirmer</li>
+                <li>Le montant sera débité de votre compte Zamtel Money</li>
               </ul>
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function TogocelTogoForm({
               Traitement en cours...
             </div>
           ) : (
-            `Payer ${formatAmount(amount, currency)} avec Togocel Money`
+            `Payer ${formatAmount(amount, currency)} avec Zamtel Money`
           )}
         </button>
       </form>

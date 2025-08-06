@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useToast } from '../../hooks/use-toast';
+
 
 interface MoovCIFormProps {
   paymentToken: string;
@@ -23,7 +23,7 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
   onSuccess,
   onError
 }) => {
-  const { toast } = useToast();
+
   // Extraire le numéro sans le préfixe +225 pour l'affichage
   const phoneWithoutPrefix = customerPhone.replace('+225', '');
   const [phone, setPhone] = useState(phoneWithoutPrefix);
@@ -49,21 +49,14 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
       if (response.data.success) {
         setStatus('success');
         setMessage(response.data.message);
-        toast({
-          title: "Paiement Moov CI réussi !",
-          description: response.data.message,
-        });
+        alert('Paiement Moov CI réussi ! ' + response.data.message);
         onSuccess?.(response.data);
       } else {
         setStatus('error');
         const errorMessage = response.data.message || 'Une erreur est survenue lors du paiement Moov CI.';
         setMessage(errorMessage);
         
-        toast({
-          title: "Erreur de paiement Moov CI",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        alert('Erreur de paiement Moov CI: ' + errorMessage);
         
         // Créer un objet d'erreur plus informatif
         const errorObject = {
@@ -79,11 +72,7 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
       const errorMessage = error.response?.data?.message || error.message || 'Une erreur critique est survenue.';
       setMessage(errorMessage);
       
-      toast({
-        title: "Erreur de paiement Moov CI",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      alert('Erreur de paiement Moov CI: ' + errorMessage);
       
       // Créer un objet d'erreur plus informatif pour les erreurs réseau
       const errorObject = {
