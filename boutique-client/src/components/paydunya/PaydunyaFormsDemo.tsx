@@ -51,6 +51,7 @@ const PaydunyaFormsDemo: React.FC = () => {
             paymentToken={demoData.paymentToken}
             customerName={demoData.customerName}
             customerEmail={demoData.customerEmail}
+            customerPhone="+2250700000000"
             amount={demoData.amount}
             currency={demoData.currency}
             onSuccess={handleSuccess}

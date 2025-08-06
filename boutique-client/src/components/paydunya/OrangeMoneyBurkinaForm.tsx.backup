@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-interface OrangeMoneyMaliFormProps {
+interface OrangeMoneyCIFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
@@ -12,7 +12,7 @@ interface OrangeMoneyMaliFormProps {
   onError?: (error: any) => void;
 }
 
-const OrangeMoneyMaliForm: React.FC<OrangeMoneyMaliFormProps> = ({
+const OrangeMoneyCIForm: React.FC<OrangeMoneyCIFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
@@ -207,4 +207,4 @@ const OrangeMoneyMaliForm: React.FC<OrangeMoneyMaliFormProps> = ({
   );
 };
 
-export default OrangeMoneyMaliForm; 
+export default OrangeMoneyCIForm; 

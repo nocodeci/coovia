@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\PaydunyaOfficialService;
+use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
@@ -17,11 +18,21 @@ class PaymentController extends Controller
     {
         try {
             Log::info('Initialisation paiement', $request->all());
+            Log::info('Données reçues détaillées', [
+                'storeId' => $request->input('storeId'),
+                'productId' => $request->input('productId'),
+                'productName' => $request->input('productName'),
+                'amount' => $request->input('amount'),
+                'currency' => $request->input('currency'),
+                'customer' => $request->input('customer'),
+                'paymentMethod' => $request->input('paymentMethod'),
+                'paymentCountry' => $request->input('paymentCountry'),
+            ]);
 
             $data = $request->validate([
-                'storeId' => 'required|string',
-                'productId' => 'required|string',
-                'productName' => 'required|string',
+                'storeId' => 'nullable|string',
+                'productId' => 'nullable|string',
+                'productName' => 'nullable|string',
                 'productDescription' => 'nullable|string',
                 'unit_price' => 'nullable|numeric|min:100',
                 'quantity' => 'nullable|integer|min:1',
@@ -57,6 +68,12 @@ class PaymentController extends Controller
                 'paymentMethod' => 'required|string',
                 'paymentCountry' => 'required|string',
             ]);
+
+            // Ajouter des valeurs par défaut si manquantes
+            $data['storeId'] = $data['storeId'] ?? 'default-store';
+            $data['productId'] = $data['productId'] ?? 'default-product';
+            $data['productName'] = $data['productName'] ?? 'Produit';
+            $data['productDescription'] = $data['productDescription'] ?? 'Description du produit';
 
             // Initialiser le vrai paiement Paydunya
             $paydunyaResponse = $this->initializePaydunyaPayment($data);
@@ -370,10 +387,10 @@ class PaymentController extends Controller
         if ($paymentResult['success']) {
             return [
                 'success' => true,
-                'payment_url' => $paymentResult['url'],
+                'payment_url' => $paymentResult['payment_url'] ?? $paymentResult['url'] ?? 'https://paydunya.com/checkout/invoice/' . ($paymentResult['token'] ?? ''),
                 'token' => $paymentResult['token'] ?? null,
-                'fees' => $paymentResult['fees'],
-                'currency' => $paymentResult['currency']
+                'fees' => $paymentResult['fees'] ?? null,
+                'currency' => $paymentResult['currency'] ?? null
             ];
         } else {
             return [
@@ -434,7 +451,7 @@ class PaymentController extends Controller
         if ($paymentResult['success']) {
             return [
                 'success' => true,
-                'payment_url' => $paymentResult['payment_url'] ?? $paymentResult['url'] ?? null,
+                'payment_url' => $paymentResult['payment_url'] ?? $paymentResult['url'] ?? 'https://paydunya.com/checkout/invoice/' . ($paymentResult['token'] ?? ''),
                 'token' => $paymentResult['token'] ?? null,
                 'fees' => $paymentResult['fees'] ?? null,
                 'currency' => $paymentResult['currency'] ?? null
@@ -2055,6 +2072,122 @@ class PaymentController extends Controller
     }
 
     /**
+     * Traiter un paiement Orange Money CI avec OTP
+     */
+    public function handleOrangeMoneyCIPayment(Request $request): JsonResponse
+    {
+        try {
+            Log::info('Paiement Orange Money CI OTP - Début', $request->all());
+
+            // Valider les données reçues
+            $request->validate([
+                'phone_number' => 'required|string|min:8',
+                'otp' => 'required|string|size:4',
+                'payment_token' => 'required|string',
+                'customer_name' => 'required|string|min:2',
+                'customer_email' => 'required|email'
+            ]);
+
+            $phoneNumber = $request->input('phone_number');
+            $otp = $request->input('otp');
+            $paymentToken = $request->input('payment_token');
+            $customerName = $request->input('customer_name');
+            $customerEmail = $request->input('customer_email');
+
+            Log::info('Paiement Orange Money CI OTP - Données validées', [
+                'phone_number' => $phoneNumber,
+                'otp' => $otp,
+                'payment_token' => $paymentToken,
+                'customer_name' => $customerName,
+                'customer_email' => $customerEmail
+            ]);
+
+            // Préparer les données pour l'API Paydunya
+            $payload = [
+                'orange_money_ci_customer_fullname' => $customerName,
+                'orange_money_ci_email' => $customerEmail,
+                'orange_money_ci_phone_number' => $phoneNumber,
+                'orange_money_ci_otp' => $otp,
+                'payment_token' => $paymentToken
+            ];
+
+            Log::info('Paiement Orange Money CI OTP - Payload Paydunya', $payload);
+
+            // Appeler l'API Paydunya
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'PAYDUNYA-MASTER-KEY' => config('paydunya.master_key'),
+                'PAYDUNYA-PUBLIC-KEY' => config('paydunya.public_key'),
+                'PAYDUNYA-PRIVATE-KEY' => config('paydunya.private_key'),
+                'PAYDUNYA-TOKEN' => config('paydunya.token')
+            ])->post('https://app.paydunya.com/api/v1/softpay/orange-money-ci', $payload);
+
+            Log::info('Paiement Orange Money CI OTP - Réponse Paydunya', [
+                'status' => $response->status(),
+                'body' => $response->json()
+            ]);
+
+            if ($response->successful()) {
+                $responseData = $response->json();
+                
+                if ($responseData['success'] ?? false) {
+                    Log::info('Paiement Orange Money CI OTP - Succès', $responseData);
+                    
+                    return response()->json([
+                        'success' => true,
+                        'message' => $responseData['message'] ?? 'Paiement Orange Money CI traité avec succès',
+                        'data' => [
+                            'transaction_id' => $responseData['transaction_id'] ?? null,
+                            'amount' => $responseData['amount'] ?? null,
+                            'currency' => $responseData['currency'] ?? 'XOF',
+                            'fees' => $responseData['fees'] ?? null
+                        ]
+                    ]);
+                } else {
+                    Log::warning('Paiement Orange Money CI OTP - Échec Paydunya', $responseData);
+                    
+                    return response()->json([
+                        'success' => false,
+                        'message' => $responseData['message'] ?? 'Échec du paiement Orange Money CI'
+                    ], 400);
+                }
+            } else {
+                Log::error('Paiement Orange Money CI OTP - Erreur HTTP', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreur de communication avec le service de paiement Orange Money CI.'
+                ], 500);
+            }
+
+        } catch (ValidationException $e) {
+            Log::error('Paiement Orange Money CI OTP - Erreur de validation', [
+                'errors' => $e->errors()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Données invalides',
+                'errors' => $e->errors()
+            ], 422);
+            
+        } catch (\Exception $e) {
+            Log::error('Paiement Orange Money CI OTP - Erreur', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du traitement du paiement Orange Money CI.'
+            ], 500);
+        }
+    }
+
+    /**
      * Webhook Paydunya - IPN (Instant Payment Notification)
      */
     public function webhook(Request $request): JsonResponse
@@ -2979,4 +3112,5 @@ class PaymentController extends Controller
             ], 500);
         }
     }
+
 } 

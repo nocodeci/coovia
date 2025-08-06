@@ -5,6 +5,7 @@ interface FreeMoneySenegalFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   amount: number;
   currency: string;
   onSuccess?: (response: any) => void;
@@ -15,12 +16,13 @@ const FreeMoneySenegalForm: React.FC<FreeMoneySenegalFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
+  customerPhone,
   amount,
   currency,
   onSuccess,
   onError
 }) => {
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(customerPhone);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -93,7 +95,7 @@ const FreeMoneySenegalForm: React.FC<FreeMoneySenegalFormProps> = ({
             <p className="text-sm text-green-700 mt-1">{message}</p>
             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800">
-                <strong>Important :</strong> Veuillez composer <strong>#150#</strong> sur votre téléphone pour finaliser le paiement.
+                <strong>Important :</strong> Votre paiement est en cours de traitement. Merci de valider le paiement après réception du SMS pour le compléter.
               </p>
             </div>
           </div>
@@ -137,9 +139,9 @@ const FreeMoneySenegalForm: React.FC<FreeMoneySenegalFormProps> = ({
               <div className="mt-2 text-sm text-blue-700 space-y-1">
                 <p>1. Assurez-vous d'avoir un compte Free Money actif</p>
                 <p>2. Vérifiez que votre compte a suffisamment de fonds</p>
-                <p>3. Entrez votre numéro de téléphone Free ci-dessous</p>
-                <p>4. Après validation, composez <strong>#150#</strong> sur votre téléphone</p>
-                <p>5. Suivez les instructions pour finaliser le paiement</p>
+                <p>3. Entrez votre numéro de téléphone Free Money ci-dessous</p>
+                <p>4. Après validation, vous recevrez un SMS de confirmation</p>
+                <p>5. Suivez les instructions du SMS pour finaliser le paiement</p>
               </div>
             </div>
           </div>
@@ -149,7 +151,7 @@ const FreeMoneySenegalForm: React.FC<FreeMoneySenegalFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-            Numéro de téléphone Free
+            Numéro de téléphone Free Money
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -165,9 +167,12 @@ const FreeMoneySenegalForm: React.FC<FreeMoneySenegalFormProps> = ({
               disabled={status === 'loading'}
               className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Numéro pré-rempli depuis le checkout
+            </p>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Format : 7xxxxxxxx (numéro Free Sénégal)
+            Format : 7xxxxxxxx (numéro Free Money Sénégal)
           </p>
         </div>
 

@@ -5,6 +5,7 @@ interface WaveCIFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   amount: number;
   currency: string;
   onSuccess?: (response: any) => void;
@@ -15,12 +16,15 @@ const WaveCIForm: React.FC<WaveCIFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
+  customerPhone,
   amount,
   currency,
   onSuccess,
   onError
 }) => {
-  const [phone, setPhone] = useState('');
+  // Extraire le numéro sans le préfixe +225 pour l'affichage
+  const phoneWithoutPrefix = customerPhone.replace('+225', '');
+  const [phone, setPhone] = useState(phoneWithoutPrefix);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -33,7 +37,7 @@ const WaveCIForm: React.FC<WaveCIFormProps> = ({
       const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-wave-ci-payment`;
 
       const response = await axios.post(laravelApiUrl, {
-        phone_number: phone,
+        phone_number: `+225${phone}`,
         payment_token: paymentToken,
         customer_name: customerName,
         customer_email: customerEmail
@@ -166,6 +170,9 @@ const WaveCIForm: React.FC<WaveCIFormProps> = ({
               className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Numéro pré-rempli depuis le checkout
+          </p>
         </div>
 
         <button

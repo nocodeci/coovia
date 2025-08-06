@@ -366,6 +366,9 @@ Route::post('/process-orange-money-mali-payment', [App\Http\Controllers\PaymentC
 // Route SOFTPAY Moov Mali
 Route::post('/process-moov-mali-payment', [App\Http\Controllers\PaymentController::class, 'handleMoovMaliPayment']);
 
+// Route SOFTPAY Orange Money CI OTP
+Route::post('/process-orange-money-ci-payment', [App\Http\Controllers\PaymentController::class, 'handleOrangeMoneyCIPayment']);
+
 // Routes de paiement principales
 Route::prefix('payment')->group(function () {
     Route::post('initialize', [MainPaymentController::class, 'initializePayment']);

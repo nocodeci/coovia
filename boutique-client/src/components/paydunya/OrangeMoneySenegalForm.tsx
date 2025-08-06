@@ -5,26 +5,25 @@ interface OrangeMoneySenegalFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   amount: number;
   currency: string;
   onSuccess?: (response: any) => void;
   onError?: (error: any) => void;
 }
 
-type PaymentMethod = 'qr' | 'otp';
-
 const OrangeMoneySenegalForm: React.FC<OrangeMoneySenegalFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
+  customerPhone,
   amount,
   currency,
   onSuccess,
   onError
 }) => {
-  const [phone, setPhone] = useState('');
-  const [authorizationCode, setAuthorizationCode] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('qr');
+  const [phone, setPhone] = useState(customerPhone);
+  const [otp, setOtp] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -34,80 +33,35 @@ const OrangeMoneySenegalForm: React.FC<OrangeMoneySenegalFormProps> = ({
     setMessage('');
 
     try {
-      const endpoint = paymentMethod === 'qr' 
-        ? '/api/process-orange-money-senegal-qr-payment'
-        : '/api/process-orange-money-senegal-otp-payment';
+      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-paydunya-payment`;
 
-      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}${endpoint}`;
-
-      const requestData = {
+      const response = await axios.post(laravelApiUrl, {
         phone_number: phone,
+        otp: otp,
         payment_token: paymentToken,
         customer_name: customerName,
-        customer_email: customerEmail,
-        ...(paymentMethod === 'otp' && { authorization_code: authorizationCode })
-      };
+        customer_email: customerEmail
+      });
 
-      const response = await axios.post(laravelApiUrl, requestData);
-
-      if (paymentMethod === 'qr') {
-        // QR CODE retourne une URL de redirection
-        if (response.data.success && response.data.redirect_url) {
-          setStatus('success');
-          setMessage('Redirection vers Orange Money Sénégal...');
-          // Rediriger l'utilisateur vers l'URL de paiement
-          window.location.href = response.data.redirect_url;
-          onSuccess?.(response.data);
-        } else {
-          setStatus('error');
-          const errorMessage = response.data.message || 'Une erreur est survenue lors de l\'initiation du paiement Orange Money Sénégal QR.';
-          setMessage(errorMessage);
-          
-          const errorObject = {
-            message: errorMessage,
-            paydunya_response: response.data.paydunya_response,
-            status: response.status,
-            data: response.data
-          };
-          onError?.(errorObject);
-        }
+      if (response.data.success) {
+        setStatus('success');
+        setMessage(response.data.message);
+        onSuccess?.(response.data);
       } else {
-        // OTP CODE finalise directement le paiement
-        if (response.data.success) {
-          setStatus('success');
-          setMessage(response.data.message);
-          onSuccess?.(response.data);
-        } else {
-          setStatus('error');
-          const errorMessage = response.data.message || 'Une erreur est survenue lors du paiement Orange Money Sénégal OTP.';
-          setMessage(errorMessage);
-          
-          const errorObject = {
-            message: errorMessage,
-            paydunya_response: response.data.paydunya_response,
-            status: response.status,
-            data: response.data
-          };
-          onError?.(errorObject);
-        }
+        setStatus('error');
+        setMessage(response.data.message);
+        onError?.(response.data);
       }
     } catch (error: any) {
       setStatus('error');
-      const errorMessage = error.response?.data?.message || error.message || 'Une erreur critique est survenue.';
+      const errorMessage = error.response?.data?.message || 'Une erreur critique est survenue.';
       setMessage(errorMessage);
-      
-      const errorObject = {
-        message: errorMessage,
-        status: error.response?.status,
-        data: error.response?.data,
-        networkError: true
-      };
-      onError?.(errorObject);
+      onError?.(error);
     }
   };
 
   const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('fr-SN', {
+    return new Intl.NumberFormat('fr-CI', {
       style: 'currency',
       currency: currency
     }).format(amount);
@@ -123,7 +77,7 @@ const OrangeMoneySenegalForm: React.FC<OrangeMoneySenegalFormProps> = ({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-green-800">Paiement Orange Money Sénégal Réussi !</h3>
+            <h3 className="text-sm font-medium text-green-800">Paiement Orange Money Réussi !</h3>
             <p className="text-sm text-green-700 mt-1">{message}</p>
           </div>
         </div>
@@ -144,42 +98,13 @@ const OrangeMoneySenegalForm: React.FC<OrangeMoneySenegalFormProps> = ({
             <h3 className="text-lg font-semibold text-gray-900">
               Paiement par Orange Money
             </h3>
-            <p className="text-sm text-gray-600">Sénégal</p>
+            <p className="text-sm text-gray-600">Côte d'Ivoire</p>
           </div>
         </div>
         
         <p className="text-sm text-gray-600 mb-4">
           Montant à payer : <span className="font-semibold text-orange-600">{formatAmount(amount, currency)}</span>
         </p>
-
-        {/* Sélection de la méthode de paiement */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Choisissez votre méthode de paiement :
-          </label>
-          <div className="flex space-x-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                value="qr"
-                checked={paymentMethod === 'qr'}
-                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                className="mr-2 text-orange-600 focus:ring-orange-500"
-              />
-              <span className="text-sm">QR Code</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                value="otp"
-                checked={paymentMethod === 'otp'}
-                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                className="mr-2 text-orange-600 focus:ring-orange-500"
-              />
-              <span className="text-sm">Code USSD</span>
-            </label>
-          </div>
-        </div>
 
         <div className="bg-orange-50 border border-orange-200 rounded-md p-4">
           <div className="flex">
@@ -189,27 +114,11 @@ const OrangeMoneySenegalForm: React.FC<OrangeMoneySenegalFormProps> = ({
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-orange-800">
-                Instructions Orange Money Sénégal - {paymentMethod === 'qr' ? 'QR Code' : 'Code USSD'}
-              </h3>
+              <h3 className="text-sm font-medium text-orange-800">Instructions Orange Money</h3>
               <div className="mt-2 text-sm text-orange-700 space-y-1">
-                {paymentMethod === 'qr' ? (
-                  <>
-                    <p>1. Assurez-vous d'avoir l'application Orange Money installée</p>
-                    <p>2. Vérifiez que votre compte Orange Money a suffisamment de fonds</p>
-                    <p>3. Entrez votre numéro de téléphone Orange ci-dessous</p>
-                    <p>4. Vous serez redirigé vers une page avec un QR Code</p>
-                    <p>5. Scannez le QR Code avec votre application Orange Money</p>
-                  </>
-                ) : (
-                  <>
-                    <p>1. Assurez-vous d'avoir un compte Orange Money actif</p>
-                    <p>2. Vérifiez que votre compte a suffisamment de fonds</p>
-                    <p>3. Entrez votre numéro de téléphone Orange ci-dessous</p>
-                    <p>4. Composez le code USSD : <strong>#144#391*VOTRE_CODE_PIN#</strong></p>
-                    <p>5. Entrez le code d'autorisation reçu par SMS</p>
-                  </>
-                )}
+                <p>1. Composez <code className="bg-orange-100 px-1 rounded font-mono">#144*82#</code> sur votre téléphone</p>
+                <p>2. Sélectionnez l'option 2 pour obtenir le code de paiement</p>
+                <p>3. Entrez le code reçu dans le champ ci-dessous</p>
               </div>
             </div>
           </div>
@@ -223,14 +132,14 @@ const OrangeMoneySenegalForm: React.FC<OrangeMoneySenegalFormProps> = ({
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 text-sm">+221</span>
+              <span className="text-gray-500 text-sm">+225</span>
             </div>
             <input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="7xxxxxxxx"
+              placeholder="07xxxxxxxx"
               required
               disabled={status === 'loading'}
               className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -238,28 +147,22 @@ const OrangeMoneySenegalForm: React.FC<OrangeMoneySenegalFormProps> = ({
           </div>
         </div>
 
-        {paymentMethod === 'otp' && (
-          <div>
-            <label htmlFor="authorization_code" className="block text-sm font-medium text-gray-700 mb-1">
-              Code d'Autorisation
-            </label>
-            <input
-              id="authorization_code"
-              type="text"
-              value={authorizationCode}
-              onChange={(e) => setAuthorizationCode(e.target.value)}
-              placeholder="152347"
-              required
-              minLength={6}
-              maxLength={6}
-              disabled={status === 'loading'}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Entrez le code d'autorisation reçu par SMS après avoir composé #144#391*VOTRE_CODE_PIN#
-            </p>
-          </div>
-        )}
+        <div>
+          <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
+            Code OTP de paiement
+          </label>
+          <input
+            id="otp"
+            type="text"
+            pattern="\d*"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            placeholder="Code à 4 chiffres"
+            required
+            disabled={status === 'loading'}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+        </div>
 
         <button
           type="submit"
@@ -272,14 +175,14 @@ const OrangeMoneySenegalForm: React.FC<OrangeMoneySenegalFormProps> = ({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Traitement en cours...
+              Validation en cours...
             </>
           ) : (
             <>
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
               </svg>
-              Payer avec Orange Money {formatAmount(amount, currency)}
+              Payer {formatAmount(amount, currency)}
             </>
           )}
         </button>
