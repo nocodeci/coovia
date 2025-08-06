@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'pawapay' => [
+        'token' => env('PAWAPAY_TOKEN'),
+        'sandbox' => env('PAWAPAY_SANDBOX', true),
+    ],
+
 ];

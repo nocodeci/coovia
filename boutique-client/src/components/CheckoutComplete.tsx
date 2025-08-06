@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowRight, CheckCircle, AlertCircle, ChevronDown, Phone, Mail, User } from "lucide-react"
 import { CircleFlag } from 'react-circle-flags'
-import { useToast } from '../hooks/use-toast'
+
 
 // Import des composants de paiement
 import PaymentMethodSelector from './PaymentMethodSelector'
 import PaydunyaPaymentMethodSelector from './paydunya/PaymentMethodSelector'
 import PaymentFormRenderer from './PaymentFormRenderer'
 import OTPInput from './OTPInput'
+
 
 // Utility functions
 function cn(...inputs: (string | undefined | null | boolean | number)[]): string {
@@ -121,7 +122,12 @@ const countries: Country[] = [
   { name: 'Mali', code: 'ML', flag: 'ml', currency: 'XOF', currencySymbol: 'F CFA' },
   { name: 'Burkina Faso', code: 'BF', flag: 'bf', currency: 'XOF', currencySymbol: 'F CFA' },
   { name: 'Bénin', code: 'BJ', flag: 'bj', currency: 'XOF', currencySymbol: 'F CFA' },
-  { name: 'Togo', code: 'TG', flag: 'tg', currency: 'XOF', currencySymbol: 'F CFA' }
+  { name: 'Togo', code: 'TG', flag: 'tg', currency: 'XOF', currencySymbol: 'F CFA' },
+  { name: 'Zambie', code: 'ZMB', flag: 'zm', currency: 'ZMW', currencySymbol: 'K' },
+  { name: 'Ouganda', code: 'UG', flag: 'ug', currency: 'UGX', currencySymbol: 'USh' },
+  { name: 'Tanzanie', code: 'TZ', flag: 'tz', currency: 'TZS', currencySymbol: 'TSh' },
+  { name: 'Kenya', code: 'KE', flag: 'ke', currency: 'KES', currencySymbol: 'KSh' },
+  { name: 'Nigeria', code: 'NG', flag: 'ng', currency: 'NGN', currencySymbol: '₦' }
 ]
 
 const phoneCountries: PhoneCountry[] = [
@@ -130,7 +136,12 @@ const phoneCountries: PhoneCountry[] = [
   { name: 'Mali', code: 'ML', flag: 'ml', phoneCode: '223' },
   { name: 'Burkina Faso', code: 'BF', flag: 'bf', phoneCode: '226' },
   { name: 'Bénin', code: 'BJ', flag: 'bj', phoneCode: '229' },
-  { name: 'Togo', code: 'TG', flag: 'tg', phoneCode: '228' }
+  { name: 'Togo', code: 'TG', flag: 'tg', phoneCode: '228' },
+  { name: 'Zambie', code: 'ZMB', flag: 'zm', phoneCode: '260' },
+  { name: 'Ouganda', code: 'UG', flag: 'ug', phoneCode: '256' },
+  { name: 'Tanzanie', code: 'TZ', flag: 'tz', phoneCode: '255' },
+  { name: 'Kenya', code: 'KE', flag: 'ke', phoneCode: '254' },
+  { name: 'Nigeria', code: 'NG', flag: 'ng', phoneCode: '234' }
 ]
 
 const paymentMethodsByCountry: { [key: string]: PaymentMethod[] } = {
@@ -150,6 +161,28 @@ const paymentMethodsByCountry: { [key: string]: PaymentMethod[] } = {
   'TG': [
     { id: 'togocel-togo', name: 'Togocel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/togocel.svg', type: 'mobile_money', country: 'TG', enabled: true },
     { id: 't-money-togo', name: 'T-Money', logo: '/t-money.png', type: 'mobile_money', country: 'TG', enabled: true }
+  ],
+  'ZMB': [
+    { id: 'mtn-momo-zambia', name: 'MTN MoMo', logo: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg', type: 'mobile_money', country: 'ZMB', enabled: true },
+    { id: 'airtel-money-zambia', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'ZMB', enabled: true },
+    { id: 'zamtel-money-zambia', name: 'Zamtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/zamtel_money.svg', type: 'mobile_money', country: 'ZMB', enabled: true }
+  ],
+  'UG': [
+    { id: 'mtn-momo-uganda', name: 'MTN MoMo', logo: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg', type: 'mobile_money', country: 'UG', enabled: true },
+    { id: 'airtel-money-uganda', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'UG', enabled: true }
+  ],
+  'TZ': [
+    { id: 'mpesa-tanzania', name: 'M-Pesa', logo: 'https://assets.cdn.moneroo.io/icons/circle/mpesa.svg', type: 'mobile_money', country: 'TZ', enabled: true },
+    { id: 'airtel-money-tanzania', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'TZ', enabled: true },
+    { id: 'tigo-pesa-tanzania', name: 'Tigo Pesa', logo: 'https://assets.cdn.moneroo.io/icons/circle/tigo_pesa.svg', type: 'mobile_money', country: 'TZ', enabled: true }
+  ],
+  'KE': [
+    { id: 'mpesa-kenya', name: 'M-Pesa', logo: 'https://assets.cdn.moneroo.io/icons/circle/mpesa.svg', type: 'mobile_money', country: 'KE', enabled: true },
+    { id: 'airtel-money-kenya', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'KE', enabled: true }
+  ],
+  'NG': [
+    { id: 'mtn-momo-nigeria', name: 'MTN MoMo', logo: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg', type: 'mobile_money', country: 'NG', enabled: true },
+    { id: 'airtel-money-nigeria', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'NG', enabled: true }
   ]
 }
 
@@ -278,7 +311,7 @@ export default function CheckoutComplete({
   productName, 
   price 
 }: CheckoutCompleteProps = {}) {
-  const { toast } = useToast()
+
   const [selectedCountry, setSelectedCountry] = useState('CI')
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('')
   const [formData, setFormData] = useState<FormData>({
@@ -548,6 +581,133 @@ export default function CheckoutComplete({
               }
             }
           }
+        } else if (selectedCountry === 'ZMB') {
+          // Validation pour Zambie
+          const phoneRegex = /^[0-9]{9}$/
+          if (!phoneRegex.test(value)) {
+            return 'Format invalide pour Zambie'
+          }
+          
+          // Validation spécifique selon la méthode de paiement
+          if (selectedPaymentMethod) {
+            if (selectedPaymentMethod === 'mtn-momo-zambia') {
+              // MTN MoMo Zambie: numéros commençant par 9
+              const mtnRegex = /^9[0-9]{8}$/
+              if (!mtnRegex.test(value)) {
+                return 'Format MTN MoMo invalide (9xxxxxxxx)'
+              }
+            } else if (selectedPaymentMethod === 'airtel-money-zambia') {
+              // Airtel Money Zambie: numéros commençant par 9
+              const airtelRegex = /^9[0-9]{8}$/
+              if (!airtelRegex.test(value)) {
+                return 'Format Airtel Money invalide (9xxxxxxxx)'
+              }
+            } else if (selectedPaymentMethod === 'zamtel-money-zambia') {
+              // Zamtel Money Zambie: numéros commençant par 9
+              const zamtelRegex = /^9[0-9]{8}$/
+              if (!zamtelRegex.test(value)) {
+                return 'Format Zamtel Money invalide (9xxxxxxxx)'
+              }
+            }
+          }
+        } else if (selectedCountry === 'UG') {
+          // Validation pour Ouganda
+          const phoneRegex = /^[0-9]{9}$/
+          if (!phoneRegex.test(value)) {
+            return 'Format invalide pour Ouganda'
+          }
+          
+          // Validation spécifique selon la méthode de paiement
+          if (selectedPaymentMethod) {
+            if (selectedPaymentMethod === 'mtn-momo-uganda') {
+              // MTN MoMo Ouganda: numéros commençant par 7
+              const mtnRegex = /^7[0-9]{8}$/
+              if (!mtnRegex.test(value)) {
+                return 'Format MTN MoMo invalide (7xxxxxxxx)'
+              }
+            } else if (selectedPaymentMethod === 'airtel-money-uganda') {
+              // Airtel Money Ouganda: numéros commençant par 7
+              const airtelRegex = /^7[0-9]{8}$/
+              if (!airtelRegex.test(value)) {
+                return 'Format Airtel Money invalide (7xxxxxxxx)'
+              }
+            }
+          }
+        } else if (selectedCountry === 'TZ') {
+          // Validation pour Tanzanie
+          const phoneRegex = /^[0-9]{9}$/
+          if (!phoneRegex.test(value)) {
+            return 'Format invalide pour Tanzanie'
+          }
+          
+          // Validation spécifique selon la méthode de paiement
+          if (selectedPaymentMethod) {
+            if (selectedPaymentMethod === 'mpesa-tanzania') {
+              // M-Pesa Tanzanie: numéros commençant par 7
+              const mpesaRegex = /^7[0-9]{8}$/
+              if (!mpesaRegex.test(value)) {
+                return 'Format M-Pesa invalide (7xxxxxxxx)'
+              }
+            } else if (selectedPaymentMethod === 'airtel-money-tanzania') {
+              // Airtel Money Tanzanie: numéros commençant par 7
+              const airtelRegex = /^7[0-9]{8}$/
+              if (!airtelRegex.test(value)) {
+                return 'Format Airtel Money invalide (7xxxxxxxx)'
+              }
+            } else if (selectedPaymentMethod === 'tigo-pesa-tanzania') {
+              // Tigo Pesa Tanzanie: numéros commençant par 7
+              const tigoRegex = /^7[0-9]{8}$/
+              if (!tigoRegex.test(value)) {
+                return 'Format Tigo Pesa invalide (7xxxxxxxx)'
+              }
+            }
+          }
+        } else if (selectedCountry === 'KE') {
+          // Validation pour Kenya
+          const phoneRegex = /^[0-9]{9}$/
+          if (!phoneRegex.test(value)) {
+            return 'Format invalide pour Kenya'
+          }
+          
+          // Validation spécifique selon la méthode de paiement
+          if (selectedPaymentMethod) {
+            if (selectedPaymentMethod === 'mpesa-kenya') {
+              // M-Pesa Kenya: numéros commençant par 7
+              const mpesaRegex = /^7[0-9]{8}$/
+              if (!mpesaRegex.test(value)) {
+                return 'Format M-Pesa invalide (7xxxxxxxx)'
+              }
+            } else if (selectedPaymentMethod === 'airtel-money-kenya') {
+              // Airtel Money Kenya: numéros commençant par 7
+              const airtelRegex = /^7[0-9]{8}$/
+              if (!airtelRegex.test(value)) {
+                return 'Format Airtel Money invalide (7xxxxxxxx)'
+              }
+            }
+          }
+        } else if (selectedCountry === 'NG') {
+          // Validation pour Nigeria
+          const phoneRegex = /^[0-9]{10}$/
+          if (!phoneRegex.test(value)) {
+            return 'Format invalide pour Nigeria'
+          }
+          
+          // Validation spécifique selon la méthode de paiement
+          if (selectedPaymentMethod) {
+            if (selectedPaymentMethod === 'mtn-momo-nigeria') {
+              // MTN MoMo Nigeria: numéros commençant par 8
+              const mtnRegex = /^8[0-9]{9}$/
+              if (!mtnRegex.test(value)) {
+                return 'Format MTN MoMo invalide (8xxxxxxxxx)'
+              }
+            } else if (selectedPaymentMethod === 'airtel-money-nigeria') {
+              // Airtel Money Nigeria: numéros commençant par 8
+              const airtelRegex = /^8[0-9]{9}$/
+              if (!airtelRegex.test(value)) {
+                return 'Format Airtel Money invalide (8xxxxxxxxx)'
+              }
+            }
+          }
         }
         
         return null
@@ -588,11 +748,7 @@ export default function CheckoutComplete({
     }
 
     if (!selectedPaymentMethod) {
-      toast({
-        title: "Méthode de paiement requise",
-        description: "Veuillez sélectionner une méthode de paiement",
-        variant: "destructive",
-      })
+      alert('Méthode de paiement requise: Veuillez sélectionner une méthode de paiement')
       return
     }
 
@@ -648,20 +804,12 @@ export default function CheckoutComplete({
         setIsProcessing(false) // Arrêter le loading
       } else {
         const errorData = await response.json()
-        toast({
-          title: "Erreur d'initialisation",
-          description: errorData.message || 'Erreur lors de l\'initialisation du paiement',
-          variant: "destructive",
-        })
+        alert('Erreur d\'initialisation: ' + (errorData.message || 'Erreur lors de l\'initialisation du paiement'))
         setIsProcessing(false) // Arrêter le loading en cas d'erreur
       }
     } catch (error) {
       console.error('Erreur lors du paiement:', error)
-      toast({
-        title: "Erreur de paiement",
-        description: "Erreur lors du paiement. Veuillez réessayer.",
-        variant: "destructive",
-      })
+      alert('Erreur de paiement: Erreur lors du paiement. Veuillez réessayer.')
       setIsProcessing(false)
     }
   }
@@ -730,11 +878,7 @@ export default function CheckoutComplete({
       errorMessage = error.paydunya_response.message
     }
     
-    toast({
-      title: "Erreur de paiement",
-      description: errorMessage,
-      variant: "destructive",
-    })
+    alert('Erreur de paiement: ' + errorMessage)
   }
 
   if (isSubmitted) {

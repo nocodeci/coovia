@@ -376,6 +376,16 @@ Route::prefix('payment')->group(function () {
     Route::get('check-status', [MainPaymentController::class, 'checkStatus']);
 });
 
+// Routes Pawapay
+Route::prefix('pawapay')->group(function () {
+    Route::post('initialize', [App\Http\Controllers\PawapayController::class, 'initializePayment']);
+    Route::post('check-status', [App\Http\Controllers\PawapayController::class, 'checkPaymentStatus']);
+    Route::post('resend-callback', [App\Http\Controllers\PawapayController::class, 'resendCallback']);
+    Route::post('create-payment-page', [App\Http\Controllers\PawapayController::class, 'createPaymentPage']);
+    Route::get('active-configuration', [App\Http\Controllers\PawapayController::class, 'getActiveConfiguration']);
+    Route::post('process/{country}/{method}', [App\Http\Controllers\PawapayController::class, 'processPayment']);
+});
+
 // Route de debug (développement seulement)
 if (app()->environment('local')) {
     Route::get('/debug/routes', function () {

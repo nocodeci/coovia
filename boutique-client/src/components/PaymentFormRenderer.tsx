@@ -16,6 +16,10 @@ import MoovMaliForm from './paydunya/MoovMaliForm'
 import EMoneySenegalForm from './paydunya/EMoneySenegalForm'
 import WizallSenegalForm from './paydunya/WizallSenegalForm'
 import TogocelTogoForm from './paydunya/TogocelTogoForm'
+import MTNMomoZambiaForm from './pawapay/MTNMomoZambiaForm'
+import AirtelMoneyZambiaForm from './pawapay/AirtelMoneyZambiaForm'
+import ZamtelMoneyZambiaForm from './pawapay/ZamtelMoneyZambiaForm'
+import MTNMomoUgandaForm from './pawapay/MTNMomoUgandaForm'
 
 interface PaymentFormRendererProps {
   selectedMethod: string
@@ -40,6 +44,7 @@ const PaymentFormRenderer: React.FC<PaymentFormRendererProps> = ({
   onSuccess,
   onError
 }) => {
+  // Props communes pour tous les formulaires
   const commonProps = {
     paymentToken,
     customerName,
@@ -96,6 +101,18 @@ const PaymentFormRenderer: React.FC<PaymentFormRendererProps> = ({
     
     case 't-money-togo':
       return <TMoneyTogoForm {...commonProps} />
+    
+    case 'mtn-momo-zambia':
+      return <MTNMomoZambiaForm {...commonProps} />
+    
+    case 'airtel-money-zambia':
+      return <AirtelMoneyZambiaForm {...commonProps} />
+    
+    case 'zamtel-money-zambia':
+      return <ZamtelMoneyZambiaForm {...commonProps} />
+    
+    case 'mtn-momo-uganda':
+      return <MTNMomoUgandaForm {...commonProps} />
     
     case 'orange-money-mali':
       return <OrangeMoneyMaliForm {...commonProps} />
