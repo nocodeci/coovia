@@ -5,6 +5,7 @@ interface WaveSenegalFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   amount: number;
   currency: string;
   onSuccess?: (response: any) => void;
@@ -15,12 +16,14 @@ const WaveSenegalForm: React.FC<WaveSenegalFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
+  customerPhone,
   amount,
   currency,
   onSuccess,
   onError
 }) => {
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(customerPhone);
+  const [otp, setOtp] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -30,52 +33,35 @@ const WaveSenegalForm: React.FC<WaveSenegalFormProps> = ({
     setMessage('');
 
     try {
-      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-wave-senegal-payment`;
+      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-paydunya-payment`;
 
       const response = await axios.post(laravelApiUrl, {
         phone_number: phone,
+        otp: otp,
         payment_token: paymentToken,
         customer_name: customerName,
         customer_email: customerEmail
       });
 
-      // Wave Sénégal retourne une URL de redirection
-      if (response.data.success && response.data.redirect_url) {
+      if (response.data.success) {
         setStatus('success');
-        setMessage('Redirection vers Wave Sénégal...');
-        // Rediriger l'utilisateur vers l'URL de paiement
-        window.location.href = response.data.redirect_url;
+        setMessage(response.data.message);
         onSuccess?.(response.data);
       } else {
         setStatus('error');
-        const errorMessage = response.data.message || 'Une erreur est survenue lors de l\'initiation du paiement Wave Sénégal.';
-        setMessage(errorMessage);
-        
-        const errorObject = {
-          message: errorMessage,
-          paydunya_response: response.data.paydunya_response,
-          status: response.status,
-          data: response.data
-        };
-        onError?.(errorObject);
+        setMessage(response.data.message);
+        onError?.(response.data);
       }
     } catch (error: any) {
       setStatus('error');
-      const errorMessage = error.response?.data?.message || error.message || 'Une erreur critique est survenue.';
+      const errorMessage = error.response?.data?.message || 'Une erreur critique est survenue.';
       setMessage(errorMessage);
-      
-      const errorObject = {
-        message: errorMessage,
-        status: error.response?.status,
-        data: error.response?.data,
-        networkError: true
-      };
-      onError?.(errorObject);
+      onError?.(error);
     }
   };
 
   const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('fr-SN', {
+    return new Intl.NumberFormat('fr-CI', {
       style: 'currency',
       currency: currency
     }).format(amount);
@@ -91,7 +77,7 @@ const WaveSenegalForm: React.FC<WaveSenegalFormProps> = ({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-green-800">Paiement Wave Sénégal Réussi !</h3>
+            <h3 className="text-sm font-medium text-green-800">Paiement Orange Money Réussi !</h3>
             <p className="text-sm text-green-700 mt-1">{message}</p>
           </div>
         </div>
@@ -103,40 +89,36 @@ const WaveSenegalForm: React.FC<WaveSenegalFormProps> = ({
     <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
       <div className="mb-6">
         <div className="flex items-center mb-4">
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-            <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+            <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
             </svg>
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Paiement par Wave
+              Paiement par Orange Money
             </h3>
-            <p className="text-sm text-gray-600">Sénégal</p>
+            <p className="text-sm text-gray-600">Côte d'Ivoire</p>
           </div>
         </div>
         
         <p className="text-sm text-gray-600 mb-4">
-          Montant à payer : <span className="font-semibold text-green-600">{formatAmount(amount, currency)}</span>
+          Montant à payer : <span className="font-semibold text-orange-600">{formatAmount(amount, currency)}</span>
         </p>
 
-        <div className="bg-green-50 border border-green-200 rounded-md p-4">
+        <div className="bg-orange-50 border border-orange-200 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">
-                Instructions Wave Sénégal
-              </h3>
-              <div className="mt-2 text-sm text-green-700 space-y-1">
-                <p>1. Assurez-vous d'avoir un compte Wave actif</p>
-                <p>2. Vérifiez que votre compte a suffisamment de fonds</p>
-                <p>3. Entrez votre numéro de téléphone Wave ci-dessous</p>
-                <p>4. Vous serez redirigé vers l'application Wave</p>
-                <p>5. Suivez les instructions pour finaliser le paiement</p>
+              <h3 className="text-sm font-medium text-orange-800">Instructions Orange Money</h3>
+              <div className="mt-2 text-sm text-orange-700 space-y-1">
+                <p>1. Composez <code className="bg-orange-100 px-1 rounded font-mono">#144*82#</code> sur votre téléphone</p>
+                <p>2. Sélectionnez l'option 2 pour obtenir le code de paiement</p>
+                <p>3. Entrez le code reçu dans le champ ci-dessous</p>
               </div>
             </div>
           </div>
@@ -146,32 +128,46 @@ const WaveSenegalForm: React.FC<WaveSenegalFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-            Numéro de téléphone Wave
+            Numéro de téléphone Orange
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 text-sm">+221</span>
+              <span className="text-gray-500 text-sm">+225</span>
             </div>
             <input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="7xxxxxxxx"
+              placeholder="07xxxxxxxx"
               required
               disabled={status === 'loading'}
-              className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Format : 7xxxxxxxx (numéro Wave Sénégal)
-          </p>
+        </div>
+
+        <div>
+          <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
+            Code OTP de paiement
+          </label>
+          <input
+            id="otp"
+            type="text"
+            pattern="\d*"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            placeholder="Code à 4 chiffres"
+            required
+            disabled={status === 'loading'}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
         </div>
 
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-3 px-4 rounded-md transition duration-200 ease-in-out disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-medium py-3 px-4 rounded-md transition duration-200 ease-in-out disabled:cursor-not-allowed flex items-center justify-center"
         >
           {status === 'loading' ? (
             <>
@@ -179,14 +175,14 @@ const WaveSenegalForm: React.FC<WaveSenegalFormProps> = ({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Traitement en cours...
+              Validation en cours...
             </>
           ) : (
             <>
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
               </svg>
-              Payer avec Wave {formatAmount(amount, currency)}
+              Payer {formatAmount(amount, currency)}
             </>
           )}
         </button>

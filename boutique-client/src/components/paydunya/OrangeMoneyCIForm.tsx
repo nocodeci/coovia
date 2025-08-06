@@ -5,6 +5,7 @@ interface OrangeMoneyCIFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   amount: number;
   currency: string;
   onSuccess?: (response: any) => void;
@@ -15,12 +16,15 @@ const OrangeMoneyCIForm: React.FC<OrangeMoneyCIFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
+  customerPhone,
   amount,
   currency,
   onSuccess,
   onError
 }) => {
-  const [phone, setPhone] = useState('');
+  // Extraire le numéro sans le préfixe +225 pour l'affichage
+  const phoneWithoutPrefix = customerPhone.replace('+225', '');
+  const [phone, setPhone] = useState(phoneWithoutPrefix);
   const [otp, setOtp] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -34,7 +38,7 @@ const OrangeMoneyCIForm: React.FC<OrangeMoneyCIFormProps> = ({
       const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-paydunya-payment`;
 
       const response = await axios.post(laravelApiUrl, {
-        phone_number: phone,
+        phone_number: `+225${phone}`,
         otp: otp,
         payment_token: paymentToken,
         customer_name: customerName,

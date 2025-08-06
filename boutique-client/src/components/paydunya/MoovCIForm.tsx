@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useToast } from '../../hooks/use-toast';
 
 interface MoovCIFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   amount: number;
   currency: string;
   onSuccess?: (response: any) => void;
@@ -15,12 +17,16 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
+  customerPhone,
   amount,
   currency,
   onSuccess,
   onError
 }) => {
-  const [phone, setPhone] = useState('');
+  const { toast } = useToast();
+  // Extraire le numéro sans le préfixe +225 pour l'affichage
+  const phoneWithoutPrefix = customerPhone.replace('+225', '');
+  const [phone, setPhone] = useState(phoneWithoutPrefix);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -33,7 +39,7 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
       const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-moov-ci-payment`;
 
       const response = await axios.post(laravelApiUrl, {
-        phone_number: phone,
+        phone_number: `+225${phone}`,
         payment_token: paymentToken,
         customer_name: customerName,
         customer_email: customerEmail
@@ -43,11 +49,21 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
       if (response.data.success) {
         setStatus('success');
         setMessage(response.data.message);
+        toast({
+          title: "Paiement Moov CI réussi !",
+          description: response.data.message,
+        });
         onSuccess?.(response.data);
       } else {
         setStatus('error');
         const errorMessage = response.data.message || 'Une erreur est survenue lors du paiement Moov CI.';
         setMessage(errorMessage);
+        
+        toast({
+          title: "Erreur de paiement Moov CI",
+          description: errorMessage,
+          variant: "destructive",
+        });
         
         // Créer un objet d'erreur plus informatif
         const errorObject = {
@@ -62,6 +78,12 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
       setStatus('error');
       const errorMessage = error.response?.data?.message || error.message || 'Une erreur critique est survenue.';
       setMessage(errorMessage);
+      
+      toast({
+        title: "Erreur de paiement Moov CI",
+        description: errorMessage,
+        variant: "destructive",
+      });
       
       // Créer un objet d'erreur plus informatif pour les erreurs réseau
       const errorObject = {
@@ -147,19 +169,74 @@ const MoovCIForm: React.FC<MoovCIFormProps> = ({
             Numéro de téléphone Moov
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 text-sm">+225</span>
+            <div className="flex">
+              {/* Bouton préfixe pays */}
+              <button 
+                type="button" 
+                className="flex items-center space-x-2 px-4 py-3 bg-white border-2 border-r-0 border-gray-200 rounded-l-lg hover:border-gray-300 transition-all duration-200"
+              >
+                <img 
+                  data-testid="circle-country-flag" 
+                  className="w-4 h-4 rounded-full" 
+                  title="ci" 
+                  height="100" 
+                  src="https://react-circle-flags.pages.dev/ci.svg"
+                  alt="Côte d'Ivoire"
+                />
+                <span className="text-sm font-medium text-gray-900">+225</span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="24" 
+                  height="24" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  className="lucide lucide-chevron-down w-3 h-3 text-gray-400" 
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg>
+              </button>
+              
+              {/* Champ de saisie */}
+              <input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="01xxxxxxxx"
+                required
+                disabled={status === 'loading'}
+                className="flex-1 rounded-r-lg border-2 border-l-0 border-gray-200 px-4 py-3 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:bg-gray-50 disabled:cursor-not-allowed"
+              />
             </div>
-            <input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="01xxxxxxxx"
-              required
-              disabled={status === 'loading'}
-              className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
+            
+            {/* Message informatif avec design amélioré */}
+            <div className="mt-2 flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs text-green-600 font-medium">
+                  Numéro pré-rempli depuis le checkout
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Format avec design amélioré */}
+          <div className="mt-2 flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+              <svg className="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+              </svg>
+              <span className="text-xs text-purple-600 font-medium">
+                Format : 01xxxxxxxx (numéro Moov Côte d'Ivoire)
+              </span>
+            </div>
           </div>
         </div>
 

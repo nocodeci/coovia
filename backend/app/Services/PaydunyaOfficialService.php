@@ -113,7 +113,7 @@ class PaydunyaOfficialService
                 return [
                     'success' => true,
                     'token' => $invoice->token,
-                    'url' => $invoice->getInvoiceUrl(),
+                    'url' => $invoice->getInvoiceUrl() ?: 'https://paydunya.com/checkout/invoice/' . $invoice->token,
                     'data' => [
                         'response_code' => $invoice->response_code,
                         'response_text' => $invoice->response_text,
@@ -368,7 +368,7 @@ class PaydunyaOfficialService
             // Pour Orange Money CI, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? 'https://paydunya.com/checkout/invoice/' . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Orange Money CI initialisé avec succès'
             ];
@@ -403,7 +403,7 @@ class PaydunyaOfficialService
             // Pour MTN CI, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? 'https://paydunya.com/checkout/invoice/' . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement MTN CI initialisé avec succès'
             ];
@@ -438,7 +438,7 @@ class PaydunyaOfficialService
             // Pour Moov CI, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? 'https://paydunya.com/checkout/invoice/' . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Moov CI initialisé avec succès'
             ];
@@ -473,7 +473,7 @@ class PaydunyaOfficialService
             // Pour Orange Money Burkina, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? 'https://paydunya.com/checkout/invoice/' . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Orange Money Burkina initialisé avec succès'
             ];
@@ -508,7 +508,7 @@ class PaydunyaOfficialService
             // Pour Orange Money Sénégal, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Orange Money Sénégal initialisé avec succès'
             ];
@@ -543,7 +543,7 @@ class PaydunyaOfficialService
             // Pour Free Money Sénégal, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Free Money Sénégal initialisé avec succès'
             ];
@@ -578,7 +578,7 @@ class PaydunyaOfficialService
             // Pour Expresso Sénégal, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Expresso Sénégal initialisé avec succès'
             ];
@@ -613,7 +613,7 @@ class PaydunyaOfficialService
             // Pour Wave Sénégal, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Wave Sénégal initialisé avec succès'
             ];
@@ -648,7 +648,7 @@ class PaydunyaOfficialService
             // Pour Wizall Sénégal, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Wizall Sénégal initialisé avec succès'
             ];
@@ -683,7 +683,7 @@ class PaydunyaOfficialService
             // Pour Moov Bénin, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Moov Bénin initialisé avec succès'
             ];
@@ -718,7 +718,7 @@ class PaydunyaOfficialService
             // Pour MTN Bénin, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement MTN Bénin initialisé avec succès'
             ];
@@ -753,7 +753,7 @@ class PaydunyaOfficialService
             // Pour T-Money Togo, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement T-Money Togo initialisé avec succès'
             ];
@@ -788,7 +788,7 @@ class PaydunyaOfficialService
             // Pour Moov Togo, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Moov Togo initialisé avec succès'
             ];
@@ -823,7 +823,7 @@ class PaydunyaOfficialService
             // Pour Orange Money Mali, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Orange Money Mali initialisé avec succès'
             ];
@@ -858,7 +858,7 @@ class PaydunyaOfficialService
             // Pour Moov Mali, nous utilisons la facture créée
             return [
                 'success' => true,
-                'payment_url' => $invoiceResult['url'] ?? null,
+                'payment_url' => $invoiceResult['url'] ?? "https://paydunya.com/checkout/invoice/" . $invoiceResult['token'],
                 'token' => $invoiceResult['token'],
                 'message' => 'Paiement Moov Mali initialisé avec succès'
             ];

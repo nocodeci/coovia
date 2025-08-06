@@ -5,6 +5,7 @@ interface MTNBeninFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   amount: number;
   currency: string;
   onSuccess?: (response: any) => void;
@@ -15,12 +16,13 @@ const MTNBeninForm: React.FC<MTNBeninFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
+  customerPhone,
   amount,
   currency,
   onSuccess,
   onError
 }) => {
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(customerPhone);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -181,6 +183,9 @@ const MTNBeninForm: React.FC<MTNBeninFormProps> = ({
               disabled={status === 'loading'}
               className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Numéro pré-rempli depuis le checkout
+            </p>
           </div>
           <p className="text-xs text-gray-500 mt-1">
             Format : xxxxxxxxx (numéro MTN Bénin)

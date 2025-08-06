@@ -5,6 +5,7 @@ interface OrangeMoneyBurkinaFormProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   amount: number;
   currency: string;
   onSuccess?: (response: any) => void;
@@ -15,13 +16,14 @@ const OrangeMoneyBurkinaForm: React.FC<OrangeMoneyBurkinaFormProps> = ({
   paymentToken,
   customerName,
   customerEmail,
+  customerPhone,
   amount,
   currency,
   onSuccess,
   onError
 }) => {
-  const [phone, setPhone] = useState('');
-  const [otpCode, setOtpCode] = useState('');
+  const [phone, setPhone] = useState(customerPhone);
+  const [otp, setOtp] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -31,53 +33,35 @@ const OrangeMoneyBurkinaForm: React.FC<OrangeMoneyBurkinaFormProps> = ({
     setMessage('');
 
     try {
-      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-orange-money-burkina-payment`;
+      const laravelApiUrl = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/process-paydunya-payment`;
 
       const response = await axios.post(laravelApiUrl, {
         phone_number: phone,
+        otp: otp,
         payment_token: paymentToken,
         customer_name: customerName,
-        customer_email: customerEmail,
-        otp_code: otpCode
+        customer_email: customerEmail
       });
 
-      // Orange Money Burkina finalise directement le paiement (pas de redirection)
       if (response.data.success) {
         setStatus('success');
         setMessage(response.data.message);
         onSuccess?.(response.data);
       } else {
         setStatus('error');
-        const errorMessage = response.data.message || 'Une erreur est survenue lors du paiement Orange Money Burkina.';
-        setMessage(errorMessage);
-        
-        // Créer un objet d'erreur plus informatif
-        const errorObject = {
-          message: errorMessage,
-          paydunya_response: response.data.paydunya_response,
-          status: response.status,
-          data: response.data
-        };
-        onError?.(errorObject);
+        setMessage(response.data.message);
+        onError?.(response.data);
       }
     } catch (error: any) {
       setStatus('error');
-      const errorMessage = error.response?.data?.message || error.message || 'Une erreur critique est survenue.';
+      const errorMessage = error.response?.data?.message || 'Une erreur critique est survenue.';
       setMessage(errorMessage);
-      
-      // Créer un objet d'erreur plus informatif pour les erreurs réseau
-      const errorObject = {
-        message: errorMessage,
-        status: error.response?.status,
-        data: error.response?.data,
-        networkError: true
-      };
-      onError?.(errorObject);
+      onError?.(error);
     }
   };
 
   const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('fr-BF', {
+    return new Intl.NumberFormat('fr-CI', {
       style: 'currency',
       currency: currency
     }).format(amount);
@@ -93,7 +77,7 @@ const OrangeMoneyBurkinaForm: React.FC<OrangeMoneyBurkinaFormProps> = ({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-green-800">Paiement Orange Money Burkina Réussi !</h3>
+            <h3 className="text-sm font-medium text-green-800">Paiement Orange Money Réussi !</h3>
             <p className="text-sm text-green-700 mt-1">{message}</p>
           </div>
         </div>
@@ -114,7 +98,7 @@ const OrangeMoneyBurkinaForm: React.FC<OrangeMoneyBurkinaFormProps> = ({
             <h3 className="text-lg font-semibold text-gray-900">
               Paiement par Orange Money
             </h3>
-            <p className="text-sm text-gray-600">Burkina Faso</p>
+            <p className="text-sm text-gray-600">Côte d'Ivoire</p>
           </div>
         </div>
         
@@ -130,13 +114,11 @@ const OrangeMoneyBurkinaForm: React.FC<OrangeMoneyBurkinaFormProps> = ({
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-orange-800">Instructions Orange Money Burkina</h3>
+              <h3 className="text-sm font-medium text-orange-800">Instructions Orange Money</h3>
               <div className="mt-2 text-sm text-orange-700 space-y-1">
-                <p>1. Assurez-vous d'avoir l'application Orange Money installée</p>
-                <p>2. Vérifiez que votre compte Orange Money a suffisamment de fonds</p>
-                <p>3. Entrez votre numéro de téléphone Orange ci-dessous</p>
-                <p>4. Entrez le code OTP reçu par SMS</p>
-                <p>5. Le paiement sera débité directement de votre compte</p>
+                <p>1. Composez <code className="bg-orange-100 px-1 rounded font-mono">#144*82#</code> sur votre téléphone</p>
+                <p>2. Sélectionnez l'option 2 pour obtenir le code de paiement</p>
+                <p>3. Entrez le code reçu dans le champ ci-dessous</p>
               </div>
             </div>
           </div>
@@ -150,14 +132,14 @@ const OrangeMoneyBurkinaForm: React.FC<OrangeMoneyBurkinaFormProps> = ({
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 text-sm">+226</span>
+              <span className="text-gray-500 text-sm">+225</span>
             </div>
             <input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="7xxxxxxxx"
+              placeholder="xxxxxxxxx"
               required
               disabled={status === 'loading'}
               className="w-full pl-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -167,23 +149,19 @@ const OrangeMoneyBurkinaForm: React.FC<OrangeMoneyBurkinaFormProps> = ({
 
         <div>
           <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
-            Code OTP
+            Code OTP de paiement
           </label>
           <input
             id="otp"
             type="text"
-            value={otpCode}
-            onChange={(e) => setOtpCode(e.target.value)}
-            placeholder="89525"
+            pattern="\d*"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            placeholder="Code à 4 chiffres"
             required
-            minLength={5}
-            maxLength={6}
             disabled={status === 'loading'}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Entrez le code OTP reçu par SMS sur votre téléphone
-          </p>
         </div>
 
         <button
@@ -197,14 +175,14 @@ const OrangeMoneyBurkinaForm: React.FC<OrangeMoneyBurkinaFormProps> = ({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Traitement en cours...
+              Validation en cours...
             </>
           ) : (
             <>
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
               </svg>
-              Payer avec Orange Money {formatAmount(amount, currency)}
+              Payer {formatAmount(amount, currency)}
             </>
           )}
         </button>

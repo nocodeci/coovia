@@ -6,6 +6,7 @@ import { ProductPage } from './components/product/ProductPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ProductPageTest from './pages/ProductPageTest';
 import { CurrencyProvider } from './contexts/CurrencyContext';
+import { Toaster } from './components/ui/toaster';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,6 +61,7 @@ function App() {
             <BoutiquePage storeId={storeSlug} />
           )}
         </div>
+        <Toaster />
       </CurrencyProvider>
     </QueryClientProvider>
   );

@@ -17,6 +17,7 @@ interface PaymentMethodSelectorProps {
   paymentToken: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   amount: number;
   currency: string;
   onSuccess?: (response: any) => void;
@@ -27,6 +28,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   paymentToken,
   customerName,
   customerEmail,
+  customerPhone,
   amount,
   currency,
   onSuccess,
@@ -70,15 +72,16 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   ];
 
   const renderPaymentForm = () => {
-    const commonProps = {
-      paymentToken,
-      customerName,
-      customerEmail,
-      amount,
-      currency,
-      onSuccess,
-      onError
-    };
+      const commonProps = {
+    paymentToken,
+    customerName,
+    customerEmail,
+    customerPhone,
+    amount,
+    currency,
+    onSuccess,
+    onError
+  };
 
     switch (selectedMethod) {
       case 'orange-money-ci':
