@@ -11,6 +11,7 @@ import PaymentFormRenderer from './PaymentFormRenderer'
 import OTPInput from './OTPInput'
 
 
+
 // Utility functions
 function cn(...inputs: (string | undefined | null | boolean | number)[]): string {
   return inputs.filter(Boolean).join(' ')
@@ -123,6 +124,11 @@ const countries: Country[] = [
   { name: 'Burkina Faso', code: 'BF', flag: 'bf', currency: 'XOF', currencySymbol: 'F CFA' },
   { name: 'Bénin', code: 'BJ', flag: 'bj', currency: 'XOF', currencySymbol: 'F CFA' },
   { name: 'Togo', code: 'TG', flag: 'tg', currency: 'XOF', currencySymbol: 'F CFA' },
+  { name: 'Cameroun', code: 'CM', flag: 'cm', currency: 'XAF', currencySymbol: 'FCFA' },
+  { name: 'République Démocratique du Congo', code: 'CD', flag: 'cd', currency: 'CDF', currencySymbol: 'FC' },
+  { name: 'Congo', code: 'CG', flag: 'cg', currency: 'XAF', currencySymbol: 'FCFA' },
+  { name: 'Gabon', code: 'GA', flag: 'ga', currency: 'XAF', currencySymbol: 'FCFA' },
+  { name: 'Rwanda', code: 'RW', flag: 'rw', currency: 'RWF', currencySymbol: 'R₣' },
   { name: 'Zambie', code: 'ZMB', flag: 'zm', currency: 'ZMW', currencySymbol: 'K' },
   { name: 'Ouganda', code: 'UG', flag: 'ug', currency: 'UGX', currencySymbol: 'USh' },
   { name: 'Tanzanie', code: 'TZ', flag: 'tz', currency: 'TZS', currencySymbol: 'TSh' },
@@ -137,6 +143,11 @@ const phoneCountries: PhoneCountry[] = [
   { name: 'Burkina Faso', code: 'BF', flag: 'bf', phoneCode: '226' },
   { name: 'Bénin', code: 'BJ', flag: 'bj', phoneCode: '229' },
   { name: 'Togo', code: 'TG', flag: 'tg', phoneCode: '228' },
+  { name: 'Cameroun', code: 'CM', flag: 'cm', phoneCode: '237' },
+  { name: 'République Démocratique du Congo', code: 'CD', flag: 'cd', phoneCode: '243' },
+  { name: 'Congo', code: 'CG', flag: 'cg', phoneCode: '242' },
+  { name: 'Gabon', code: 'GA', flag: 'ga', phoneCode: '241' },
+  { name: 'Rwanda', code: 'RW', flag: 'rw', phoneCode: '250' },
   { name: 'Zambie', code: 'ZMB', flag: 'zm', phoneCode: '260' },
   { name: 'Ouganda', code: 'UG', flag: 'ug', phoneCode: '256' },
   { name: 'Tanzanie', code: 'TZ', flag: 'tz', phoneCode: '255' },
@@ -180,6 +191,26 @@ const paymentMethodsByCountry: { [key: string]: PaymentMethod[] } = {
     { id: 'mpesa-kenya', name: 'M-Pesa', logo: 'https://assets.cdn.moneroo.io/icons/circle/mpesa.svg', type: 'mobile_money', country: 'KE', enabled: true },
     { id: 'airtel-money-kenya', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'KE', enabled: true }
   ],
+  'CM': [
+    { id: 'mtn-momo-cameroon', name: 'MTN MoMo', logo: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg', type: 'mobile_money', country: 'CM', enabled: true },
+    { id: 'orange-cameroon', name: 'Orange Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/orange_money.svg', type: 'mobile_money', country: 'CM', enabled: true }
+  ],
+  'CD': [
+    { id: 'airtel-congo', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'CD', enabled: true },
+    { id: 'orange-congo', name: 'Orange Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/orange_money.svg', type: 'mobile_money', country: 'CD', enabled: true },
+    { id: 'vodacom-mpesa-congo', name: 'Vodacom M-Pesa', logo: 'https://assets.cdn.moneroo.io/icons/circle/vodacom_mpesa.svg', type: 'mobile_money', country: 'CD', enabled: true }
+  ],
+  'CG': [
+    { id: 'airtel-congo-brazzaville', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'CG', enabled: true },
+    { id: 'mtn-momo-congo', name: 'MTN MoMo', logo: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg', type: 'mobile_money', country: 'CG', enabled: true }
+  ],
+  'GA': [
+    { id: 'airtel-gabon', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'GA', enabled: true }
+  ],
+  'RW': [
+    { id: 'airtel-rwanda', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'RW', enabled: true },
+    { id: 'mtn-momo-rwanda', name: 'MTN MoMo', logo: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg', type: 'mobile_money', country: 'RW', enabled: true }
+  ],
   'NG': [
     { id: 'mtn-momo-nigeria', name: 'MTN MoMo', logo: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg', type: 'mobile_money', country: 'NG', enabled: true },
     { id: 'airtel-money-nigeria', name: 'Airtel Money', logo: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg', type: 'mobile_money', country: 'NG', enabled: true }
@@ -187,26 +218,57 @@ const paymentMethodsByCountry: { [key: string]: PaymentMethod[] } = {
 }
 
 // Components
+
 function CountrySelector({ selectedCountry, onCountrySelect }: { selectedCountry: string, onCountrySelect: (country: string) => void }) {
   const [isOpen, setIsOpen] = useState(false)
   const selectedCountryData = countries.find(c => c.code === selectedCountry) || countries[0]
+
+  console.log('CountrySelector - isOpen:', isOpen)
+  console.log('CountrySelector - selectedCountryData:', selectedCountryData)
+
+  // Fermer le dropdown quand on clique à l'extérieur
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('click', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside)
+    }
+  }, [isOpen])
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation()
+          console.log('CountrySelector button clicked, current isOpen:', isOpen)
+          setIsOpen(!isOpen)
+        }}
         className="flex items-center space-x-3 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-all duration-200"
       >
-        <CircleFlag countryCode={selectedCountryData.flag} className="w-5 h-5 rounded-full" />
+                        <img 
+          data-testid="circle-country-flag" 
+          title={selectedCountryData.flag} 
+          height="100" 
+          src={`https://react-circle-flags.pages.dev/${selectedCountryData.flag}.svg`}
+          className="w-5 h-5 rounded-full"
+          alt={`${selectedCountryData.name} flag`}
+        />
         <span className="text-sm font-medium text-gray-900">{selectedCountryData.name}</span>
         <ChevronDown className="w-4 h-4 text-gray-400 ml-auto" />
       </button>
 
-      {isOpen && createPortal(
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/20" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 bg-white border-2 border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-50">
+          <div className="bg-white border-2 border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
             {countries.map((country) => (
               <button
                 key={country.code}
@@ -216,14 +278,20 @@ function CountrySelector({ selectedCountry, onCountrySelect }: { selectedCountry
                 }}
                 className="flex items-center space-x-3 w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
               >
-                <CircleFlag countryCode={country.flag} className="w-5 h-5 rounded-full" />
+                <img 
+                  data-testid="circle-country-flag" 
+                  title={country.flag} 
+                  height="100" 
+                  src={`https://react-circle-flags.pages.dev/${country.flag}.svg`}
+                  className="w-5 h-5 rounded-full"
+                  alt={`${country.name} flag`}
+                />
                 <span className="text-sm text-gray-900 flex-1">{country.name}</span>
                 <span className="text-xs text-gray-500">{country.currencySymbol}</span>
               </button>
             ))}
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   )
@@ -246,7 +314,14 @@ function PhoneInput({ value, onChange, selectedCountry, onCountrySelect }: {
           onClick={() => setIsPhoneCountryOpen(!isPhoneCountryOpen)}
           className="flex items-center space-x-2 px-4 py-3 bg-white border-2 border-r-0 border-gray-200 rounded-l-lg hover:border-gray-300 transition-all duration-200"
         >
-          <CircleFlag countryCode={selectedPhoneCountry.flag} className="w-4 h-4 rounded-full" />
+          <img 
+            data-testid="circle-country-flag" 
+            title={selectedPhoneCountry.flag} 
+            height="100" 
+            src={`https://react-circle-flags.pages.dev/${selectedPhoneCountry.flag}.svg`}
+            className="w-4 h-4 rounded-full"
+            alt={`${selectedPhoneCountry.name} flag`}
+          />
           <span className="text-sm font-medium text-gray-900">+{selectedPhoneCountry.phoneCode}</span>
           <ChevronDown className="w-3 h-3 text-gray-400" />
         </button>
@@ -272,7 +347,14 @@ function PhoneInput({ value, onChange, selectedCountry, onCountrySelect }: {
                 }}
                 className="flex items-center space-x-3 w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
               >
-                <CircleFlag countryCode={country.flag} className="w-4 h-4 rounded-full" />
+                <img 
+                  data-testid="circle-country-flag" 
+                  title={country.flag} 
+                  height="100" 
+                  src={`https://react-circle-flags.pages.dev/${country.flag}.svg`}
+                  className="w-4 h-4 rounded-full"
+                  alt={`${country.name} flag`}
+                />
                 <span className="text-sm text-gray-900 flex-1">{country.name}</span>
                 <span className="text-xs text-gray-500">+{country.phoneCode}</span>
               </button>
@@ -297,20 +379,62 @@ function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   )
 }
 
+function ProviderInfo({ provider, fallbackUsed }: { provider: string, fallbackUsed: boolean }) {
+  const getProviderColor = (provider: string) => {
+    switch (provider.toLowerCase()) {
+      case 'pawapay':
+        return 'text-blue-600 bg-blue-50 border-blue-200'
+      case 'paydunya':
+        return 'text-green-600 bg-green-50 border-green-200'
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200'
+    }
+  }
+
+  const getProviderIcon = (provider: string) => {
+    switch (provider.toLowerCase()) {
+      case 'pawapay':
+        return '🔗'
+      case 'paydunya':
+        return '💳'
+      default:
+        return '⚡'
+    }
+  }
+
+  return (
+    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getProviderColor(provider)}`}>
+      <span>{getProviderIcon(provider)}</span>
+      <span>{provider.toUpperCase()}</span>
+      {fallbackUsed && (
+        <span className="text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full text-xs">
+          FALLBACK
+        </span>
+      )}
+    </div>
+  )
+}
+
 // Main Component
 interface CheckoutCompleteProps {
   storeId?: string;
   productId?: string;
   productName?: string;
   price?: number;
+  storeName?: string;
+  storeLogo?: string;
 }
 
 export default function CheckoutComplete({ 
   storeId, 
   productId, 
   productName, 
-  price 
+  price,
+  storeName = 'Boutique',
+  storeLogo = 'B'
 }: CheckoutCompleteProps = {}) {
+
+  console.log('🏪 CheckoutComplete - Props:', { storeId, productId, productName, price, storeName, storeLogo });
 
   const [selectedCountry, setSelectedCountry] = useState('CI')
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('')
@@ -330,9 +454,18 @@ export default function CheckoutComplete({
   const [otpCode, setOtpCode] = useState('')
   const [otpStatus, setOtpStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [otpMessage, setOtpMessage] = useState('')
+  const [providerInfo, setProviderInfo] = useState<{
+    provider: string
+    fallbackUsed: boolean
+  } | null>(null)
   const [savedCustomers, setSavedCustomers] = useState<SavedCustomerData[]>([])
   const [showSavedCustomers, setShowSavedCustomers] = useState(false)
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number | null>(null)
+  const [storeInfo, setStoreInfo] = useState<{
+    name: string
+    logo: string
+  } | null>(null)
+  const [isLoadingStore, setIsLoadingStore] = useState(false)
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('checkoutData')
@@ -343,6 +476,74 @@ export default function CheckoutComplete({
     // Charger les coordonnées sauvegardées
     loadSavedCustomers()
   }, [])
+
+  // Charger les informations de la boutique quand storeId change
+  useEffect(() => {
+    console.log('🏪 useEffect - storeId changé:', storeId)
+    loadStoreInfo()
+  }, [storeId])
+
+  // Fonction pour charger les informations de la boutique
+  const loadStoreInfo = async () => {
+    if (!storeId) {
+      console.log('🏪 Pas de storeId, utilisation des valeurs par défaut')
+      setStoreInfo({
+        name: storeName,
+        logo: storeLogo
+      })
+      return
+    }
+    
+    console.log('🏪 Chargement des informations de la boutique pour storeId:', storeId)
+    setIsLoadingStore(true)
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/store-info/${storeId}`)
+      console.log('🏪 Réponse API:', response.status, response.statusText)
+      
+      if (response.ok) {
+        const storeData = await response.json()
+        console.log('🏪 Données reçues de l\'API:', storeData)
+        
+        const newStoreInfo = {
+          name: storeData.data?.name || storeName,
+          logo: storeData.data?.logo || storeLogo
+        }
+        
+        setStoreInfo(newStoreInfo)
+        console.log('🏪 Informations de la boutique mises à jour:', newStoreInfo)
+      } else {
+        console.log('🏪 Erreur API, utilisation des valeurs par défaut')
+        setStoreInfo({
+          name: storeName,
+          logo: storeLogo
+        })
+      }
+    } catch (error) {
+      console.log('🏪 Erreur lors du chargement de la boutique:', error)
+      setStoreInfo({
+        name: storeName,
+        logo: storeLogo
+      })
+    } finally {
+      setIsLoadingStore(false)
+    }
+  }
+
+  // Console log pour le rendu de la section logo et nom
+  useEffect(() => {
+    const currentName = storeInfo?.name || storeName;
+    const currentLogo = storeInfo?.logo || storeLogo;
+    
+    console.log('🏪 Rendu de la section logo et nom:', { 
+      currentLogo, 
+      currentName,
+      isLoadingStore,
+      storeInfo,
+      defaultStoreName: storeName,
+      defaultStoreLogo: storeLogo
+    });
+  }, [storeInfo, storeLogo, storeName, isLoadingStore]);
 
   // Fonction pour charger les coordonnées sauvegardées
   const loadSavedCustomers = () => {
@@ -732,6 +933,12 @@ export default function CheckoutComplete({
     }
   }
 
+  // Pré-sélectionner une méthode de paiement quand le pays change
+  const handleCountryChange = (countryCode: string) => {
+    setSelectedCountry(countryCode)
+    // Ne pas réinitialiser la méthode de paiement - laisser le PaymentMethodSelector gérer la pré-sélection
+  }
+
   const validateAllFields = (): boolean => {
     const newErrors: FormErrors = {}
     Object.keys(formData).forEach(field => {
@@ -771,17 +978,46 @@ export default function CheckoutComplete({
         paymentCountry: countries.find(c => c.code === selectedCountry)?.name || 'Côte d\'Ivoire'
       }
 
-      const response = await fetch('http://localhost:8000/api/payment/initialize', {
+      // Utiliser le système intelligent avec fallback
+      const response = await fetch('http://localhost:8000/api/smart-payment/initialize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(paymentData)
+        body: JSON.stringify({
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          customer_name: `${paymentData.customer.firstName} ${paymentData.customer.lastName}`,
+          customer_email: paymentData.customer.email,
+          phone_number: paymentData.customer.phone,
+          country: selectedCountry,
+          payment_method: selectedPaymentMethod,
+          store_id: paymentData.storeId,
+          product_id: paymentData.productId,
+          product_name: paymentData.productName,
+          price: paymentData.amount
+        })
       })
       
       if (response.ok) {
         const result = await response.json()
-        setPaymentToken(result.data.token) // Correction : utiliser result.data.token
+        
+        if (result.success) {
+          // Sauvegarder les informations sur le provider utilisé
+          setProviderInfo({
+            provider: result.data.provider || 'unknown',
+            fallbackUsed: result.data.fallback_used || false
+          })
+          
+          // Afficher les informations sur le provider utilisé
+          const providerInfo = result.data.fallback_used 
+            ? ` (Fallback: ${result.data.provider})`
+            : ` (${result.data.provider})`
+          
+          console.log(`Paiement initialisé avec succès${providerInfo}`)
+          
+          // Utiliser le payment_id du système intelligent
+          setPaymentToken(result.data.payment_id || result.data.token)
         
         // Sauvegarder les coordonnées après un paiement réussi
         const customerData: SavedCustomerData = {
@@ -794,18 +1030,22 @@ export default function CheckoutComplete({
         }
         saveCustomerData(customerData)
 
+          // Afficher le formulaire de paiement approprié
         if (selectedPaymentMethod === 'orange-money-ci') {
           setShowOtpStep(true)
         } else {
-          // Pour les autres méthodes, afficher le formulaire spécifique
           setShowPaydunyaForm(true)
         }
         
-        setIsProcessing(false) // Arrêter le loading
+          setIsProcessing(false)
+        } else {
+          alert('Erreur d\'initialisation: ' + (result.message || 'Erreur lors de l\'initialisation du paiement'))
+          setIsProcessing(false)
+        }
       } else {
         const errorData = await response.json()
         alert('Erreur d\'initialisation: ' + (errorData.message || 'Erreur lors de l\'initialisation du paiement'))
-        setIsProcessing(false) // Arrêter le loading en cas d'erreur
+        setIsProcessing(false)
       }
     } catch (error) {
       console.error('Erreur lors du paiement:', error)
@@ -917,13 +1157,17 @@ export default function CheckoutComplete({
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                        <span className="text-lg font-bold">N</span>
+                        {isLoadingStore ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <span className="text-lg font-bold text-white">
+                            {storeInfo?.logo || storeLogo}
+                          </span>
+                        )}
                       </div>
-                      <span className="text-xl font-bold">NOCODE2</span>
-                    </div>
-                    <div className="flex items-center space-x-1 text-sm">
-                      <span>FR</span>
-                      <ChevronDown className="w-4 h-4" />
+                      <span className="text-xl font-bold">
+                        {isLoadingStore ? 'Chargement...' : (storeInfo?.name || storeName)}
+                      </span>
                     </div>
                   </div>
 
@@ -932,27 +1176,37 @@ export default function CheckoutComplete({
                     <p className="text-blue-100">Entrez le code reçu par SMS</p>
                   </div>
 
+                  {/* Affichage des produits */}
+                  {checkoutData?.productName && (
+                    <div className="mb-6">
+                      <div className="text-sm text-blue-200 mb-3">Produit à acheter</div>
+                      <div className="bg-white/10 rounded-lg p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                              <path d="M16 10a4 4 0 0 1-8 0"></path>
+                              <path d="M3.103 6.034h17.794"></path>
+                              <path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path>
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-white font-medium">{checkoutData.productName}</div>
+                            <div className="text-blue-200 text-sm">
+                              Quantité: 1 • {isLoadingStore ? 'Chargement...' : (storeInfo?.name || storeName)}
+                            </div>
+                          </div>
+                          <div className="text-white font-bold">
+                            {checkoutData.price} F CFA
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mb-6">
                     <div className="text-sm text-blue-200 mb-1">Total</div>
                     <div className="text-3xl font-bold">
                       {checkoutData?.price || price} F CFA
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-blue-200">Sous-total</span>
-                      <span>{(checkoutData?.price || price) - 100} F CFA</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-blue-200">Frais</span>
-                      <span>100 F CFA</span>
-                    </div>
-                    <div className="border-t border-blue-500 pt-4">
-                      <div className="flex items-center justify-between font-bold">
-                        <span>Total</span>
-                        <span>{checkoutData?.price || price} F CFA</span>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -1064,13 +1318,17 @@ export default function CheckoutComplete({
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                        <span className="text-lg font-bold">N</span>
+                        {isLoadingStore ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <span className="text-lg font-bold text-white">
+                            {storeInfo?.logo || storeLogo}
+                          </span>
+                        )}
                       </div>
-                      <span className="text-xl font-bold">NOCODE2</span>
-                    </div>
-                    <div className="flex items-center space-x-1 text-sm">
-                      <span>FR</span>
-                      <ChevronDown className="w-4 h-4" />
+                      <span className="text-xl font-bold">
+                        {isLoadingStore ? 'Chargement...' : (storeInfo?.name || storeName)}
+                      </span>
                     </div>
                   </div>
 
@@ -1079,27 +1337,37 @@ export default function CheckoutComplete({
                     <p className="text-blue-100">Choisissez votre méthode de paiement mobile</p>
                   </div>
 
+                  {/* Affichage des produits */}
+                  {checkoutData?.productName && (
+                    <div className="mb-6">
+                      <div className="text-sm text-blue-200 mb-3">Produit à acheter</div>
+                      <div className="bg-white/10 rounded-lg p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                              <path d="M16 10a4 4 0 0 1-8 0"></path>
+                              <path d="M3.103 6.034h17.794"></path>
+                              <path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path>
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-white font-medium">{checkoutData.productName}</div>
+                            <div className="text-blue-200 text-sm">
+                              Quantité: 1 • {isLoadingStore ? 'Chargement...' : (storeInfo?.name || storeName)}
+                            </div>
+                          </div>
+                          <div className="text-white font-bold">
+                            {checkoutData.price} F CFA
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mb-6">
                     <div className="text-sm text-blue-200 mb-1">Total</div>
                     <div className="text-3xl font-bold">
                       {checkoutData?.price || price} F CFA
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-blue-200">Sous-total</span>
-                      <span>{(checkoutData?.price || price) - 100} F CFA</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-blue-200">Frais</span>
-                      <span>100 F CFA</span>
-                    </div>
-                    <div className="border-t border-blue-500 pt-4">
-                      <div className="flex items-center justify-between font-bold">
-                        <span>Total</span>
-                        <span>{checkoutData?.price || price} F CFA</span>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -1135,22 +1403,59 @@ export default function CheckoutComplete({
               {/* Left Column - Order Summary */}
               <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-8">
                 <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                      <span className="text-lg font-bold">N</span>
+                  <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity duration-200">
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl flex items-center justify-center shadow-md">
+                      {isLoadingStore ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <span className="text-lg font-bold text-white">
+                          {storeInfo?.logo || storeLogo}
+                        </span>
+                      )}
                     </div>
-                    <span className="text-xl font-bold">NOCODE2</span>
+                    <div className="flex flex-col">
+                      <h1 className="text-xl font-bold text-white tracking-tight">
+                        {isLoadingStore ? 'Chargement...' : (storeInfo?.name || storeName)}
+                      </h1>
+                      <div className="text-xs text-blue-200 font-medium">
+                        {isLoadingStore ? 'Vérification...' : 'Digital Store'}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-1 text-sm">
-                    <span>FR</span>
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
+
                 </div>
 
                 <div className="mb-6">
                   <h1 className="text-2xl font-bold mb-2">Bienvenue, {formData.firstName || 'Utilisateur'} !</h1>
                   <p className="text-blue-100">Remplissez vos informations pour continuer</p>
                 </div>
+
+                {/* Affichage des produits */}
+                {checkoutData?.productName && (
+                  <div className="mb-6">
+                    <div className="text-sm text-blue-200 mb-3">Produit à acheter</div>
+                    <div className="bg-white/10 rounded-lg p-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            <path d="M3.103 6.034h17.794"></path>
+                            <path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path>
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-white font-medium">{checkoutData.productName}</div>
+                          <div className="text-blue-200 text-sm">
+                            Quantité: 1 • {isLoadingStore ? 'Chargement...' : (storeInfo?.name || storeName)}
+                          </div>
+                        </div>
+                        <div className="text-white font-bold">
+                          {checkoutData.price} F CFA
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mb-6">
                   <div className="text-sm text-blue-200 mb-1">Total</div>
@@ -1159,22 +1464,7 @@ export default function CheckoutComplete({
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-blue-200">Sous-total</span>
-                    <span>{(checkoutData?.price || price) - 100} F CFA</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-blue-200">Frais</span>
-                    <span>100 F CFA</span>
-                  </div>
-                  <div className="border-t border-blue-500 pt-4">
-                    <div className="flex items-center justify-between font-bold">
-                      <span>Total</span>
-                      <span>{checkoutData?.price || price} F CFA</span>
-                    </div>
-                  </div>
-                </div>
+
               </div>
 
               {/* Right Column - Payment Form */}
@@ -1183,7 +1473,7 @@ export default function CheckoutComplete({
                   <div className="text-sm text-gray-600 mb-2">Votre pays</div>
                   <CountrySelector
                     selectedCountry={selectedCountry}
-                    onCountrySelect={setSelectedCountry}
+                    onCountrySelect={handleCountryChange}
                   />
                 </div>
 
@@ -1195,11 +1485,13 @@ export default function CheckoutComplete({
                 />
 
                 {/* Coordonnées sauvegardées */}
-                {savedCustomers.length > 0 && (
                   <div className="mb-6">
-                    <div className="text-sm text-gray-600 mb-3">Coordonnées précédentes</div>
+                                      <div className="text-sm text-gray-600 mb-3">
+                      Coordonnées précédentes ({Math.min(savedCustomers.length, 2)})
+                    </div>
+                    {savedCustomers.length > 0 ? (
                     <div className="space-y-2">
-                      {savedCustomers.slice(0, 3).map((customer, index) => (
+                        {savedCustomers.slice(0, 2).map((customer, index) => (
                         <button
                           key={index}
                           type="button"
@@ -1237,8 +1529,12 @@ export default function CheckoutComplete({
                         </button>
                       ))}
                     </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 italic">
+                      Aucune coordonnée sauvegardée
                   </div>
                 )}
+                </div>
 
                 <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
                   <div>
@@ -1324,10 +1620,28 @@ export default function CheckoutComplete({
                     )}
                   </Button>
 
-                  <p className="text-xs text-gray-500 text-center">
-                    <span className="text-red-500">*</span> Des frais supplémentaires peuvent s'appliquer
-                  </p>
+
                 </form>
+
+                {/* Informations sur le provider utilisé */}
+                {providerInfo && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-600">Provider utilisé:</span>
+                        <ProviderInfo 
+                          provider={providerInfo.provider} 
+                          fallbackUsed={providerInfo.fallbackUsed} 
+                        />
+              </div>
+                      {providerInfo.fallbackUsed && (
+                        <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                          ⚠️ Fallback utilisé - Le provider principal était indisponible
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

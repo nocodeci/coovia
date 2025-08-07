@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
 
+// Styles CSS pour masquer la barre de défilement
+const scrollbarHideStyles = `
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
+  }
+`;
+
 interface PaymentMethod {
   id: string;
   name: string;
@@ -153,6 +164,180 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         country: 'Burkina Faso',
         available: true
       }
+    ],
+    'Cameroun': [
+      {
+        id: 'mtn-momo-cameroon',
+        name: 'MTN MoMo',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg',
+        country: 'Cameroun',
+        available: true
+      },
+      {
+        id: 'orange-cameroon',
+        name: 'Orange Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/orange_money.svg',
+        country: 'Cameroun',
+        available: true
+      }
+    ],
+    'République Démocratique du Congo': [
+      {
+        id: 'airtel-congo',
+        name: 'Airtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg',
+        country: 'République Démocratique du Congo',
+        available: true
+      },
+      {
+        id: 'orange-congo',
+        name: 'Orange Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/orange_money.svg',
+        country: 'République Démocratique du Congo',
+        available: true
+      },
+      {
+        id: 'vodacom-mpesa-congo',
+        name: 'Vodacom M-Pesa',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/vodacom_mpesa.svg',
+        country: 'République Démocratique du Congo',
+        available: true
+      }
+    ],
+    'Congo': [
+      {
+        id: 'airtel-congo-brazzaville',
+        name: 'Airtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg',
+        country: 'Congo',
+        available: true
+      },
+      {
+        id: 'mtn-momo-congo',
+        name: 'MTN MoMo',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg',
+        country: 'Congo',
+        available: true
+      }
+    ],
+    'Gabon': [
+      {
+        id: 'airtel-gabon',
+        name: 'Airtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg',
+        country: 'Gabon',
+        available: true
+      }
+    ],
+    'Rwanda': [
+      {
+        id: 'airtel-rwanda',
+        name: 'Airtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg',
+        country: 'Rwanda',
+        available: true
+      },
+      {
+        id: 'mtn-momo-rwanda',
+        name: 'MTN MoMo',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg',
+        country: 'Rwanda',
+        available: true
+      }
+    ],
+    'Zambie': [
+      {
+        id: 'mtn-momo-zambia',
+        name: 'MTN MoMo',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg',
+        country: 'Zambie',
+        available: true
+      },
+      {
+        id: 'airtel-money-zambia',
+        name: 'Airtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg',
+        country: 'Zambie',
+        available: true
+      },
+      {
+        id: 'zamtel-money-zambia',
+        name: 'Zamtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/zamtel_money.svg',
+        country: 'Zambie',
+        available: true
+      }
+    ],
+    'Ouganda': [
+      {
+        id: 'mtn-momo-uganda',
+        name: 'MTN MoMo',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg',
+        country: 'Ouganda',
+        available: true
+      },
+      {
+        id: 'airtel-money-uganda',
+        name: 'Airtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg',
+        country: 'Ouganda',
+        available: true
+      }
+    ],
+    'Tanzanie': [
+      {
+        id: 'mpesa-tanzania',
+        name: 'M-Pesa',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/mpesa.svg',
+        country: 'Tanzanie',
+        available: true
+      },
+      {
+        id: 'airtel-money-tanzania',
+        name: 'Airtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg',
+        country: 'Tanzanie',
+        available: true
+      },
+      {
+        id: 'tigo-pesa-tanzania',
+        name: 'Tigo Pesa',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/tigo_pesa.svg',
+        country: 'Tanzanie',
+        available: true
+      }
+    ],
+    'Kenya': [
+      {
+        id: 'mpesa-kenya',
+        name: 'M-Pesa',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/mpesa.svg',
+        country: 'Kenya',
+        available: true
+      },
+      {
+        id: 'airtel-money-kenya',
+        name: 'Airtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg',
+        country: 'Kenya',
+        available: true
+      }
+    ],
+    'Nigeria': [
+      {
+        id: 'mtn-momo-nigeria',
+        name: 'MTN MoMo',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/mtn_momo.svg',
+        country: 'Nigeria',
+        available: true
+      },
+      {
+        id: 'airtel-money-nigeria',
+        name: 'Airtel Money',
+        icon: 'https://assets.cdn.moneroo.io/icons/circle/airtel_money.svg',
+        country: 'Nigeria',
+        available: true
+      }
     ]
   };
 
@@ -161,9 +346,20 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     const availableMethods = paymentMethodsConfig[selectedCountry] || [];
     setMethods(availableMethods);
     
-    // Réinitialiser la sélection si le pays change
-    if (selectedMethod && !availableMethods.find(m => m.id === selectedMethod)) {
-      onMethodSelect('');
+    console.log('PaymentMethodSelector - selectedCountry:', selectedCountry);
+    console.log('PaymentMethodSelector - selectedMethod:', selectedMethod);
+    console.log('PaymentMethodSelector - availableMethods:', availableMethods);
+    
+    // Si aucune méthode n'est sélectionnée et qu'il y a des méthodes disponibles,
+    // pré-sélectionner la première méthode
+    if (!selectedMethod && availableMethods.length > 0) {
+      console.log('PaymentMethodSelector - Pré-sélection de:', availableMethods[0].id);
+      onMethodSelect(availableMethods[0].id);
+    }
+    // Réinitialiser la sélection si le pays change et que la méthode actuelle n'est pas disponible
+    else if (selectedMethod && !availableMethods.find(m => m.id === selectedMethod)) {
+      console.log('PaymentMethodSelector - Réinitialisation vers:', availableMethods[0]?.id || '');
+      onMethodSelect(availableMethods.length > 0 ? availableMethods[0].id : '');
     }
   }, [selectedCountry, selectedMethod, onMethodSelect]);
 
@@ -177,23 +373,12 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   }
 
   return (
-    <div className="mt-3">
+    <>
+      <style>{scrollbarHideStyles}</style>
+      <div className="mt-3">
       <div className="relative flex flex-row items-center">
-        {/* Bouton de navigation gauche */}
-        <button 
-          className="absolute md:-left-7 -left-2 top-1/2 z-10 bg-neutral-100 hover:bg-neutral-200 rounded-full p-1 transition-colors duration-200"
-          type="button"
-          style={{ transform: 'translateY(-50%)' }}
-          hidden={methods.length <= 3}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" strokeWidth="2" aria-hidden="true" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10" d="m15.0001 19.92-6.52-6.52c-.77-.77-.77-2.03 0-2.8L15 4.08"></path>
-          </svg>
-        </button>
-
         {/* Container des méthodes de paiement */}
-        <div className="grid grid-flow-col overflow-x-auto md:py-4 py-3 space-x-3 scroll-smooth transition-[width] duration-300 md:max-w-[400px] max-w-xs">
-          <div className="w-1 h-full min-w-[1rem] -mr-4"></div>
+        <div className="grid grid-flow-col overflow-x-auto md:py-4 py-3 space-x-3 scroll-smooth transition-[width] duration-300 md:max-w-[400px] max-w-xs scrollbar-hide">
           
           {methods.map((method) => (
             <div key={method.id} className="relative">
@@ -248,21 +433,11 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
             </div>
           ))}
 
-          <div className="w-1 h-full min-w-[1rem] -ml-4"></div>
-        </div>
 
-        {/* Bouton de navigation droite */}
-        <button 
-          className="absolute md:-right-8 -right-4 z-10 bg-neutral-100 hover:bg-neutral-200 rounded-full p-1 transition-colors duration-200"
-          type="button"
-          hidden={methods.length <= 3}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" strokeWidth="2" aria-hidden="true" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10" d="m8.91 19.92 6.5199-6.52c.77-.77.77-2.03 0-2.8l-6.52-6.52"></path>
-          </svg>
-        </button>
+        </div>
       </div>
     </div>
+    </>
   );
 };
 

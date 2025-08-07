@@ -9,5 +9,12 @@ export default function CheckoutPage() {
   console.log('🏪 CheckoutPage - StoreId depuis URL:', storeId);
   console.log('🌐 URL complète:', window.location.href);
 
-  return <CheckoutComplete storeId={storeId} />
+  return (
+    <CheckoutComplete 
+      storeId={storeId}
+      productId="default-product"
+      productName="Produit par défaut"
+      price={2000}
+    />
+  )
 } 

@@ -19,6 +19,8 @@ const TestPaydunyaIntegration: React.FC = () => {
           productId="test-product-123"
           productName="Produit de Test"
           price={5000}
+          storeName="NOCODE2"
+          storeLogo="N"
         />
       </div>
     </div>
