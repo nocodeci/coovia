@@ -386,6 +386,21 @@ Route::prefix('pawapay')->group(function () {
     Route::post('process/{country}/{method}', [App\Http\Controllers\PawapayController::class, 'processPayment']);
 });
 
+// Routes Smart Payment (Système Intelligent avec Fallback)
+Route::prefix('smart-payment')->group(function () {
+    Route::post('initialize', [App\Http\Controllers\SmartPaymentController::class, 'initializePayment']);
+    Route::post('check-status', [App\Http\Controllers\SmartPaymentController::class, 'checkPaymentStatus']);
+    Route::get('available-methods', [App\Http\Controllers\SmartPaymentController::class, 'getAvailableMethods']);
+    Route::get('provider-stats', [App\Http\Controllers\SmartPaymentController::class, 'getProviderStats']);
+    Route::post('process/{country}/{method}', [App\Http\Controllers\SmartPaymentController::class, 'processPayment']);
+});
+
+// Routes pour les informations de boutique (checkout)
+Route::prefix('store-info')->group(function () {
+    Route::get('/', [App\Http\Controllers\StoreController::class, 'index']);
+    Route::get('/{storeId}', [App\Http\Controllers\StoreController::class, 'show']);
+});
+
 // Route de debug (développement seulement)
 if (app()->environment('local')) {
     Route::get('/debug/routes', function () {

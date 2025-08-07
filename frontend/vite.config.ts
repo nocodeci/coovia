@@ -44,15 +44,12 @@ export default defineConfig({
           
           // Features par domaine
           'product-features': [
-            '@/features/produits',
             '@/components/ui/optimized/product-card',
           ],
           'media-features': [
-            '@/features/media',
             '@/components/MediaSelectorDialog',
           ],
           'cart-features': [
-            '@/features/panier',
             '@/hooks/use-optimized-products',
           ],
         },

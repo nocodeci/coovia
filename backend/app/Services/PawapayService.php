@@ -378,6 +378,30 @@ class PawapayService
     private function getProviderFromCountry($country, $paymentMethod)
     {
         $providers = [
+            'CIV' => [
+                'MTN_MOMO_CIV' => 'MTN_MOMO_CIV',
+                'ORANGE_CIV' => 'ORANGE_CIV'
+            ],
+            'CM' => [
+                'MTN_MOMO_CM' => 'MTN_MOMO_CM',
+                'ORANGE_CM' => 'ORANGE_CM'
+            ],
+            'CD' => [
+                'AIRTEL_CD' => 'AIRTEL_CD',
+                'ORANGE_CD' => 'ORANGE_CD',
+                'VODACOM_MPESA_CD' => 'VODACOM_MPESA_CD'
+            ],
+            'CG' => [
+                'AIRTEL_CG' => 'AIRTEL_CG',
+                'MTN_MOMO_CG' => 'MTN_MOMO_CG'
+            ],
+            'GA' => [
+                'AIRTEL_GA' => 'AIRTEL_GA'
+            ],
+            'RW' => [
+                'AIRTEL_RW' => 'AIRTEL_RW',
+                'MTN_MOMO_RW' => 'MTN_MOMO_RW'
+            ],
             'ZMB' => [
                 'mtn-momo-zambia' => 'MTN_MOMO_ZMB',
                 'airtel-money-zambia' => 'AIRTEL_MONEY_ZMB',
@@ -415,6 +439,12 @@ class PawapayService
         
         // S'assurer que le numéro commence par le préfixe pays
         $countryPrefixes = [
+            '225' => 'CIV', // Côte d'Ivoire
+            '237' => 'CM',  // Cameroun
+            '243' => 'CD',  // République Démocratique du Congo
+            '242' => 'CG',  // Congo
+            '241' => 'GA',  // Gabon
+            '250' => 'RW',  // Rwanda
             '260' => 'ZMB', // Zambie
             '256' => 'UG',  // Ouganda
             '255' => 'TZ',  // Tanzanie
@@ -429,8 +459,8 @@ class PawapayService
             }
         }
         
-        // Si pas de préfixe pays, ajouter celui de la Zambie par défaut
-        return '260' . $cleaned;
+        // Si pas de préfixe pays, ajouter celui de la Côte d'Ivoire par défaut
+        return '225' . $cleaned;
     }
 
     /**
@@ -579,6 +609,12 @@ class PawapayService
     private function getCurrencyFromCountry($country)
     {
         $currencies = [
+            'CIV' => 'XOF',
+            'CM' => 'XAF',
+            'CD' => 'CDF',
+            'CG' => 'XAF',
+            'GA' => 'XAF',
+            'RW' => 'RWF',
             'ZMB' => 'ZMW',
             'UG' => 'UGX',
             'TZ' => 'TZS',
@@ -586,6 +622,6 @@ class PawapayService
             'NG' => 'NGN'
         ];
 
-        return $currencies[$country] ?? 'ZMW';
+        return $currencies[$country] ?? 'XOF';
     }
 } 
