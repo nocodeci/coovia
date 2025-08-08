@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Coovia Laravel Backend",
   "engines": {
-    "node": "22.16.0"
+    "php": "8.2"
   },
   "scripts": {
     "build": "echo 'PHP application - no build required'",

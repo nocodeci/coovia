@@ -421,3 +421,10 @@ if (app()->environment('local')) {
         ]);
     });
 }
+// Routes pour Cloudflare R2
+Route::prefix('files')->group(function () {
+    Route::post('/upload', [App\Http\Controllers\FileController::class, 'upload']);
+    Route::post('/upload-image', [App\Http\Controllers\FileController::class, 'uploadImage']);
+    Route::delete('/delete', [App\Http\Controllers\FileController::class, 'delete']);
+    Route::get('/list', [App\Http\Controllers\FileController::class, 'list']);
+});
