@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowRight, ShoppingCart, Users, Settings, Zap, Shield, Globe } from 'lucide-react'
 
@@ -65,7 +65,7 @@ export default function HomePage() {
             </Link>
             <Link href="https://app.wozif.com">
               <Button variant="outline" size="lg" className="text-lg px-8">
-                Accéder à l'administration
+                Accéder à l&apos;administration
               </Button>
             </Link>
           </div>
@@ -156,7 +156,7 @@ export default function HomePage() {
               </div>
               <CardTitle>Disponible partout</CardTitle>
               <CardDescription>
-                Accédez à votre boutique depuis n'importe où avec notre interface 
+                Accédez à votre boutique depuis n&apos;importe où avec notre interface 
                 web responsive et nos applications mobiles.
               </CardDescription>
             </CardHeader>
@@ -218,7 +218,7 @@ export default function HomePage() {
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-slate-400">
                 <li><Link href="#" className="hover:text-white transition-colors">Documentation</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Centre d'aide</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Centre d&apos;aide</Link></li>
                 <li><Link href="#contact" className="hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
