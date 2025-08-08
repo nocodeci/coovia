@@ -1,0 +1,13 @@
+# Extensions PHP nécessaires pour Render
+pdo_pgsql
+pgsql
+mbstring
+openssl
+tokenizer
+xml
+ctype
+json
+bcmath
+fileinfo
+curl
+zip
