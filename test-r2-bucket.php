@@ -21,24 +21,20 @@ try {
     
     $s3Client = new S3Client($config);
     
-    // Test de connexion
-    $result = $s3Client->listBuckets();
-    echo "✅ Connexion R2 réussie!\n";
-    echo "📦 Buckets disponibles:\n";
-    foreach ($result['Buckets'] as $bucket) {
-        echo "- " . $bucket['Name'] . "\n";
-    }
+    // Test direct avec le bucket coovia-files
+    echo "📦 Test avec le bucket coovia-files...\n";
     
     // Test d'upload
     echo "📤 Test d'upload...\n";
     $testContent = "Test R2 " . date('Y-m-d H:i:s');
-    $s3Client->putObject([
+    $result = $s3Client->putObject([
         'Bucket' => 'coovia-files',
         'Key' => 'test/connection-test.txt',
         'Body' => $testContent,
         'ContentType' => 'text/plain',
     ]);
     echo "✅ Upload test réussi!\n";
+    echo "📄 ETag: " . $result['ETag'] . "\n";
     
     // Test de lecture
     echo "📥 Test de lecture...\n";
@@ -54,9 +50,24 @@ try {
     $publicUrl = "https://coovia-files.abf701097f61a1d3954f38fcc6b41e83.r2.cloudflarestorage.com/test/connection-test.txt";
     echo "🔗 URL: " . $publicUrl . "\n";
     
-    echo "�� Tous les tests sont passés avec succès!\n";
+    // Test de liste des objets dans le bucket
+    echo "📋 Liste des objets...\n";
+    $result = $s3Client->listObjects([
+        'Bucket' => 'coovia-files',
+        'MaxKeys' => 10
+    ]);
+    
+    if (isset($result['Contents'])) {
+        echo "📁 Objets trouvés:\n";
+        foreach ($result['Contents'] as $object) {
+            echo "- " . $object['Key'] . " (" . $object['Size'] . " bytes)\n";
+        }
+    } else {
+        echo "📁 Aucun objet trouvé\n";
+    }
+    
+    echo "🎉 Tous les tests sont passés avec succès!\n";
     
 } catch (Exception $e) {
     echo "❌ Erreur: " . $e->getMessage() . "\n";
-    echo "🔍 Détails: " . $e->getTraceAsString() . "\n";
 }

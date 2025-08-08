@@ -36,9 +36,9 @@ services:
   - key: DB_PASSWORD
     value: ${db.DATABASE_PASSWORD}
   - key: CLOUDFLARE_R2_ACCESS_KEY_ID
-    value: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
+    value: d8bd4ac4100f9d1af000d8b59c0d5810
   - key: CLOUDFLARE_R2_SECRET_ACCESS_KEY
-    value: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+    value: 67482928c8d1093677ad71131d0d63dcbf886d4e7385f1b904e7958af159ac1c
   - key: CLOUDFLARE_R2_BUCKET
     value: coovia-files
   - key: CLOUDFLARE_R2_URL
