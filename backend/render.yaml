@@ -3,15 +3,11 @@ services:
     name: coovia-backend
     env: php
     plan: free
-    buildCommand: |
-      composer install --no-dev --optimize-autoloader
-      php artisan config:cache
-      php artisan route:cache
-      php artisan view:cache
+    buildCommand: composer install --no-dev --optimize-autoloader
     startCommand: |
-      chmod +x deploy.sh
-      ./deploy.sh
-      vendor/bin/heroku-php-apache2 public/
+      chmod +x pre-deploy.sh
+      ./pre-deploy.sh
+      php artisan serve --host=0.0.0.0 --port=$PORT
     envVars:
       - key: APP_ENV
         value: production
