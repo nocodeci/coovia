@@ -18,7 +18,8 @@
         "laravel/ui": "^4.6",
         "moneroo/moneroo-laravel": "^0.1.2",
         "paydunya/paydunya": "^1.0",
-        "pragmarx/google2fa": "^8.0"
+        "pragmarx/google2fa": "^8.0",
+        "ext-pdo_pgsql": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
