@@ -10,12 +10,15 @@ git commit -m "Configuration Render"
 git push origin main
 ```
 
-### 2. Créer la Base de Données
-1. Aller sur [Render.com](https://render.com)
-2. **New** → **PostgreSQL**
-3. **Name**: `coovia-database`
-4. **Plan**: Free
-5. **Create Database**
+### 2. Configurer Supabase
+1. Aller sur [Supabase.com](https://supabase.com)
+2. Sélectionner votre projet existant
+3. **Settings** → **Database**
+4. Copier les informations de connexion :
+   - Host: `db.xxxxxxxxxxxxx.supabase.co`
+   - Database: `postgres`
+   - User: `postgres`
+   - Password: `[votre_mot_de_passe]`
 
 ### 3. Créer le Service Web
 1. **New** → **Web Service**
@@ -37,11 +40,11 @@ APP_URL=https://coovia-backend.onrender.com
 LOG_CHANNEL=stack
 LOG_LEVEL=error
 DB_CONNECTION=pgsql
-DB_HOST=[host de votre DB]
+DB_HOST=db.xxxxxxxxxxxxx.supabase.co
 DB_PORT=5432
-DB_DATABASE=coovia_db
-DB_USERNAME=coovia_user
-DB_PASSWORD=[mot de passe de votre DB]
+DB_DATABASE=postgres
+DB_USERNAME=postgres
+DB_PASSWORD=[votre_mot_de_passe_supabase]
 CACHE_DRIVER=file
 SESSION_DRIVER=file
 QUEUE_CONNECTION=sync
