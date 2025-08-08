@@ -31,6 +31,14 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
+# Tester la connexion Supabase
+echo "🗄️  Test de connexion Supabase..."
+if php artisan tinker --execute="try { DB::connection()->getPdo(); echo '✅ Connexion Supabase OK'; } catch(Exception \$e) { echo '❌ Erreur Supabase: ' . \$e->getMessage(); }"; then
+    echo "✅ Connexion Supabase réussie"
+else
+    echo "⚠️  Erreur de connexion Supabase - vérifier les variables d'environnement"
+fi
+
 # Exécuter les migrations
 echo "🗄️  Exécution des migrations..."
 php artisan migrate --force
