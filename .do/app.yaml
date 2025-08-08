@@ -1,0 +1,42 @@
+name: coovia-backend
+services:
+- name: backend
+  source_dir: /backend
+  github:
+    repo: koffiyohanerickouakou/coovia
+    branch: main
+  dockerfile_path: backend/Dockerfile
+  run_command: /usr/local/bin/start.sh
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 8000
+  health_check:
+    http_path: /api/health
+  envs:
+  - key: APP_ENV
+    value: production
+  - key: APP_DEBUG
+    value: "false"
+  - key: CACHE_DRIVER
+    value: file
+  - key: SESSION_DRIVER
+    value: file
+  - key: QUEUE_CONNECTION
+    value: sync
+  - key: DB_CONNECTION
+    value: pgsql
+  - key: DB_HOST
+    value: ${db.DATABASE_HOST}
+  - key: DB_PORT
+    value: ${db.DATABASE_PORT}
+  - key: DB_DATABASE
+    value: ${db.DATABASE_NAME}
+  - key: DB_USERNAME
+    value: ${db.DATABASE_USER}
+  - key: DB_PASSWORD
+    value: ${db.DATABASE_PASSWORD}
+
+databases:
+- name: db
+  engine: PG
+  version: "15"
