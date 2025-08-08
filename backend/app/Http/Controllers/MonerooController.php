@@ -15,6 +15,7 @@ class MonerooController extends Controller
     public function __construct()
     {
         // Le service sera créé avec l'ID utilisateur dans chaque méthode
+        $this->monerooService = null; // Initialiser à null, sera créé selon les besoins
     }
 
     /**
@@ -95,7 +96,10 @@ class MonerooController extends Controller
     public function checkPaymentStatus(string $paymentId): JsonResponse
     {
         try {
-            $result = $this->monerooService->checkPaymentStatus($paymentId);
+            $userId = Auth::id();
+            $monerooService = new MonerooService($userId);
+            
+            $result = $monerooService->checkPaymentStatus($paymentId);
 
             if ($result) {
                 return response()->json([
@@ -137,7 +141,10 @@ class MonerooController extends Controller
 
             $data = $request->all();
             
-            $result = $this->monerooService->processWebhook($data, $signature);
+            $userId = Auth::id();
+            $monerooService = new MonerooService($userId);
+            
+            $result = $monerooService->processWebhook($data, $signature);
 
             if ($result) {
                 return response()->json(['success' => true]);
