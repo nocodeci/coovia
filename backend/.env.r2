@@ -1,0 +1,9 @@
+# Cloudflare R2 Configuration
+CLOUDFLARE_R2_ACCESS_KEY_ID=your_access_key_id
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_secret_access_key
+CLOUDFLARE_R2_BUCKET=coovia-files
+CLOUDFLARE_R2_URL=https://coovia-files.abf701097f61a1d3954f38fcc6b41e83.r2.cloudflarestorage.com
+CLOUDFLARE_R2_ENDPOINT=https://abf701097f61a1d3954f38fcc6b41e83.r2.cloudflarestorage.com
+
+# Configuration par défaut
+FILESYSTEM_DISK=r2
