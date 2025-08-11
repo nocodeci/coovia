@@ -37,7 +37,7 @@ export default function SignUp() {
             </div>
             <div>
               <div className="text-neutral-900 text-lg font-bold">Alex Johnson</div>
-              <div className="text-neutral-500 text-sm">CEO chez Coovia</div>
+              <div className="text-neutral-500 text-sm">CEO chez Wozif</div>
             </div>
           </div>
         </div>

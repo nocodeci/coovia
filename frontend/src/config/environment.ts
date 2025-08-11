@@ -9,7 +9,7 @@ export const env = {
   API_AUDIENCE: import.meta.env.VITE_API_AUDIENCE || 'https://api.coovia.com',
 
   // Configuration de l'application
-  APP_NAME: import.meta.env.VITE_APP_NAME || 'Coovia',
+  APP_NAME: import.meta.env.VITE_APP_NAME || 'Wozif',
   APP_VERSION: import.meta.env.VITE_APP_VERSION || '1.0.0',
   APP_ENV: import.meta.env.VITE_APP_ENV || 'development',
 

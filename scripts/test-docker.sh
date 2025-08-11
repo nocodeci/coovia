@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Script de test Docker pour Coovia
+# Script de test Docker pour Wozif
 # Usage: ./scripts/test-docker.sh
 
 set -e
 
-echo "🧪 Test de la configuration Docker Coovia..."
+echo "🧪 Test de la configuration Docker Wozif..."
 
 # Couleurs pour les messages
 RED='\033[0;31m'

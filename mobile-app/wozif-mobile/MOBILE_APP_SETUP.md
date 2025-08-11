@@ -99,7 +99,7 @@ eas build:configure
 Projet 1: wozif-homepage (page d'accueil)
 └── wozif.com (domaine principal)
 
-Projet 2: coovia (frontend)
+Projet 2: wozif (frontend)
 └── app.wozif.com (administration)
 
 Projet 3: boutique-client (boutique publique)

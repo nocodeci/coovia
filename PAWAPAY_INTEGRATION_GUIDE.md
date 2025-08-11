@@ -1,4 +1,4 @@
-# 🚀 Guide d'Intégration Pawapay - Coovia
+# 🚀 Guide d'Intégration Pawapay - Wozif
 
 ## 📋 Table des Matières
 

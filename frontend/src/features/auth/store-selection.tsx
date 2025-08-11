@@ -151,7 +151,7 @@ export function StoreSelection() {
             <div className="w-24 h-24 mx-auto mb-6 bg-white rounded-3xl flex items-center justify-center shadow-lg">
               <img 
                 src="/assets/images/logo.svg" 
-                alt="Coovia Logo" 
+                alt="Wozif Logo" 
                 className="h-12 w-auto"
               />
             </div>

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Script de déploiement Docker pour Coovia
+# Script de déploiement Docker pour Wozif
 # Usage: ./scripts/docker-deploy.sh [dev|prod]
 
 set -e
 
 ENVIRONMENT=${1:-dev}
-echo "🐳 Déploiement Docker Coovia - Environnement: $ENVIRONMENT"
+echo "🐳 Déploiement Docker Wozif - Environnement: $ENVIRONMENT"
 
 # Couleurs pour les messages
 RED='\033[0;31m'

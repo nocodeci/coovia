@@ -50,7 +50,7 @@ git push origin main
 5. **Configurez le service :**
 
 **Configuration de base :**
-- **Name** : `coovia-backend`
+- **Name** : `wozif-backend`
 - **Environment** : `PHP`
 - **Region** : `Frankfurt (EU Central)` (recommandé)
 - **Branch** : `main`
@@ -77,10 +77,10 @@ Dans le dashboard Render, configurez ces variables :
 
 **Variables de Base :**
 ```env
-APP_NAME=Coovia
+APP_NAME=Wozif
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://coovia-backend.onrender.com
+APP_URL=https://wozif-backend.onrender.com
 LOG_CHANNEL=stack
 LOG_LEVEL=error
 CACHE_DRIVER=file
@@ -128,29 +128,29 @@ FRONTEND_URL=https://votre-frontend.vercel.app
 
 ```bash
 # Test de santé
-curl https://coovia-backend.onrender.com/api/health
+curl https://wozif-backend.onrender.com/api/health
 
 # Test de statut
-curl https://coovia-backend.onrender.com/api/status
+curl https://wozif-backend.onrender.com/api/status
 
 # Test de base
-curl https://coovia-backend.onrender.com/api/test
+curl https://wozif-backend.onrender.com/api/test
 
 # Test de connectivité
-curl https://coovia-backend.onrender.com/api/ping
+curl https://wozif-backend.onrender.com/api/ping
 ```
 
 ### 2. Test des API Principales
 
 ```bash
 # Test des stores
-curl https://coovia-backend.onrender.com/api/stores
+curl https://wozif-backend.onrender.com/api/stores
 
 # Test des produits
-curl https://coovia-backend.onrender.com/api/products
+curl https://wozif-backend.onrender.com/api/products
 
 # Test des commandes
-curl https://coovia-backend.onrender.com/api/orders
+curl https://wozif-backend.onrender.com/api/orders
 ```
 
 ### 3. Vérification des Logs
@@ -228,9 +228,9 @@ Render déploie automatiquement à chaque push sur la branche configurée.
 
 Après le déploiement réussi :
 
-- **Backend API** : `https://coovia-backend.onrender.com`
-- **Health Check** : `https://coovia-backend.onrender.com/api/health`
-- **API Status** : `https://coovia-backend.onrender.com/api/status`
+- **Backend API** : `https://wozif-backend.onrender.com`
+- **Health Check** : `https://wozif-backend.onrender.com/api/health`
+- **API Status** : `https://wozif-backend.onrender.com/api/status`
 
 ## 📞 Support et Documentation
 

@@ -89,16 +89,16 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
     }
 
     const result = await register({
-      name,
-      email,
-      password,
-      password_confirmation: passwordConfirmation
-    })
-    
+          name,
+          email,
+          password,
+          password_confirmation: passwordConfirmation
+        })
+        
     if (result.success) {
-      onSuccess?.()
-    }
-  }
+          onSuccess?.()
+        }
+      }
 
   const handleBackToEmail = () => {
     resetAuthStep()
@@ -126,7 +126,7 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
 
   // Mode inscription
   if (isRegistering) {
-    return (
+  return (
       <div className="w-full max-w-xs">
         <div className="text-left">
           <div className="text-2xl font-bold text-neutral-900 mb-2">Créer un compte</div>
@@ -154,13 +154,13 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
                 </svg>
               </div>
                              <input
-                 type="text"
-                 value={name}
-                 onChange={(e) => setName(e.target.value)}
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                  className="flex w-full min-w-0 border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] pl-10 h-12 rounded-xl border-neutral-200 focus:border-primary focus:ring-primary text-neutral-900"
-                 placeholder="Votre nom complet"
+                placeholder="Votre nom complet"
                  required
-               />
+              />
             </div>
           </div>
 
@@ -176,13 +176,13 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
                 </svg>
               </div>
                              <input
-                 type="email"
-                 value={email}
-                 onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                  className="flex w-full min-w-0 border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] pl-10 h-12 rounded-xl border-neutral-200 focus:border-primary focus:ring-primary text-neutral-900"
                  placeholder="nom@exemple.com"
-                 required
-               />
+                required
+              />
             </div>
           </div>
 
@@ -199,11 +199,11 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
               </div>
                              <input
                  type="password"
-                 value={password}
-                 onChange={(e) => setPassword(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                  className="flex w-full min-w-0 border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] pl-10 pr-10 h-12 rounded-xl border-neutral-200 focus:border-primary focus:ring-primary text-neutral-900"
-                 placeholder="Votre mot de passe"
-                 required
+                placeholder="Votre mot de passe"
+                required
                />
             </div>
           </div>
@@ -220,13 +220,13 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
                 </svg>
               </div>
                              <input
-                 type="password"
-                 value={passwordConfirmation}
-                 onChange={(e) => setPasswordConfirmation(e.target.value)}
+                type="password"
+                value={passwordConfirmation}
+                onChange={(e) => setPasswordConfirmation(e.target.value)}
                  className="flex w-full min-w-0 border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] pl-10 h-12 rounded-xl border-neutral-200 focus:border-primary focus:ring-primary text-neutral-900"
                  placeholder="Confirmer le mot de passe"
                  required
-               />
+              />
             </div>
           </div>
 
@@ -235,7 +235,7 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
           )}
 
           <button
-            type="submit"
+            type="submit" 
             disabled={isLoading}
             className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] shadow-xs px-4 py-2 w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
           >
@@ -315,7 +315,7 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
                  required
                />
               <button
-                type="button"
+              type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:text-accent-foreground rounded-md gap-1.5 absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
               >

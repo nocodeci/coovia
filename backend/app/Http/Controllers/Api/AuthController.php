@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Mail\OtpMail;
+use App\Services\MailtrapService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -201,12 +203,21 @@ class AuthController extends Controller
     {
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         
-        // En développement, on affiche l'OTP dans les logs
-        if (app()->environment('local')) {
+        try {
+            // Envoyer l'OTP par email via SMTP Mailtrap
+            Mail::to($user->email)->send(new OtpMail($otp, $user->email));
+            
+            \Log::info("OTP envoyé avec succès à {$user->email} via Mailtrap SMTP");
+            
+            // En développement, on affiche aussi l'OTP dans les logs pour faciliter les tests
+            if (app()->environment('local')) {
+                \Log::info("OTP pour {$user->email}: {$otp}");
+            }
+        } catch (\Exception $e) {
+            \Log::error("Erreur lors de l'envoi de l'OTP: " . $e->getMessage());
+            
+            // En cas d'erreur, on affiche l'OTP dans les logs pour ne pas bloquer le processus
             \Log::info("OTP pour {$user->email}: {$otp}");
-        } else {
-            // En production, envoyer par email
-            // Mail::to($user->email)->send(new OtpMail($otp));
         }
 
         return $otp;
