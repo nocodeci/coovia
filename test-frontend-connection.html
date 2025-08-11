@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Connexion Frontend-Backend</title>
+</head>
+<body>
+    <h1>Test de Connexion Frontend-Backend</h1>
+    
+    <div>
+        <h2>Test de la route validate-email</h2>
+        <button onclick="testValidateEmail()">Tester validate-email</button>
+        <div id="result1"></div>
+    </div>
+
+    <div>
+        <h2>Test de la route validate-password</h2>
+        <button onclick="testValidatePassword()">Tester validate-password</button>
+        <div id="result2"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000/api';
+
+        async function testValidateEmail() {
+            const resultDiv = document.getElementById('result1');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/validate-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: 'test@example.com' })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>✅ Succès !</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Headers CORS:</strong></p>
+                    <ul>
+                        <li>Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}</li>
+                        <li>Access-Control-Allow-Methods: ${response.headers.get('Access-Control-Allow-Methods')}</li>
+                        <li>Access-Control-Allow-Headers: ${response.headers.get('Access-Control-Allow-Headers')}</li>
+                    </ul>
+                    <p><strong>Réponse:</strong> ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Erreur !</h3>
+                    <p><strong>Erreur:</strong> ${error.message}</p>
+                `;
+            }
+        }
+
+        async function testValidatePassword() {
+            const resultDiv = document.getElementById('result2');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/validate-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        email: 'test@example.com',
+                        password: 'password123'
+                    })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>✅ Succès !</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Réponse:</strong> ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Erreur !</h3>
+                    <p><strong>Erreur:</strong> ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

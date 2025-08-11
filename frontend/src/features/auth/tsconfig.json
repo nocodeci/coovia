@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../../*"],
+      "@/features/auth/*": ["./*"]
+    },
+    "types": ["vitest/globals"]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
+}

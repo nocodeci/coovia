@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Laravel Artisan - Serveur de développement
+ * Port: 8001 (configuré dans le frontend)
+ */
+
+define('LARAVEL_START', microtime(true));
+
+// Charger l'autoloader de Composer
+require __DIR__.'/vendor/autoload.php';
+
+// Charger l'application Laravel
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+// Démarrer le serveur sur le port 8001
+$command = 'serve --host=0.0.0.0 --port=8001';
+$input = new Symfony\Component\Console\Input\StringInput($command);
+$output = new Symfony\Component\Console\Output\ConsoleOutput();
+
+// Exécuter la commande serve
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$status = $kernel->handle($input, $output);
+
+$kernel->terminate($input, $status);
+
+exit($status);

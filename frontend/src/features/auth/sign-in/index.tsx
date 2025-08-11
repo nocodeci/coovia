@@ -1,14 +1,12 @@
 "use client"
 
 import { useEffect } from "react"
-import { Link, useNavigate } from "@tanstack/react-router"
-import { UserAuthForm } from "./components/user-auth-form"
-import { ModernAuthForm } from "./components/modern-auth-form"
-import { MfaForm } from "./components/mfa-form"
-import { useAuth } from "@/hooks/useAuth"
+import { useNavigate } from "@tanstack/react-router"
+import { SanctumLoginForm } from "@/components/auth/SanctumLoginForm"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 
 export default function SignIn() {
-  const { isAuthenticated, mfaRequired } = useAuth()
+  const { isAuthenticated } = useSanctumAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -57,19 +55,7 @@ export default function SignIn() {
           </div>
 
         <div className="w-full max-w-xs">
-          {mfaRequired ? (
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-neutral-900 mb-2">
-                Authentification à deux facteurs
-              </h1>
-              <p className="text-sm text-neutral-500 mb-6">
-                Entrez votre code d'authentification à deux facteurs
-              </p>
-              <MfaForm />
-            </div>
-          ) : (
-            <ModernAuthForm />
-          )}
+          <SanctumLoginForm />
         </div>
       </div>
     </main>

@@ -10,17 +10,65 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
     /**
-     * Login user and create token
+     * Étape 1: Validation de l'email
      */
-    public function login(Request $request)
+    public function validateEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email invalide',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun compte trouvé avec cet email'
+            ], 404);
+        }
+
+        if (!$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Compte désactivé'
+            ], 403);
+        }
+
+        // Générer un token temporaire pour l'étape suivante
+        $tempToken = Str::random(32);
+        $cacheKey = "email_validation_{$tempToken}";
+        Cache::put($cacheKey, $user->email, 300); // 5 minutes
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email validé',
+            'temp_token' => $tempToken,
+            'step' => 'email_validated'
+        ]);
+    }
+
+    /**
+     * Étape 2: Validation du mot de passe
+     */
+    public function validatePassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string|min:6',
+            'temp_token' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -31,32 +79,105 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Vérifier le token temporaire
+        $cacheKey = "email_validation_{$request->temp_token}";
+        $cachedEmail = Cache::get($cacheKey);
+
+        if (!$cachedEmail || $cachedEmail !== $request->email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token de validation expiré ou invalide'
+            ], 401);
+        }
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Identifiants invalides'
+                'message' => 'Mot de passe incorrect'
             ], 401);
         }
 
-        // Vérifier si l'utilisateur est actif
-        if (!$user->is_active) {
+        // Générer et envoyer l'OTP
+        $otp = $this->generateAndSendOtp($user);
+
+        // Créer un nouveau token temporaire pour l'étape OTP
+        $otpToken = Str::random(32);
+        $otpCacheKey = "otp_validation_{$otpToken}";
+        Cache::put($otpCacheKey, [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'otp' => $otp
+        ], 300); // 5 minutes
+
+        // Supprimer l'ancien token
+        Cache::forget($cacheKey);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mot de passe validé. Code OTP envoyé par email.',
+            'otp_token' => $otpToken,
+            'step' => 'password_validated'
+        ]);
+    }
+
+    /**
+     * Étape 3: Connexion avec OTP
+     */
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp' => 'required|string|size:6',
+            'otp_token' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Compte désactivé'
-            ], 403);
+                'message' => 'Données invalides',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        // Générer un nouveau token
-        $token = Str::random(60);
-        $user->remember_token = $token;
+        // Vérifier le token OTP
+        $otpCacheKey = "otp_validation_{$request->otp_token}";
+        $otpData = Cache::get($otpCacheKey);
+
+        if (!$otpData || $otpData['email'] !== $request->email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token OTP expiré ou invalide'
+            ], 401);
+        }
+
+        // Vérifier l'OTP
+        if ($otpData['otp'] !== $request->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Code OTP incorrect'
+            ], 401);
+        }
+
+        $user = User::find($otpData['user_id']);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Utilisateur non trouvé'
+            ], 404);
+        }
+
+        // Créer un token Sanctum
+        $token = $user->createToken('auth-token')->plainTextToken;
+        
+        // Mettre à jour la dernière connexion
         $user->last_login_at = now();
         $user->save();
 
-        // Mettre en cache l'utilisateur avec TTL plus long
-        $cacheKey = "user_token_{$token}";
-        Cache::put($cacheKey, $user, 60 * 60); // 1 heure au lieu de 30 minutes
+        // Supprimer le token OTP
+        Cache::forget($otpCacheKey);
 
         return response()->json([
             'success' => true,
@@ -74,33 +195,28 @@ class AuthController extends Controller
     }
 
     /**
-     * Check authentication status - OPTIMISÉ
+     * Générer et envoyer l'OTP par email
+     */
+    private function generateAndSendOtp(User $user)
+    {
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        // En développement, on affiche l'OTP dans les logs
+        if (app()->environment('local')) {
+            \Log::info("OTP pour {$user->email}: {$otp}");
+        } else {
+            // En production, envoyer par email
+            // Mail::to($user->email)->send(new OtpMail($otp));
+        }
+
+        return $otp;
+    }
+
+    /**
+     * Check authentication status
      */
     public function checkAuth(Request $request)
     {
-        // Vérifier d'abord le cache pour éviter les requêtes DB
-        $token = $request->bearerToken();
-        if ($token) {
-            $cacheKey = "user_token_{$token}";
-            $cachedUser = Cache::get($cacheKey);
-            
-            if ($cachedUser) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Authentifié (cache)',
-                    'user' => [
-                        'id' => $cachedUser->id,
-                        'name' => $cachedUser->name,
-                        'email' => $cachedUser->email,
-                        'role' => $cachedUser->role,
-                        'created_at' => $cachedUser->created_at,
-                        'updated_at' => $cachedUser->updated_at,
-                    ]
-                ]);
-            }
-        }
-
-        // Fallback vers la DB si pas en cache
         $user = $request->user();
         
         if (!$user) {
@@ -108,67 +224,6 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Non authentifié'
             ], 401);
-        }
-
-        // Remettre en cache si trouvé en DB
-        if ($token) {
-            $cacheKey = "user_token_{$token}";
-            Cache::put($cacheKey, $user, 60 * 60);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Authentifié',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'created_at' => $user->created_at,
-                'updated_at' => $user->updated_at,
-            ]
-        ]);
-    }
-
-    /**
-     * Get current user info - OPTIMISÉ
-     */
-    public function me(Request $request)
-    {
-        // Même logique que checkAuth mais avec cache
-        $token = $request->bearerToken();
-        if ($token) {
-            $cacheKey = "user_token_{$token}";
-            $cachedUser = Cache::get($cacheKey);
-            
-            if ($cachedUser) {
-                return response()->json([
-                    'success' => true,
-                    'user' => [
-                        'id' => $cachedUser->id,
-                        'name' => $cachedUser->name,
-                        'email' => $cachedUser->email,
-                        'role' => $cachedUser->role,
-                        'created_at' => $cachedUser->created_at,
-                        'updated_at' => $cachedUser->updated_at,
-                    ]
-                ]);
-            }
-        }
-
-        $user = $request->user();
-        
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Non authentifié'
-            ], 401);
-        }
-
-        // Remettre en cache
-        if ($token) {
-            $cacheKey = "user_token_{$token}";
-            Cache::put($cacheKey, $user, 60 * 60);
         }
 
         return response()->json([
@@ -185,23 +240,15 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout user (Revoke the token)
+     * Logout user (Revoke the Sanctum token)
      */
     public function logout(Request $request)
     {
         $user = $request->user();
         
         if ($user) {
-            // Supprimer le token
-            $user->remember_token = null;
-            $user->save();
-
-            // Supprimer du cache
-            $token = $request->bearerToken();
-            if ($token) {
-                Cache::forget("user_token_{$token}");
-            }
-
+            // Révoquer le token Sanctum actuel
+            $request->user()->currentAccessToken()->delete();
         }
 
         return response()->json([
@@ -237,14 +284,8 @@ class AuthController extends Controller
             'is_active' => true,
         ]);
 
-        // Générer un token
-        $token = Str::random(60);
-        $user->remember_token = $token;
-        $user->save();
-
-        // Mettre en cache l'utilisateur
-        $cacheKey = "user_token_{$token}";
-        Cache::put($cacheKey, $user, 60 * 60);
+        // Créer un token Sanctum
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
             'success' => true,
@@ -262,7 +303,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Refresh user token
+     * Refresh user token with Sanctum
      */
     public function refresh(Request $request)
     {
@@ -275,25 +316,16 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Supprimer l'ancien token du cache
-        $oldToken = $request->bearerToken();
-        if ($oldToken) {
-            Cache::forget("user_token_{$oldToken}");
-        }
+        // Révoquer l'ancien token
+        $request->user()->currentAccessToken()->delete();
 
-        // Générer un nouveau token
-        $newToken = Str::random(60);
-        $user->remember_token = $newToken;
-        $user->save();
-
-        // Mettre en cache avec le nouveau token
-        $cacheKey = "user_token_{$newToken}";
-        Cache::put($cacheKey, $user, 60 * 60);
+        // Créer un nouveau token
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
             'success' => true,
             'message' => 'Token rafraîchi',
-            'token' => $newToken,
+            'token' => $token,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -305,60 +337,48 @@ class AuthController extends Controller
         ]);
     }
 
-    // Méthodes MFA pour compatibilité
-    public function verifyMfa(Request $request)
-    {
-        return response()->json([
-            'success' => false,
-            'message' => 'MFA non implémenté'
-        ], 501);
-    }
-
-    public function setupMfa(Request $request)
-    {
-        return response()->json([
-            'success' => false,
-            'message' => 'MFA non implémenté'
-        ], 501);
-    }
-
-    public function enableMfa(Request $request)
-    {
-        return response()->json([
-            'success' => false,
-            'message' => 'MFA non implémenté'
-        ], 501);
-    }
-
-    public function disableMfa(Request $request)
-    {
-        return response()->json([
-            'success' => false,
-            'message' => 'MFA non implémenté'
-        ], 501);
-    }
-
-    public function regenerateBackupCodes(Request $request)
-    {
-        return response()->json([
-            'success' => false,
-            'message' => 'MFA non implémenté'
-        ], 501);
-    }
-
+    /**
+     * Logout from all devices
+     */
     public function logoutAll(Request $request)
     {
         $user = $request->user();
         
         if ($user) {
-            // Supprimer tous les tokens de l'utilisateur
-            $user->remember_token = null;
-            $user->save();
+            // Révoquer tous les tokens de l'utilisateur
+            $user->tokens()->delete();
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Déconnexion de tous les appareils réussie'
+        ]);
+    }
+
+    /**
+     * Get current user info
+     */
+    public function me(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ]
         ]);
     }
 }

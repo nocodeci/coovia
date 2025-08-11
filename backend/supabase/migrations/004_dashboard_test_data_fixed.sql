@@ -1,4 +1,4 @@
--- Ajouter des données de test pour le dashboard
+-- Ajouter des données de test pour le dashboard (VERSION CORRIGÉE)
 -- Clients de test
 INSERT INTO public.customers (store_id, email, first_name, last_name, phone, total_spent, orders_count, created_at, updated_at) VALUES
 (1, 'jean.dupont@email.com', 'Jean', 'Dupont', '+225 07 12 34 56 78', 45000, 2, NOW() - INTERVAL '30 days', NOW()),
@@ -12,36 +12,36 @@ INSERT INTO public.customers (store_id, email, first_name, last_name, phone, tot
 (1, 'antoine.leroux@email.com', 'Antoine', 'Leroux', '+225 05 33 44 55 66', 112000, 2, NOW() - INTERVAL '1 day', NOW()),
 (1, 'camille.duval@email.com', 'Camille', 'Duval', '+225 07 22 33 44 55', 234000, 6, NOW() - INTERVAL '12 hours', NOW());
 
--- Commandes de test
-INSERT INTO public.orders (store_id, customer_id, order_number, status, total_amount, currency, payment_status, shipping_address, billing_address, notes, created_at, updated_at) VALUES
-(1, 1, 'ORD-001-001', 'completed', 25000, 'XOF', 'paid', '{"street": "Rue des Fleurs", "city": "Abidjan"}', '{"street": "Rue des Fleurs", "city": "Abidjan"}', 'Livraison express', NOW() - INTERVAL '30 days', NOW()),
-(1, 1, 'ORD-001-002', 'completed', 20000, 'XOF', 'paid', '{"street": "Avenue de la Paix", "city": "Abidjan"}', '{"street": "Avenue de la Paix", "city": "Abidjan"}', '', NOW() - INTERVAL '25 days', NOW()),
-(1, 2, 'ORD-001-003', 'completed', 32000, 'XOF', 'paid', '{"street": "Boulevard de la République", "city": "Abidjan"}', '{"street": "Boulevard de la République", "city": "Abidjan"}', '', NOW() - INTERVAL '20 days', NOW()),
-(1, 3, 'ORD-001-004', 'completed', 45000, 'XOF', 'paid', '{"street": "Rue du Commerce", "city": "Abidjan"}', '{"street": "Rue du Commerce", "city": "Abidjan"}', 'Livraison gratuite', NOW() - INTERVAL '18 days', NOW()),
-(1, 3, 'ORD-001-005', 'completed', 33000, 'XOF', 'paid', '{"street": "Avenue Noguès", "city": "Abidjan"}', '{"street": "Avenue Noguès", "city": "Abidjan"}', '', NOW() - INTERVAL '15 days', NOW()),
-(1, 4, 'ORD-001-006', 'completed', 35000, 'XOF', 'paid', '{"street": "Rue des Banques", "city": "Abidjan"}', '{"street": "Rue des Banques", "city": "Abidjan"}', '', NOW() - INTERVAL '12 days', NOW()),
-(1, 4, 'ORD-001-007', 'completed', 40000, 'XOF', 'paid', '{"street": "Boulevard Roume", "city": "Abidjan"}', '{"street": "Boulevard Roume", "city": "Abidjan"}', 'Cadeau', NOW() - INTERVAL '10 days', NOW()),
-(1, 4, 'ORD-001-008', 'completed', 30000, 'XOF', 'paid', '{"street": "Avenue Chardy", "city": "Abidjan"}', '{"street": "Avenue Chardy", "city": "Abidjan"}', '', NOW() - INTERVAL '8 days', NOW()),
-(1, 4, 'ORD-001-009', 'completed', 30000, 'XOF', 'paid', '{"street": "Rue du Plateau", "city": "Abidjan"}', '{"street": "Rue du Plateau", "city": "Abidjan"}', '', NOW() - INTERVAL '6 days', NOW()),
-(1, 5, 'ORD-001-010', 'completed', 55000, 'XOF', 'paid', '{"street": "Boulevard de Marseille", "city": "Abidjan"}', '{"street": "Boulevard de Marseille", "city": "Abidjan"}', 'Livraison express', NOW() - INTERVAL '5 days', NOW()),
-(1, 5, 'ORD-001-011', 'completed', 40000, 'XOF', 'paid', '{"street": "Avenue 16", "city": "Abidjan"}', '{"street": "Avenue 16", "city": "Abidjan"}', '', NOW() - INTERVAL '4 days', NOW()),
-(1, 6, 'ORD-001-012', 'completed', 67000, 'XOF', 'paid', '{"street": "Rue des Jardins", "city": "Abidjan"}', '{"street": "Rue des Jardins", "city": "Abidjan"}', '', NOW() - INTERVAL '3 days', NOW()),
-(1, 7, 'ORD-001-013', 'completed', 35000, 'XOF', 'paid', '{"street": "Boulevard de la Corniche", "city": "Abidjan"}', '{"street": "Boulevard de la Corniche", "city": "Abidjan"}', '', NOW() - INTERVAL '2 days', NOW()),
-(1, 7, 'ORD-001-014', 'completed', 28000, 'XOF', 'paid', '{"street": "Avenue des Banques", "city": "Abidjan"}', '{"street": "Avenue des Banques", "city": "Abidjan"}', '', NOW() - INTERVAL '2 days', NOW()),
-(1, 7, 'ORD-001-015', 'completed', 26000, 'XOF', 'paid', '{"street": "Rue du Commerce", "city": "Abidjan"}', '{"street": "Rue du Commerce", "city": "Abidjan"}', '', NOW() - INTERVAL '1 day', NOW()),
-(1, 8, 'ORD-001-016', 'completed', 45000, 'XOF', 'paid', '{"street": "Boulevard de la République", "city": "Abidjan"}', '{"street": "Boulevard de la République", "city": "Abidjan"}', 'Livraison express', NOW() - INTERVAL '1 day', NOW()),
-(1, 8, 'ORD-001-017', 'completed', 38000, 'XOF', 'paid', '{"street": "Avenue Noguès", "city": "Abidjan"}', '{"street": "Avenue Noguès", "city": "Abidjan"}', '', NOW() - INTERVAL '1 day', NOW()),
-(1, 8, 'ORD-001-018', 'completed', 42000, 'XOF', 'paid', '{"street": "Rue des Fleurs", "city": "Abidjan"}', '{"street": "Rue des Fleurs", "city": "Abidjan"}', '', NOW() - INTERVAL '12 hours', NOW()),
-(1, 8, 'ORD-001-019', 'completed', 31000, 'XOF', 'paid', '{"street": "Boulevard Roume", "city": "Abidjan"}', '{"street": "Boulevard Roume", "city": "Abidjan"}', '', NOW() - INTERVAL '12 hours', NOW()),
-(1, 8, 'ORD-001-020', 'completed', 29000, 'XOF', 'paid', '{"street": "Avenue Chardy", "city": "Abidjan"}', '{"street": "Avenue Chardy", "city": "Abidjan"}', '', NOW() - INTERVAL '6 hours', NOW()),
-(1, 9, 'ORD-001-021', 'completed', 56000, 'XOF', 'paid', '{"street": "Rue du Plateau", "city": "Abidjan"}', '{"street": "Rue du Plateau", "city": "Abidjan"}', '', NOW() - INTERVAL '6 hours', NOW()),
-(1, 9, 'ORD-001-022', 'completed', 56000, 'XOF', 'paid', '{"street": "Boulevard de Marseille", "city": "Abidjan"}', '{"street": "Boulevard de Marseille", "city": "Abidjan"}', '', NOW() - INTERVAL '4 hours', NOW()),
-(1, 10, 'ORD-001-023', 'completed', 45000, 'XOF', 'paid', '{"street": "Avenue 16", "city": "Abidjan"}', '{"street": "Avenue 16", "city": "Abidjan"}', 'Livraison express', NOW() - INTERVAL '3 hours', NOW()),
-(1, 10, 'ORD-001-024', 'completed', 38000, 'XOF', 'paid', '{"street": "Rue des Jardins", "city": "Abidjan"}', '{"street": "Rue des Jardins", "city": "Abidjan"}', '', NOW() - INTERVAL '2 hours', NOW()),
-(1, 10, 'ORD-001-025', 'completed', 42000, 'XOF', 'paid', '{"street": "Boulevard de la Corniche", "city": "Abidjan"}', '{"street": "Boulevard de la Corniche", "city": "Abidjan"}', '', NOW() - INTERVAL '1 hour', NOW()),
-(1, 10, 'ORD-001-026', 'completed', 35000, 'XOF', 'paid', '{"street": "Avenue des Banques", "city": "Abidjan"}', '{"street": "Avenue des Banques", "city": "Abidjan"}', '', NOW() - INTERVAL '30 minutes', NOW()),
-(1, 10, 'ORD-001-027', 'completed', 29000, 'XOF', 'paid', '{"street": "Rue du Commerce", "city": "Abidjan"}', '{"street": "Rue du Commerce", "city": "Abidjan"}', '', NOW() - INTERVAL '15 minutes', NOW()),
-(1, 10, 'ORD-001-028', 'completed', 31000, 'XOF', 'paid', '{"street": "Boulevard de la République", "city": "Abidjan"}', '{"street": "Boulevard de la République", "city": "Abidjan"}', '', NOW() - INTERVAL '5 minutes', NOW());
+-- Commandes de test (avec statuts et colonnes corrigés)
+INSERT INTO public.orders (store_id, customer_id, order_number, status, total_amount, currency, financial_status, shipping_address, billing_address, notes, created_at, updated_at) VALUES
+(1, 1, 'ORD-001-001', 'delivered', 25000, 'XOF', 'paid', '{"street": "Rue des Fleurs", "city": "Abidjan"}', '{"street": "Rue des Fleurs", "city": "Abidjan"}', 'Livraison express', NOW() - INTERVAL '30 days', NOW()),
+(1, 1, 'ORD-001-002', 'delivered', 20000, 'XOF', 'paid', '{"street": "Avenue de la Paix", "city": "Abidjan"}', '{"street": "Avenue de la Paix", "city": "Abidjan"}', '', NOW() - INTERVAL '25 days', NOW()),
+(1, 2, 'ORD-001-003', 'delivered', 32000, 'XOF', 'paid', '{"street": "Boulevard de la République", "city": "Abidjan"}', '{"street": "Boulevard de la République", "city": "Abidjan"}', '', NOW() - INTERVAL '20 days', NOW()),
+(1, 3, 'ORD-001-004', 'delivered', 45000, 'XOF', 'paid', '{"street": "Rue du Commerce", "city": "Abidjan"}', '{"street": "Rue du Commerce", "city": "Abidjan"}', 'Livraison gratuite', NOW() - INTERVAL '18 days', NOW()),
+(1, 3, 'ORD-001-005', 'delivered', 33000, 'XOF', 'paid', '{"street": "Avenue Noguès", "city": "Abidjan"}', '{"street": "Avenue Noguès", "city": "Abidjan"}', '', NOW() - INTERVAL '15 days', NOW()),
+(1, 4, 'ORD-001-006', 'delivered', 35000, 'XOF', 'paid', '{"street": "Rue des Banques", "city": "Abidjan"}', '{"street": "Rue des Banques", "city": "Abidjan"}', '', NOW() - INTERVAL '12 days', NOW()),
+(1, 4, 'ORD-001-007', 'delivered', 40000, 'XOF', 'paid', '{"street": "Boulevard Roume", "city": "Abidjan"}', '{"street": "Boulevard Roume", "city": "Abidjan"}', 'Cadeau', NOW() - INTERVAL '10 days', NOW()),
+(1, 4, 'ORD-001-008', 'delivered', 30000, 'XOF', 'paid', '{"street": "Avenue Chardy", "city": "Abidjan"}', '{"street": "Avenue Chardy", "city": "Abidjan"}', '', NOW() - INTERVAL '8 days', NOW()),
+(1, 4, 'ORD-001-009', 'delivered', 30000, 'XOF', 'paid', '{"street": "Rue du Plateau", "city": "Abidjan"}', '{"street": "Rue du Plateau", "city": "Abidjan"}', '', NOW() - INTERVAL '6 days', NOW()),
+(1, 5, 'ORD-001-010', 'delivered', 55000, 'XOF', 'paid', '{"street": "Boulevard de Marseille", "city": "Abidjan"}', '{"street": "Boulevard de Marseille", "city": "Abidjan"}', 'Livraison express', NOW() - INTERVAL '5 days', NOW()),
+(1, 5, 'ORD-001-011', 'delivered', 40000, 'XOF', 'paid', '{"street": "Avenue 16", "city": "Abidjan"}', '{"street": "Avenue 16", "city": "Abidjan"}', '', NOW() - INTERVAL '4 days', NOW()),
+(1, 6, 'ORD-001-012', 'delivered', 67000, 'XOF', 'paid', '{"street": "Rue des Jardins", "city": "Abidjan"}', '{"street": "Rue des Jardins", "city": "Abidjan"}', '', NOW() - INTERVAL '3 days', NOW()),
+(1, 7, 'ORD-001-013', 'delivered', 35000, 'XOF', 'paid', '{"street": "Boulevard de la Corniche", "city": "Abidjan"}', '{"street": "Boulevard de la Corniche", "city": "Abidjan"}', '', NOW() - INTERVAL '2 days', NOW()),
+(1, 7, 'ORD-001-014', 'delivered', 28000, 'XOF', 'paid', '{"street": "Avenue des Banques", "city": "Abidjan"}', '{"street": "Avenue des Banques", "city": "Abidjan"}', '', NOW() - INTERVAL '2 days', NOW()),
+(1, 7, 'ORD-001-015', 'delivered', 26000, 'XOF', 'paid', '{"street": "Rue du Commerce", "city": "Abidjan"}', '{"street": "Rue du Commerce", "city": "Abidjan"}', '', NOW() - INTERVAL '1 day', NOW()),
+(1, 8, 'ORD-001-016', 'delivered', 45000, 'XOF', 'paid', '{"street": "Boulevard de la République", "city": "Abidjan"}', '{"street": "Boulevard de la République", "city": "Abidjan"}', 'Livraison express', NOW() - INTERVAL '1 day', NOW()),
+(1, 8, 'ORD-001-017', 'delivered', 38000, 'XOF', 'paid', '{"street": "Avenue Noguès", "city": "Abidjan"}', '{"street": "Avenue Noguès", "city": "Abidjan"}', '', NOW() - INTERVAL '1 day', NOW()),
+(1, 8, 'ORD-001-018', 'delivered', 42000, 'XOF', 'paid', '{"street": "Rue des Fleurs", "city": "Abidjan"}', '{"street": "Rue des Fleurs", "city": "Abidjan"}', '', NOW() - INTERVAL '12 hours', NOW()),
+(1, 8, 'ORD-001-019', 'delivered', 31000, 'XOF', 'paid', '{"street": "Boulevard Roume", "city": "Abidjan"}', '{"street": "Boulevard Roume", "city": "Abidjan"}', '', NOW() - INTERVAL '12 hours', NOW()),
+(1, 8, 'ORD-001-020', 'delivered', 29000, 'XOF', 'paid', '{"street": "Avenue Chardy", "city": "Abidjan"}', '{"street": "Avenue Chardy", "city": "Abidjan"}', '', NOW() - INTERVAL '6 hours', NOW()),
+(1, 9, 'ORD-001-021', 'delivered', 56000, 'XOF', 'paid', '{"street": "Rue du Plateau", "city": "Abidjan"}', '{"street": "Rue du Plateau", "city": "Abidjan"}', '', NOW() - INTERVAL '6 hours', NOW()),
+(1, 9, 'ORD-001-022', 'delivered', 56000, 'XOF', 'paid', '{"street": "Boulevard de Marseille", "city": "Abidjan"}', '{"street": "Boulevard de Marseille", "city": "Abidjan"}', '', NOW() - INTERVAL '4 hours', NOW()),
+(1, 10, 'ORD-001-023', 'delivered', 45000, 'XOF', 'paid', '{"street": "Avenue 16", "city": "Abidjan"}', '{"street": "Avenue 16", "city": "Abidjan"}', 'Livraison express', NOW() - INTERVAL '3 hours', NOW()),
+(1, 10, 'ORD-001-024', 'delivered', 38000, 'XOF', 'paid', '{"street": "Rue des Jardins", "city": "Abidjan"}', '{"street": "Rue des Jardins", "city": "Abidjan"}', '', NOW() - INTERVAL '2 hours', NOW()),
+(1, 10, 'ORD-001-025', 'delivered', 42000, 'XOF', 'paid', '{"street": "Boulevard de la Corniche", "city": "Abidjan"}', '{"street": "Boulevard de la Corniche", "city": "Abidjan"}', '', NOW() - INTERVAL '1 hour', NOW()),
+(1, 10, 'ORD-001-026', 'delivered', 35000, 'XOF', 'paid', '{"street": "Avenue des Banques", "city": "Abidjan"}', '{"street": "Avenue des Banques", "city": "Abidjan"}', '', NOW() - INTERVAL '30 minutes', NOW()),
+(1, 10, 'ORD-001-027', 'delivered', 29000, 'XOF', 'paid', '{"street": "Rue du Commerce", "city": "Abidjan"}', '{"street": "Rue du Commerce", "city": "Abidjan"}', '', NOW() - INTERVAL '15 minutes', NOW()),
+(1, 10, 'ORD-001-028', 'delivered', 31000, 'XOF', 'paid', '{"street": "Boulevard de la République", "city": "Abidjan"}', '{"street": "Boulevard de la République", "city": "Abidjan"}', '', NOW() - INTERVAL '5 minutes', NOW());
 
 -- Transactions de paiement de test (pour le dashboard)
 INSERT INTO public.payment_transactions (store_id, order_id, gateway_id, transaction_id, gateway_transaction_id, amount, currency, status, gateway_response, metadata, processed_at, created_at, updated_at) VALUES
@@ -84,4 +84,4 @@ INSERT INTO public.payment_transactions (store_id, order_id, gateway_id, transac
 
 -- Transactions échouées (pour montrer la diversité)
 (1, NULL, 3, 'TXN-001-034', 'CP-001-011', 15000, 'XOF', 'failed', '{"status": "failed", "gateway": "cinetpay", "reason": "insufficient_funds"}', '{"payment_method": "orange_money"}', NULL, NOW() - INTERVAL '1 day', NOW()),
-(1, NULL, 1, 'TXN-001-035', 'PS-001-013', 22000, 'XOF', 'failed', '{"status": "failed", "gateway": "paystack", "reason": "card_declined"}', '{"payment_method": "card"}', NULL, NOW() - INTERVAL '2 days', NOW()); 
+(1, NULL, 1, 'TXN-001-035', 'PS-001-013', 22000, 'XOF', 'failed', '{"status": "failed", "gateway": "paystack", "reason": "card_declined"}', '{"payment_method": "card"}', NULL, NOW() - INTERVAL '2 days', NOW());
