@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Simple</title>
+</head>
+<body>
+    <h1>🧪 Test API Simple</h1>
+    <button onclick="testAPI()">Tester l'API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '🔄 Test en cours...';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/auth/validate-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: 'test@example.com' })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>✅ Succès !</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Réponse:</strong> ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Erreur</h3>
+                    <p><strong>Message:</strong> ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

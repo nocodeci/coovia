@@ -15,17 +15,31 @@ class Cors
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $response = $next($request);
-
-        $response->headers->set('Access-Control-Allow-Origin', '*');
-        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
-
+        // Gérer les requêtes OPTIONS (preflight)
         if ($request->isMethod('OPTIONS')) {
-            $response->setStatusCode(200);
-            $response->setContent('');
+            $response = response('', 200);
+            
+            // Forcer l'application des en-têtes CORS
+            $response->headers->set('Access-Control-Allow-Origin', $request->header('Origin', '*'));
+            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, X-CSRF-TOKEN');
+            $response->headers->set('Access-Control-Max-Age', '86400');
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
+            
+            return $response;
         }
 
+        $response = $next($request);
+
+        // Forcer l'application des en-têtes CORS à toutes les réponses
+        $response->headers->set('Access-Control-Allow-Origin', $request->header('Origin', '*'));
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, X-CSRF-TOKEN');
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
+        
+        // S'assurer que les en-têtes sont bien envoyés
+        $response->headers->set('Vary', 'Origin');
+        
         return $response;
     }
 } 

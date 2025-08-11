@@ -18,7 +18,12 @@ use App\Http\Controllers\TestMonerooController;
 use App\Http\Controllers\Api\MonerooConfigController;
 use App\Http\Controllers\Api\MonerooTestController;
 use App\Http\Controllers\Api\MonerooWebhookController;
+use App\Http\Controllers\LunarProductController;
 //use App\Http\Controllers\Api\StatsController;
+
+
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -132,13 +137,18 @@ Route::prefix('moneroo-config')->group(function () {
 });
 
 // Routes d'authentification (publiques)
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware(\App\Http\Middleware\Cors::class)->group(function () {
+    // Nouvelles routes pour l'authentification en 3 étapes
+    Route::post('validate-email', [AuthController::class, 'validateEmail']);
+    Route::post('validate-password', [AuthController::class, 'validatePassword']);
+    
+    // Routes existantes
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
     Route::post('verify-mfa', [AuthController::class, 'verifyMfa']);
 
-    // Routes protégées par authentification
-    Route::middleware('auth.api')->group(function () {
+    // Routes protégées par authentification Sanctum
+    Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::get('check', [AuthController::class, 'checkAuth']);
         Route::post('logout', [AuthController::class, 'logout']);
@@ -427,4 +437,22 @@ Route::prefix('files')->group(function () {
     Route::post('/upload-image', [App\Http\Controllers\FileController::class, 'uploadImage']);
     Route::delete('/delete', [App\Http\Controllers\FileController::class, 'delete']);
     Route::get('/list', [App\Http\Controllers\FileController::class, 'list']);
+});
+
+// Routes Lunar E-commerce
+Route::prefix('lunar')->group(function () {
+    // Routes publiques
+    Route::get('products', [LunarProductController::class, 'index']);
+    Route::get('products/{id}', [LunarProductController::class, 'show']);
+    Route::get('products/search', [LunarProductController::class, 'search']);
+    Route::get('products/featured', [LunarProductController::class, 'featured']);
+    Route::get('products/category/{categorySlug}', [LunarProductController::class, 'byCategory']);
+    Route::get('products/brand/{brandSlug}', [LunarProductController::class, 'byBrand']);
+    
+    // Routes protégées
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('products', [LunarProductController::class, 'store']);
+        Route::put('products/{id}', [LunarProductController::class, 'update']);
+        Route::delete('products/{id}', [LunarProductController::class, 'destroy']);
+    });
 });
