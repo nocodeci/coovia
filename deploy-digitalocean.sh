@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 Déploiement DigitalOcean App Platform pour Coovia Backend..."
+echo "🚀 Déploiement DigitalOcean App Platform pour Wozif Backend..."
 
 # Couleurs pour les messages
 RED='\033[0;31m'

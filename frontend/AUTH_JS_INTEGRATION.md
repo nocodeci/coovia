@@ -1,6 +1,6 @@
-# Intégration d'Auth.js dans Coovia
+# Intégration d'Auth.js dans Wozif
 
-Ce document explique comment Auth.js a été intégré dans votre projet Coovia pour remplacer l'authentification précédente.
+Ce document explique comment Auth.js a été intégré dans votre projet Wozif pour remplacer l'authentification précédente.
 
 ## 🚀 Installation
 
@@ -42,7 +42,7 @@ VITE_AUTH_SECRET=your-super-secret-key-here-change-in-production
 VITE_AUTH_URL=http://localhost:5173
 
 # Configuration de l'application
-VITE_APP_NAME=Coovia
+VITE_APP_NAME=Wozif
 VITE_APP_VERSION=1.0.0
 ```
 

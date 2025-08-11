@@ -340,7 +340,7 @@ const observer = new IntersectionObserver((entries) => {
 
 ```typescript
 // Variables d'environnement
-VITE_API_URL=https://api.coovia.com
+VITE_API_URL=https://api.wozif.com
 VITE_ENABLE_SW=true
 VITE_ENABLE_ANALYTICS=true
 ```
@@ -351,7 +351,7 @@ VITE_ENABLE_ANALYTICS=true
 <!-- Préconnexions DNS -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="dns-prefetch" href="https://api.coovia.com">
+<link rel="dns-prefetch" href="https://api.wozif.com">
 ```
 
 ---

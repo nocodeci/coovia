@@ -151,7 +151,7 @@ export function ModernAuthForm() {
 
       <div className="flex flex-col items-center justify-center mt-6">
         <div className="text-sm text-neutral-500">
-          Avez-vous précédemment acheté sur Coovia ?
+          Avez-vous précédemment acheté sur Wozif ?
         </div>
         <div className="text-sm">
           <span className="text-neutral-500">Accéder à vos achats</span>

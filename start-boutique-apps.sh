@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Démarrage des applications Coovia..."
+echo "🚀 Démarrage des applications Wozif..."
 
 # Fonction pour démarrer le serveur Laravel
 start_laravel() {

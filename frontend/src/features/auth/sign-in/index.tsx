@@ -28,7 +28,7 @@ export default function SignIn() {
       >
         <div className="bg-white rounded-[12px] p-6 max-w-sm mx-auto shadow-xl">
           <div className="text-neutral-900 text-2xl font-semibold mb-8">
-            La force de Coovia, c'est l'accompagnement personnalisé de chaque marchand. Que vous débutiez ou que vous soyez un vendeur expérimenté, nous sommes là pour vous aider à atteindre vos objectifs.
+            La force de Wozif, c'est l'accompagnement personnalisé de chaque marchand. Que vous débutiez ou que vous soyez un vendeur expérimenté, nous sommes là pour vous aider à atteindre vos objectifs.
           </div>
           <div className="flex flex-row items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
@@ -36,7 +36,7 @@ export default function SignIn() {
             </div>
             <div>
               <div className="text-neutral-900 text-lg font-bold">Yohan Kouakou</div>
-              <div className="text-neutral-500 text-sm">Lead Developer chez Coovia</div>
+              <div className="text-neutral-500 text-sm">Lead Developer chez Wozif</div>
             </div>
         </div>
         </div>

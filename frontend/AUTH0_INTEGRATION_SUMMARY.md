@@ -21,7 +21,7 @@ Vos clés Auth0 ont été intégrées avec succès dans le projet Wozif :
 - `src/context/auth0-context.tsx` - Mise à jour pour utiliser la nouvelle config
 
 ### 3. Pages et composants
-- `src/pages/home.tsx` - Mise à jour des références "Coovia" → "Wozif"
+- `src/pages/home.tsx` - Mise à jour des références "Wozif" → "Wozif"
 
 ### 4. Documentation
 - `AUTH0_SETUP.md` - Guide de configuration détaillé

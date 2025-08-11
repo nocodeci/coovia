@@ -32,7 +32,7 @@ VITE_API_URL=http://localhost:8000/api
 VITE_AUTH_TOKEN_KEY=auth_token
 
 # App Configuration
-VITE_APP_NAME=Coovia
+VITE_APP_NAME=Wozif
 VITE_APP_VERSION=1.0.0
 ```
 

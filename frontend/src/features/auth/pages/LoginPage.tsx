@@ -28,8 +28,8 @@ export const LoginPage: React.FC = () => {
           </h1>
           <p className="text-center text-sm text-gray-600">
             {isLoginMode 
-              ? 'Connectez-vous à votre compte Coovia' 
-              : 'Créez votre compte Coovia'
+              ? 'Connectez-vous à votre compte Wozif' 
+              : 'Créez votre compte Wozif'
             }
           </p>
         </div>
