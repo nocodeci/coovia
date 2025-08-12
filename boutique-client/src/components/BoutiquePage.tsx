@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Header from '../components/Header';
+import { StoreHeader } from './StoreHeader';
 import SearchFilters from '../components/SearchFilters';
 import ProductCard from '../components/ProductCard';
 import Footer from '../components/Footer';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { storeService } from '../services/api';
 import { BoutiquePageProps } from '../types/store';
+import { useSubdomain } from '../hooks/useSubdomain';
 
 function BoutiquePage({ storeId }: BoutiquePageProps) {
+  const { subdomain, isSubdomain } = useSubdomain();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedType, setSelectedType] = useState('');
@@ -67,6 +70,11 @@ function BoutiquePage({ storeId }: BoutiquePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Afficher l'en-tête de la boutique si on est sur un sous-domaine */}
+      {isSubdomain && store && subdomain && (
+        <StoreHeader store={store} subdomain={subdomain} />
+      )}
+      
       <Header 
         store={store}
         isMenuOpen={isMenuOpen}
@@ -74,7 +82,7 @@ function BoutiquePage({ storeId }: BoutiquePageProps) {
       />
 
       {/* Main Content */}
-      <main className="pt-20 pb-16">
+      <main className={`${isSubdomain ? 'pt-4' : 'pt-20'} pb-16`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Section */}
           <div className="text-center mb-12">

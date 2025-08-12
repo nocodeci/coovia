@@ -7,6 +7,10 @@
   "regions": ["cdg1"],
   "rewrites": [
     {
+      "source": "/api/store/:slug",
+      "destination": "/api/store/[slug].js"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
