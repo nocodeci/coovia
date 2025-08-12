@@ -107,14 +107,14 @@ class StoreController extends Controller
             ], 401);
         }
 
-        // Vérifier si l'utilisateur a déjà une boutique
-        $existingStore = Store::where('owner_id', $user->id)->first();
+        // Vérifier si le slug est déjà utilisé (pour éviter les conflits)
+        $existingStoreWithSlug = Store::where('slug', $request->slug)->first();
 
-        if ($existingStore) {
+        if ($existingStoreWithSlug) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous avez déjà une boutique'
-            ], 400);
+                'message' => 'Ce nom de boutique est déjà utilisé. Veuillez choisir un autre nom.'
+            ], 422);
         }
 
         try {
@@ -163,7 +163,7 @@ class StoreController extends Controller
             // Configuration Monneroo
             if ($request->input('settings.monneroo.enabled')) {
                 $settings['monneroo'] = [
-                    'enabled' => $request->input('settings.monneroo.enabled') === 'true',
+                    'enabled' => in_array($request->input('settings.monneroo.enabled'), ['true', '1', true, 1]),
                     'secretKey' => $request->input('settings.monneroo.secretKey'),
                     'environment' => $request->input('settings.monneroo.environment'),
                 ];
