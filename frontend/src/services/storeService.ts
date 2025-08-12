@@ -82,7 +82,7 @@ class StoreService {
       
       // Configuration Monneroo
       if (data.settings?.monneroo) {
-        formData.append('settings[monneroo][enabled]', data.settings.monneroo.enabled.toString())
+        formData.append('settings[monneroo][enabled]', data.settings.monneroo.enabled ? '1' : '0')
         if (data.settings.monneroo.secretKey) formData.append('settings[monneroo][secretKey]', data.settings.monneroo.secretKey)
         if (data.settings.monneroo.environment) formData.append('settings[monneroo][environment]', data.settings.monneroo.environment)
       }
@@ -94,7 +94,12 @@ class StoreService {
       })
       return response.data
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Erreur lors de la création de la boutique')
+      // Retourner la réponse d'erreur du backend si disponible
+      if (error.response?.data) {
+        return error.response.data
+      }
+      // Sinon, lancer une exception avec un message générique
+      throw new Error('Erreur lors de la création de la boutique')
     }
   }
 
