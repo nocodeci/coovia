@@ -123,6 +123,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   }
 
   const refreshStores = async () => {
+    console.log('🔄 refreshStores called')
     setHasLoaded(false)
     cache.delete(CACHE_KEYS.STORES)
     await loadStores(true) // Force refresh
@@ -154,7 +155,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
 
   // Charger les boutiques au montage du composant - OPTIMISÉ
   useEffect(() => {
-    const token = localStorage.getItem("auth_token")
+    const token = localStorage.getItem("sanctum_token")
     
     if (token) {
       // Vérifier immédiatement le cache

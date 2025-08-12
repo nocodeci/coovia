@@ -28,7 +28,7 @@ export const Route = createFileRoute('/clerk/_authenticated/user-management')({
 
 function UserManagement() {
   const [opened, setOpened] = useState(true)
-  const { isLoaded, isSignedIn } = useAuth()
+  const { isLoaded, isSignedIn } = useSanctumAuth()
 
   if (!isLoaded) {
     return (

@@ -10,7 +10,7 @@ import { Eye, EyeOff, Loader2, Mail, Lock, Store } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useAuth } from "@/hooks/useAuth"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const loginSchema = z.object({
@@ -22,7 +22,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 
 export function ModernAuthForm() {
   const [showPassword, setShowPassword] = useState(false)
-  const { login, isLoading } = useAuth()
+  const { login, isLoading } = useSanctumAuth()
   const navigate = useNavigate()
 
   const form = useForm<LoginFormData>({

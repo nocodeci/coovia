@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAuth } from "@/hooks/useAuth"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 
 const mfaSchema = z.object({
   code: z.string().min(6, "Le code doit contenir au moins 6 caractères"),
@@ -20,7 +20,7 @@ type MfaFormData = z.infer<typeof mfaSchema>
 
 export function MfaForm() {
   const [activeTab, setActiveTab] = useState("totp")
-  const { verifyMfa, mfaToken, backupCodesAvailable, resetMfaState, isLoading } = useAuth()
+  const { verifyMfa, mfaToken, backupCodesAvailable, resetMfaState, isLoading } = useSanctumAuth()
 
   const form = useForm<MfaFormData>({
     resolver: zodResolver(mfaSchema),

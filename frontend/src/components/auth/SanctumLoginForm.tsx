@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { useSanctumAuth } from '@/hooks/useSanctumAuth'
 
 interface SanctumLoginFormProps {
@@ -11,11 +12,14 @@ interface SanctumLoginFormProps {
 export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [otp, setOtp] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isRegistering, setIsRegistering] = useState(false)
   const [name, setName] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [isNewUser, setIsNewUser] = useState(false)
+  const [newUserMessage, setNewUserMessage] = useState('')
+
+  const navigate = useNavigate()
 
   const { 
     validateEmail, 
@@ -30,10 +34,12 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
     resetAuthStep 
   } = useSanctumAuth()
 
-  // Étape 1: Validation de l'email
+  // Étape 1: Validation de l'email avec Just-in-time registration
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     clearError()
+    setIsNewUser(false)
+    setNewUserMessage('')
 
     if (!email.trim()) {
       return
@@ -41,11 +47,16 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
 
     const result = await validateEmail(email)
     if (result.success) {
+      // Vérifier si c'est un nouvel utilisateur
+      if (result.isNewUser) {
+        setIsNewUser(true)
+        setNewUserMessage('Ce compte sera créé automatiquement')
+      }
       // L'étape suivante sera automatiquement activée
     }
   }
 
-  // Étape 2: Validation du mot de passe
+  // Étape 2: Validation du mot de passe avec Just-in-time registration
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     clearError()
@@ -55,25 +66,26 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
     }
 
     const result = await validatePassword(password)
-    if (result.success) {
-      // L'étape OTP sera automatiquement activée
+    console.log('Résultat validatePassword:', result)
+    
+    if (result.success && result.otp_token) {
+      // Rediriger vers la page OTP séparée avec les paramètres
+      const params = new URLSearchParams({
+        email: email,
+        otp_token: result.otp_token,
+        is_new_user: result.isNewUser ? 'true' : 'false'
+      })
+      
+      const otpUrl = `/otp?${params.toString()}`
+      console.log('Redirection vers:', otpUrl)
+      window.location.href = otpUrl
+    } else {
+      console.log('Échec de validation ou pas de otp_token')
+      // L'erreur sera gérée par le hook useSanctumAuth
     }
   }
 
-  // Étape 3: Connexion avec OTP
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    clearError()
 
-    if (!otp.trim() || otp.length !== 6) {
-      return
-    }
-
-    const result = await loginWithOtp(otp)
-    if (result.success) {
-      onSuccess?.()
-    }
-  }
 
   // Méthode legacy pour l'inscription
   const handleRegisterSubmit = async (e: React.FormEvent) => {
@@ -104,14 +116,12 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
     resetAuthStep()
     setEmail('')
     setPassword('')
-    setOtp('')
   }
 
   const handleBackToPassword = () => {
     // Pour simplifier, on revient à l'étape email
     resetAuthStep()
     setPassword('')
-    setOtp('')
   }
 
   const toggleMode = () => {
@@ -119,7 +129,6 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
     resetAuthStep()
     setEmail('')
     setPassword('')
-    setOtp('')
     setName('')
     setPasswordConfirmation('')
   }
@@ -264,8 +273,7 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
 
       <form onSubmit={
         authStep.step === 'email' ? handleEmailSubmit :
-        authStep.step === 'password' ? handlePasswordSubmit :
-        handleOtpSubmit
+        handlePasswordSubmit
       } className="space-y-4">
         
         {/* Champ email - toujours visible */}
@@ -328,41 +336,27 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
           </div>
         )}
 
-        {/* Champ OTP - visible seulement à l'étape OTP */}
-        {authStep.step === 'otp' && (
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-neutral-900 mb-1 block">
-              Code de vérification<span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-neutral-400">
-                  <path d="M9 12l2 2 4-4"></path>
-                  <path d="M21 12c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z"></path>
-                  <path d="M3 12c1 0 2-1 2-2s-1-2-2-2-2 1-2 2 1 2 2 2z"></path>
-                  <path d="M12 3c0 1-1 2-2 2s-2-1-2-2 1-2 2-2 2 1 2 2z"></path>
-                  <path d="M12 21c0-1 1-2 2-2s2 1 2 2-1 2-2 2-2-1-2-2z"></path>
-                </svg>
-              </div>
-                             <input
-                 type="text"
-                 value={otp}
-                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                 className="flex w-full min-w-0 border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] pl-10 h-12 rounded-xl border-neutral-200 focus:border-primary focus:ring-primary text-center text-lg text-neutral-900"
-                 placeholder="000000"
-                 maxLength={6}
-                 required
-               />
-            </div>
-            <p className="text-xs text-neutral-500 mt-1">
-              Code envoyé à votre email
-            </p>
-          </div>
-        )}
+
 
         {/* Messages d'erreur */}
         {error && (
           <div className="text-red-500 text-sm">{error}</div>
+        )}
+
+        {/* Messages pour nouveaux utilisateurs */}
+        {isNewUser && newUserMessage && (
+          <div className="text-green-600 text-sm bg-green-50 p-3 rounded-lg border border-green-200">
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                <path d="M9 12l2 2 4-4"></path>
+                <path d="M21 12c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z"></path>
+                <path d="M3 12c1 0 2-1 2-2s-1-2-2-2-2 1-2 2 1 2 2 2z"></path>
+                <path d="M12 3c0 1-1 2-2 2s-2-1-2-2 1-2 2-2 2 1 2 2z"></path>
+                <path d="M12 21c0-1 1-2 2-2s2 1 2 2-1 2-2 2-2-1-2-2z"></path>
+              </svg>
+              <span>{newUserMessage}</span>
+            </div>
+          </div>
         )}
 
         {/* Bouton principal */}
@@ -372,9 +366,8 @@ export function SanctumLoginForm({ onSuccess, onSwitchToAuth0 }: SanctumLoginFor
           className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] shadow-xs px-4 py-2 w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
         >
           {isLoading ? 'Vérification...' : 
-           authStep.step === 'email' ? 'Continuer' :
-           authStep.step === 'password' ? 'Continuer' :
-           'Se connecter'}
+           authStep.step === 'email' ? (isNewUser ? 'Créer un compte' : 'Continuer') :
+           (isNewUser ? 'Créer le compte' : 'Continuer')}
         </button>
       </form>
 

@@ -9,7 +9,7 @@ import { StoreGuard } from '@/components/layout/store-guard'
 import SkipToMain from '@/components/skip-to-main'
 import { TokenWarning } from '@/components/token-warning'
 import { useStore } from '@/context/store-context'
-import { useAuth } from '@/hooks/useAuth'
+import { useSanctumAuth } from '@/hooks/useSanctumAuth'
 
 interface Props {
   children?: React.ReactNode
@@ -19,14 +19,14 @@ export function AuthenticatedLayout({ children }: Props) {
   const defaultOpen = Cookies.get('sidebar_state') !== 'false'
   const location = useLocation()
   const { isLoading: storesLoading, hasLoaded } = useStore()
-  const { isLoading: authLoading, hasCheckedAuth } = useAuth()
+  const { isLoading: authLoading, isAuthenticated } = useSanctumAuth()
   
   // Ne pas afficher la sidebar sur store-selection, create-store et pendant le chargement
   const isStandalonePage = location.pathname === '/store-selection' || location.pathname === '/create-store'
-  const isLoading = authLoading || storesLoading || !hasCheckedAuth || !hasLoaded
+  const isLoading = authLoading || storesLoading || !isAuthenticated || !hasLoaded
   
   // Afficher le sidebar même pendant le chargement pour éviter le flash
-  const shouldShowSidebar = !isStandalonePage && (hasCheckedAuth || !authLoading)
+  const shouldShowSidebar = !isStandalonePage && (isAuthenticated || !authLoading)
   
   return (
     <StoreProvider>

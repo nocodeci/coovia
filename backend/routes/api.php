@@ -219,10 +219,17 @@ Route::get('/products', function () {
 });
 
 // Routes protégées par authentification
-Route::middleware('auth.api')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
 
-    // Gestion des boutiques
-    Route::apiResource('stores', StoreController::class);
+    // Gestion des boutiques (Just-in-time registration)
+    Route::prefix('stores')->group(function () {
+        Route::post('create', [StoreController::class, 'createStore']); // Création de boutique pour nouveaux utilisateurs
+        Route::get('my-store', [StoreController::class, 'getMyStore']); // Obtenir sa boutique
+        Route::put('my-store', [StoreController::class, 'updateStore']); // Mettre à jour sa boutique
+    });
+    
+    // Routes existantes pour les boutiques
+    Route::apiResource('stores', StoreController::class)->except(['create']);
     Route::get('stores/{store}/products', [ProductController::class, 'index']);
     Route::post('stores/{store}/products', [ProductController::class, 'store']);
 

@@ -9,7 +9,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { routeTree } from "./routeTree.gen"
 
 // Import providers
-import { AuthProvider } from "@/hooks/useAuth"
+import { SanctumProvider } from "@/providers/sanctum-provider"
 import { ThemeProvider } from "@/context/theme-context"
 import { StoreProvider } from "@/context/store-context"
 
@@ -43,11 +43,11 @@ if (!rootElement.innerHTML) {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <AuthProvider>
+          <SanctumProvider>
             <StoreProvider>
               <RouterProvider router={router} />
             </StoreProvider>
-          </AuthProvider>
+          </SanctumProvider>
         </ThemeProvider>
         
         {/* React Query DevTools - seulement en développement */}

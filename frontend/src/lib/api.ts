@@ -26,7 +26,7 @@ class ApiService {
 
   constructor() {
     this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-    this.token = localStorage.getItem('auth_token')
+    this.token = localStorage.getItem('sanctum_token')
   }
 
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -37,7 +37,10 @@ class ApiService {
       ...(options.headers as Record<string, string>),
     }
 
-    if (this.token) {
+    // Récupérer le token depuis localStorage à chaque requête
+    const currentToken = localStorage.getItem('sanctum_token')
+    if (currentToken) {
+      this.token = currentToken
       headers['Authorization'] = `Bearer ${this.token}`
     }
 
@@ -45,6 +48,9 @@ class ApiService {
       ...options,
       headers,
     }
+
+    console.log('🌐 Making request to:', url)
+    console.log('🔑 Headers:', headers)
 
     try {
       const response = await fetch(url, config)
@@ -86,7 +92,7 @@ class ApiService {
     if (response.success && response.token) {
       this.token = response.token
       if (this.token) {
-        localStorage.setItem('auth_token', this.token)
+        localStorage.setItem('sanctum_token', this.token)
       }
     }
     
@@ -96,9 +102,9 @@ class ApiService {
   setToken(token: string) {
     this.token = token
     if (token) {
-      localStorage.setItem('auth_token', token)
+      localStorage.setItem('sanctum_token', token)
     } else {
-      localStorage.removeItem('auth_token')
+      localStorage.removeItem('sanctum_token')
     }
   }
 
@@ -107,7 +113,7 @@ class ApiService {
       await this.request('/auth/logout', { method: 'POST' })
     } finally {
       this.token = null
-      localStorage.removeItem('auth_token')
+      localStorage.removeItem('sanctum_token')
       
       // Nettoyer tout le cache lors de la déconnexion
       cache.clear()
@@ -171,17 +177,31 @@ class ApiService {
 
   // Store methods - OPTIMISÉ
   async getStores() {
+    console.log('🔍 getStores called')
+    
     // Vérifier le cache d'abord avec TTL plus long
     const cachedStores = cache.get(CACHE_KEYS.STORES)
     if (cachedStores) {
+      console.log('📦 Returning cached stores:', cachedStores)
       return { success: true, data: cachedStores }
     }
     
-    const response = await this.request('/stores')
+    console.log('🌐 Making API request to /stores')
+    const response = await this.request('/stores') as any
+    console.log('📡 API response:', response)
     
-    // Mettre en cache si la requête réussit avec TTL plus long
-    if (response.success && response.data) {
-      cache.set(CACHE_KEYS.STORES, response.data, 15 * 60 * 1000) // 15 minutes
+    // Transformer la réponse pour correspondre à l'interface attendue
+    if (response.success && response.stores) {
+      const transformedResponse = {
+        success: true,
+        data: response.stores,
+        message: response.message
+      }
+      
+      // Mettre en cache si la requête réussit avec TTL plus long
+      cache.set(CACHE_KEYS.STORES, response.stores, 15 * 60 * 1000) // 15 minutes
+      
+      return transformedResponse
     }
     
     return response

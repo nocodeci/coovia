@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 
 export default function HomePage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated } = useSanctumAuth()
   const navigate = useNavigate()
 
   const handleGetStarted = () => {

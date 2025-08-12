@@ -18,7 +18,7 @@ export function ProtectedRoute({
   requiredRole, 
   fallback 
 }: ProtectedRouteProps) {
-  const { user, isAuthenticated, isLoading, hasCheckedAuth, login } = useAuth()
+  const { user, isAuthenticated, isLoading, hasCheckedAuth, login } = useSanctumAuth()
   const navigate = useNavigate()
 
   // Afficher un loader pendant la vérification de l'authentification
@@ -132,7 +132,7 @@ export function withAuth<P extends object>(
 
 // Hook pour vérifier les permissions
 export function usePermissions() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated } = useSanctumAuth()
 
   const hasRole = (role: string) => {
     return isAuthenticated && user?.role === role

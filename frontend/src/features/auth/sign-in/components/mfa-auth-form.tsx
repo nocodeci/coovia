@@ -38,7 +38,7 @@ export function MfaAuthForm() {
     submitPassword, 
     submitOtp, 
     resetAuth 
-  } = useAuth()
+  } = useSanctumAuth()
 
   const emailForm = useForm<EmailFormData>({
     resolver: zodResolver(emailSchema),

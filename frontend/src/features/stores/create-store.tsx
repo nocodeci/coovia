@@ -1,188 +1,347 @@
-import { useState } from "react"
-import { useNavigate } from "@tanstack/react-router"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Smile, Users, Sparkles } from "lucide-react"
-import { toast } from "sonner"
+"use client"
 
-interface CreateStoreProps {
-  onBack?: () => void
-}
+import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { useAuth } from '@/hooks/useAuthQuery'
+import { storeService } from '@/services/storeService'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
+import { toast } from 'sonner'
 
-export function CreateStore({ onBack }: CreateStoreProps) {
+export function CreateStore() {
   const navigate = useNavigate()
-  const [selectedExperience, setSelectedExperience] = useState<string>("")
+  const { data: user } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 4
-
-  const handleExperienceSelect = (experience: string) => {
-    setSelectedExperience(experience)
-  }
-
-  const handleContinue = () => {
-    if (!selectedExperience) {
-      toast.error("Veuillez sélectionner votre niveau d'expérience")
-      return
+  const [isLoading, setIsLoading] = useState(false)
+  
+  // Form data
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    category: 'digital',
+    address: {
+      street: '',
+      city: '',
+      country: 'Côte d\'Ivoire'
+    },
+    contact: {
+      email: '',
+      phone: ''
+    },
+    settings: {
+      digitalDelivery: true,
+      autoDelivery: true,
+      paymentMethods: ['mobile_money', 'card'],
+      currency: 'XOF'
     }
-    
-    // Ici vous pouvez ajouter la logique pour passer à l'étape suivante
-    setCurrentStep(currentStep + 1)
-    toast.success("Étape suivante")
+  })
+
+  const updateFormData = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
   }
 
-  const handleBack = () => {
+  const updateNestedField = (parent: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [parent]: {
+        ...(prev[parent as keyof typeof prev] as any),
+        [field]: value
+      }
+    }))
+  }
+
+  const nextStep = () => {
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
-    } else if (onBack) {
-      onBack()
-    } else {
-      navigate({ to: "/store-selection" })
+    }
+  }
+
+  const handleSubmit = async () => {
+    setIsLoading(true)
+    
+    try {
+      const response = await storeService.createStore(formData)
+      
+      if (response.success) {
+        toast.success('Boutique créée avec succès!', {
+          description: 'Votre boutique de produits digitaux est maintenant active.'
+        })
+        navigate({ to: '/store-selection' })
+      } else {
+        toast.error('Erreur lors de la création', {
+          description: response.message || 'Une erreur est survenue'
+        })
+      }
+    } catch (error: any) {
+      toast.error('Erreur de connexion', {
+        description: error.message || 'Impossible de créer la boutique'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Créer votre boutique digitale
+              </h2>
+              <p className="text-gray-600 mt-2">
+                Commençons par les informations de base de votre boutique
+              </p>
+            </div>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Nom de la boutique <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => updateFormData('name', e.target.value)}
+                      placeholder="Ma Boutique Digitale"
+                      className="h-12"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => updateFormData('description', e.target.value)}
+                      placeholder="Décrivez votre boutique et vos produits digitaux..."
+                      rows={3}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Spécialisation digitale
+              </h2>
+              <p className="text-gray-600 mt-2">
+                Configurez votre boutique pour les produits digitaux
+              </p>
+            </div>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <h4 className="font-semibold text-gray-900 mb-2">Produits digitaux</h4>
+                  <p className="text-sm text-gray-600">
+                    E-books, logiciels, cours en ligne, musique, etc.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Configuration
+              </h2>
+              <p className="text-gray-600 mt-2">
+                Paramètres de paiement et de livraison
+              </p>
+            </div>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Email de contact
+                    </label>
+                    <Input
+                      value={formData.contact.email}
+                      onChange={(e) => updateNestedField('contact', 'email', e.target.value)}
+                      placeholder="contact@maboutique.com"
+                      type="email"
+                      className="h-10"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Téléphone
+                    </label>
+                    <Input
+                      value={formData.contact.phone}
+                      onChange={(e) => updateNestedField('contact', 'phone', e.target.value)}
+                      placeholder="+2250123456789"
+                      className="h-10"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Finalisation
+              </h2>
+              <p className="text-gray-600 mt-2">
+                Vérifiez les informations et créez votre boutique
+              </p>
+            </div>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span className="font-medium">Nom de la boutique</span>
+                    <span className="text-gray-600">{formData.name || 'Non renseigné'}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span className="font-medium">Type de produits</span>
+                    <span className="text-green-600 font-medium">Produits digitaux</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span className="font-medium">Email de contact</span>
+                    <span className="text-gray-600">{formData.contact.email || 'Non renseigné'}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )
+
+      default:
+        return null
     }
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="bg-card/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-border/20 w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        {/* Header avec logo */}
-        <div className="flex justify-between items-center p-8 pb-6 border-b border-border">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
-              <Sparkles className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Coovia</h1>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-muted-foreground">Preview</span>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <img
+              src="/assets/images/logo.svg"
+              alt="Coovia"
+              className="h-8 w-auto"
+            />
+            <span className="text-sm text-gray-500 hidden sm:inline">
+              Création de boutique
+            </span>
           </div>
+          
+          <Button
+            variant="outline"
+            onClick={() => navigate({ to: '/store-selection' })}
+            className="rounded-lg"
+          >
+            Annuler
+          </Button>
         </div>
 
-        {/* Contenu principal avec scroll */}
-        <div className="p-8 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {/* Barre de progression */}
+        <div className="max-w-4xl mx-auto">
+          {/* Progress Steps */}
           <div className="mb-8">
-            <div className="flex gap-2">
-              {Array.from({ length: totalSteps }, (_, index) => (
-                <div
-                  key={index}
-                  className={`w-12 h-2 rounded-full transition-all duration-300 ${
-                    index + 1 <= currentStep 
-                      ? "bg-primary" 
-                      : "bg-muted"
-                  }`}
-                />
+            <div className="flex items-center justify-between">
+              {[1, 2, 3, 4].map((step, index) => (
+                <div key={step} className="flex items-center">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                    currentStep >= step 
+                      ? 'bg-blue-600 border-blue-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-500'
+                  }`}>
+                    {step}
+                  </div>
+                  {index < 3 && (
+                    <div className={`w-16 h-0.5 mx-2 ${
+                      currentStep > step ? 'bg-blue-600' : 'bg-gray-300'
+                    }`} />
+                  )}
+                </div>
               ))}
             </div>
-          </div>
-
-          {/* Contenu de l'étape */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-3">
-              Quelle est votre expérience de la vente en ligne ?
-            </h2>
-            <p className="text-muted-foreground text-lg mb-8">
-              Parlez-nous de votre niveau d'expérience afin que nous puissions personnaliser la configuration de votre boutique.
-            </p>
-
-            <div className="space-y-4">
-              {/* Option Débutant */}
-              <button
-                className="w-full text-left group"
-                onClick={() => handleExperienceSelect("just_starting")}
-              >
-                <div className={`p-6 border rounded-2xl transition-all duration-300 hover:shadow-lg ${
-                  selectedExperience === "just_starting" 
-                    ? "border-primary bg-primary/5 shadow-lg" 
-                    : "border-border hover:border-primary/30 hover:bg-card/50"
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                        selectedExperience === "just_starting"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground group-hover:bg-primary/10"
-                      }`}>
-                        <Smile className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <span className="font-semibold text-lg text-foreground block">
-                          Je suis débutant
-                        </span>
-                        <span className="text-muted-foreground text-sm">
-                          Je découvre la vente en ligne
-                        </span>
-                      </div>
-                    </div>
-                    <Checkbox
-                      checked={selectedExperience === "just_starting"}
-                      onCheckedChange={() => handleExperienceSelect("just_starting")}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                  </div>
-                </div>
-              </button>
-
-              {/* Option Expérimenté */}
-              <button
-                className="w-full text-left group"
-                onClick={() => handleExperienceSelect("already_selling")}
-              >
-                <div className={`p-6 border rounded-2xl transition-all duration-300 hover:shadow-lg ${
-                  selectedExperience === "already_selling" 
-                    ? "border-primary bg-primary/5 shadow-lg" 
-                    : "border-border hover:border-primary/30 hover:bg-card/50"
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                        selectedExperience === "already_selling"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground group-hover:bg-primary/10"
-                      }`}>
-                        <Users className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <span className="font-semibold text-lg text-foreground block">
-                          Je suis expérimenté
-                        </span>
-                        <span className="text-muted-foreground text-sm">
-                          J'ai déjà vendu en ligne
-                        </span>
-                      </div>
-                    </div>
-                    <Checkbox
-                      checked={selectedExperience === "already_selling"}
-                      onCheckedChange={() => handleExperienceSelect("already_selling")}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                  </div>
-                </div>
-              </button>
+            
+            <div className="mt-4 text-center">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Étape {currentStep} sur 4
+              </h3>
             </div>
           </div>
-        </div>
 
-        {/* Boutons de navigation */}
-        <div className="p-8 border-t border-border flex justify-between gap-4">
-          <Button
-            onClick={handleBack}
-            variant="outline"
-            className="border-border hover:border-border/80 bg-card/70 backdrop-blur-sm hover:bg-card rounded-2xl px-6 py-3 transition-all duration-200"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour
-          </Button>
-          <Button
-            onClick={handleContinue}
-            disabled={!selectedExperience}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-3 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Continuer
-          </Button>
+          {/* Step Content */}
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-8">
+              {renderStepContent()}
+            </CardContent>
+          </Card>
+
+          {/* Navigation */}
+          <div className="flex items-center justify-between mt-8">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className="rounded-lg"
+            >
+              Précédent
+            </Button>
+
+            <div className="flex items-center gap-3">
+              {currentStep < 4 ? (
+                <Button
+                  onClick={nextStep}
+                  disabled={!formData.name.trim()}
+                  className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Continuer
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isLoading || !formData.name.trim()}
+                  className="rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {isLoading ? 'Création...' : 'Créer ma boutique'}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
-} 
+}

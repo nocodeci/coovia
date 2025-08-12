@@ -14,7 +14,7 @@ import {
 import { LogOut, User, Settings, Shield } from 'lucide-react'
 
 export function UserNav() {
-  const { user, logout } = useAuth()
+  const { user, logout } = useSanctumAuth()
 
   if (!user) {
     return null

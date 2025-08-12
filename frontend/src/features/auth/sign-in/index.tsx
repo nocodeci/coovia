@@ -11,6 +11,7 @@ export default function SignIn() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      // Rediriger vers la route racine authentifiée qui gère automatiquement la redirection
       navigate({ to: "/" })
     }
   }, [isAuthenticated, navigate])
@@ -47,15 +48,17 @@ export default function SignIn() {
         <div className="flex flex-col items-start justify-start w-full mb-6 max-w-xs">
           <img 
             src="/assets/images/logo.svg" 
-            alt="coovia" 
+            alt="Wozif" 
             width="100" 
             height="16"
             className="h-8 w-auto"
           />
-          </div>
+        </div>
 
-        <div className="w-full max-w-xs">
-          <SanctumLoginForm />
+        <div className="w-full max-w-sm">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            <SanctumLoginForm />
+          </div>
         </div>
       </div>
     </main>

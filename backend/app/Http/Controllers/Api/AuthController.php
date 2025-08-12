@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\Mail;
 class AuthController extends Controller
 {
     /**
-     * Étape 1: Validation de l'email
+     * Étape 1: Validation de l'email avec Just-in-time registration
+     * Si l'utilisateur n'existe pas, on autorise la création automatique
      */
     public function validateEmail(Request $request)
     {
@@ -34,14 +35,28 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->first();
+        $isNewUser = !$user;
 
-        if (!$user) {
+        // Si l'utilisateur n'existe pas, on autorise la création automatique
+        if ($isNewUser) {
+            // Générer un token temporaire pour l'étape suivante
+            $tempToken = Str::random(32);
+            $cacheKey = "email_validation_{$tempToken}";
+            Cache::put($cacheKey, [
+                'email' => $request->email,
+                'is_new_user' => true
+            ], 300); // 5 minutes
+
             return response()->json([
-                'success' => false,
-                'message' => 'Aucun compte trouvé avec cet email'
-            ], 404);
+                'success' => true,
+                'message' => 'Email autorisé pour création de compte',
+                'temp_token' => $tempToken,
+                'step' => 'email_validated',
+                'is_new_user' => true
+            ]);
         }
 
+        // Vérifier si l'utilisateur existant est actif
         if (!$user->is_active) {
             return response()->json([
                 'success' => false,
@@ -52,18 +67,23 @@ class AuthController extends Controller
         // Générer un token temporaire pour l'étape suivante
         $tempToken = Str::random(32);
         $cacheKey = "email_validation_{$tempToken}";
-        Cache::put($cacheKey, $user->email, 300); // 5 minutes
+        Cache::put($cacheKey, [
+            'email' => $user->email,
+            'is_new_user' => false
+        ], 300); // 5 minutes
 
         return response()->json([
             'success' => true,
             'message' => 'Email validé',
             'temp_token' => $tempToken,
-            'step' => 'email_validated'
+            'step' => 'email_validated',
+            'is_new_user' => false
         ]);
     }
 
     /**
-     * Étape 2: Validation du mot de passe
+     * Étape 2: Validation du mot de passe avec Just-in-time registration
+     * Si c'est un nouvel utilisateur, créer le compte automatiquement
      */
     public function validatePassword(Request $request)
     {
@@ -83,15 +103,53 @@ class AuthController extends Controller
 
         // Vérifier le token temporaire
         $cacheKey = "email_validation_{$request->temp_token}";
-        $cachedEmail = Cache::get($cacheKey);
+        $cachedData = Cache::get($cacheKey);
 
-        if (!$cachedEmail || $cachedEmail !== $request->email) {
+        if (!$cachedData || $cachedData['email'] !== $request->email) {
             return response()->json([
                 'success' => false,
                 'message' => 'Token de validation expiré ou invalide'
             ], 401);
         }
 
+        $isNewUser = $cachedData['is_new_user'] ?? false;
+
+        if ($isNewUser) {
+            // Créer automatiquement le nouvel utilisateur
+            $user = $this->createUserJustInTime($request->email, $request->password);
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreur lors de la création du compte'
+                ], 500);
+            }
+
+            // Générer et envoyer l'OTP
+            $otp = $this->generateAndSendOtp($user);
+            
+            // Générer un token OTP pour l'étape suivante
+            $otpToken = Str::random(32);
+            $otpCacheKey = "otp_validation_{$otpToken}";
+            Cache::put($otpCacheKey, [
+                'email' => $user->email,
+                'otp' => $otp,
+                'is_new_user' => true
+            ], 300); // 5 minutes
+
+            // Supprimer le token temporaire
+            Cache::forget($cacheKey);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Compte créé avec succès. Code OTP envoyé.',
+                'otp_token' => $otpToken,
+                'step' => 'password_validated',
+                'is_new_user' => true
+            ]);
+        }
+
+        // Utilisateur existant - vérifier le mot de passe
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -110,7 +168,8 @@ class AuthController extends Controller
         Cache::put($otpCacheKey, [
             'user_id' => $user->id,
             'email' => $user->email,
-            'otp' => $otp
+            'otp' => $otp,
+            'is_new_user' => false
         ], 300); // 5 minutes
 
         // Supprimer l'ancien token
@@ -120,7 +179,8 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Mot de passe validé. Code OTP envoyé par email.',
             'otp_token' => $otpToken,
-            'step' => 'password_validated'
+            'step' => 'password_validated',
+            'is_new_user' => false
         ]);
     }
 
@@ -162,7 +222,8 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = User::find($otpData['user_id']);
+        // Récupérer l'utilisateur par email (plus fiable pour les nouveaux utilisateurs)
+        $user = User::where('email', $request->email)->first();
 
         if (!$user) {
             return response()->json([
@@ -178,6 +239,9 @@ class AuthController extends Controller
         $user->last_login_at = now();
         $user->save();
 
+        // Vérifier si c'est un nouvel utilisateur
+        $isNewUser = $otpData['is_new_user'] ?? false;
+
         // Supprimer le token OTP
         Cache::forget($otpCacheKey);
 
@@ -192,7 +256,9 @@ class AuthController extends Controller
                 'role' => $user->role,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
-            ]
+            ],
+            'is_new_user' => $isNewUser,
+            'redirect_to' => $isNewUser ? 'create-store' : 'dashboard'
         ]);
     }
 
@@ -391,5 +457,40 @@ class AuthController extends Controller
                 'updated_at' => $user->updated_at,
             ]
         ]);
+    }
+
+    /**
+     * Créer un utilisateur automatiquement lors du Just-in-time registration
+     * 
+     * @param string $email Email de l'utilisateur
+     * @param string $password Mot de passe en clair
+     * @return User|null L'utilisateur créé ou null en cas d'erreur
+     */
+    private function createUserJustInTime($email, $password)
+    {
+        try {
+            // Extraire le nom depuis l'email (partie avant @)
+            $name = explode('@', $email)[0];
+            
+            // Créer l'utilisateur avec les informations de base
+            $user = User::create([
+                'name' => ucfirst($name), // Première lettre en majuscule
+                'email' => $email,
+                'password' => Hash::make($password),
+                'role' => 'user', // Rôle par défaut
+                'is_active' => true, // Actif par défaut
+                'email_verified_at' => now(), // Email vérifié automatiquement
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            \Log::info("Utilisateur créé automatiquement via Just-in-time registration: {$email}");
+
+            return $user;
+
+        } catch (\Exception $e) {
+            \Log::error("Erreur lors de la création automatique de l'utilisateur: " . $e->getMessage());
+            return null;
+        }
     }
 }

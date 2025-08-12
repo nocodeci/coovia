@@ -19,14 +19,16 @@ export interface AuthStep {
   email?: string;
   tempToken?: string;
   otpToken?: string;
+  isNewUser?: boolean;
 }
 
 export function useSanctumAuth() {
   const { user, token, isAuthenticated, isLoading, error, login: storeLogin, logout: storeLogout, updateUser, setLoading, setError, clearError } = useAuthStore();
   const [authStep, setAuthStep] = useState<AuthStep>({ step: 'email' });
 
-  // Étape 1: Validation de l'email
+  // Étape 1: Validation de l'email avec Just-in-time registration
   const validateEmail = async (email: string) => {
+    console.log('validateEmail appelé avec:', email);
     setLoading(true);
     clearError();
     
@@ -34,12 +36,17 @@ export function useSanctumAuth() {
       const response = await sanctumAuthService.validateEmail(email);
       
       if (response.success) {
+        console.log('Email validé, temp_token reçu:', response.temp_token);
         setAuthStep({
           step: 'password',
           email,
-          tempToken: response.temp_token
+          tempToken: response.temp_token,
+          isNewUser: response.is_new_user || false
         });
-        return { success: true };
+        return { 
+          success: true, 
+          isNewUser: response.is_new_user || false 
+        };
       } else {
         setError(response.message || 'Erreur de validation email');
         return { success: false, message: response.message };
@@ -53,9 +60,12 @@ export function useSanctumAuth() {
     }
   };
 
-  // Étape 2: Validation du mot de passe
+  // Étape 2: Validation du mot de passe avec Just-in-time registration
   const validatePassword = async (password: string) => {
+    console.log('validatePassword appelé avec:', { password, authStep });
+    
     if (authStep.step !== 'password' || !authStep.email || !authStep.tempToken) {
+      console.log('Étape invalide:', { step: authStep.step, email: authStep.email, tempToken: authStep.tempToken });
       setError('Étape invalide');
       return { success: false, message: 'Étape invalide' };
     }
@@ -74,9 +84,15 @@ export function useSanctumAuth() {
         setAuthStep({
           step: 'otp',
           email: authStep.email,
-          otpToken: response.otp_token
+          otpToken: response.otp_token,
+          isNewUser: response.is_new_user || authStep.isNewUser
         });
-        return { success: true };
+        return { 
+          success: true, 
+          isNewUser: response.is_new_user || authStep.isNewUser,
+          message: response.message,
+          otp_token: response.otp_token
+        };
       } else {
         setError(response.message || 'Erreur de validation mot de passe');
         return { success: false, message: response.message };
@@ -90,11 +106,14 @@ export function useSanctumAuth() {
     }
   };
 
-  // Étape 3: Connexion avec OTP
-  const loginWithOtp = async (otp: string) => {
-    if (authStep.step !== 'otp' || !authStep.email || !authStep.otpToken) {
-      setError('Étape invalide');
-      return { success: false, message: 'Étape invalide' };
+  // Étape 3: Connexion avec OTP et gestion des nouveaux utilisateurs
+  const loginWithOtp = async (otp: string, email?: string, otpToken?: string) => {
+    const currentEmail = email || authStep.email;
+    const currentOtpToken = otpToken || authStep.otpToken;
+    
+    if (!currentEmail || !currentOtpToken) {
+      setError('Informations de session manquantes');
+      return { success: false, message: 'Informations de session manquantes' };
     }
 
     setLoading(true);
@@ -102,14 +121,18 @@ export function useSanctumAuth() {
     
     try {
       const response = await sanctumAuthService.login(
-        authStep.email,
+        currentEmail,
         otp,
-        authStep.otpToken
+        currentOtpToken
       );
       
       if (response.success) {
         setAuthStep({ step: 'complete' });
-        return { success: true };
+        return { 
+          success: true, 
+          isNewUser: response.is_new_user || authStep.isNewUser,
+          redirectTo: response.redirect_to || 'dashboard'
+        };
       } else {
         setError(response.message || 'Erreur de connexion OTP');
         return { success: false, message: response.message };
@@ -207,21 +230,42 @@ export function useSanctumAuth() {
     clearError();
   };
 
-  // Vérifier l'authentification au chargement
+  // Vérifier l'authentification au chargement de la page
   useEffect(() => {
     const checkAuth = async () => {
-      if (token) {
+      // Vérifier si on a un token stocké
+      const storedToken = sanctumAuthService.getToken();
+      
+      if (storedToken && !isLoading && !user) {
         try {
-          await getUser();
+          console.log('Vérification automatique de l\'authentification...');
+          const response = await getUser();
+          if (response.success && response.user) {
+            console.log('Utilisateur authentifié trouvé:', response.user);
+          }
         } catch (error) {
-          // Token invalide, nettoyer
-          logout();
+          // Token invalide, nettoyer silencieusement
+          console.log('Token invalide, nettoyage automatique');
+          sanctumAuthService.setToken('');
+          useAuthStore.getState().logout();
+        }
+      } else if (!storedToken && !isLoading) {
+        // Pas de token, vérifier si on a une session côté serveur
+        try {
+          console.log('Vérification de la session côté serveur...');
+          const response = await sanctumAuthService.checkAuth();
+          if (response.success && response.user) {
+            console.log('Session serveur trouvée:', response.user);
+            useAuthStore.getState().login(response.user, response.token || '');
+          }
+        } catch (error) {
+          console.log('Aucune session valide trouvée');
         }
       }
     };
 
     checkAuth();
-  }, []);
+  }, []); // Seulement au montage du composant
 
   return {
     // État

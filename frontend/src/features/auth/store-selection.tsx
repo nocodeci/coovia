@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "@tanstack/react-router"
-import { useAuth } from "@/hooks/useAuth"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 import { useStore } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
 import { LogOut, Plus, Sparkles, Store, ArrowRight, RefreshCw } from "lucide-react"
@@ -9,7 +9,7 @@ import { toast } from "sonner"
 
 export function StoreSelection() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout } = useSanctumAuth()
   const { stores, setCurrentStore, isLoading, error, refreshStores } = useStore()
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
   const [hoveredStore, setHoveredStore] = useState<string | null>(null)
@@ -18,9 +18,9 @@ export function StoreSelection() {
 
   // Vérification d'authentification et chargement forcé des boutiques
   useEffect(() => {
-    const token = localStorage.getItem('auth_token')
+    const token = localStorage.getItem('sanctum_token')
     if (!token || !user) {
-      navigate({ to: '/sign-in' })
+      window.location.href = '/sign-in'
       return
     }
 
@@ -72,7 +72,7 @@ export function StoreSelection() {
 
   const handleLogout = () => {
     logout()
-    navigate({ to: "/sign-in" })
+    window.location.href = "/sign-in"
   }
 
   const handleRefresh = async () => {
