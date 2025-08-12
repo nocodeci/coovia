@@ -2,21 +2,25 @@ import apiService from '@/lib/api'
 
 export interface CreateStoreData {
   name: string
+  slug: string
   description?: string
-  category?: string
+  logo?: File
+  productType?: string
+  productCategories?: string[]
   address?: {
-    street?: string
     city?: string
-    country?: string
   }
   contact?: {
     email?: string
     phone?: string
   }
   settings?: {
-    digitalDelivery?: boolean
-    autoDelivery?: boolean
     paymentMethods?: string[]
+    monneroo?: {
+      enabled: boolean
+      secretKey?: string
+      environment?: string
+    }
     currency?: string
   }
 }
@@ -54,7 +58,40 @@ class StoreService {
    */
   async createStore(data: CreateStoreData): Promise<StoreResponse> {
     try {
-      const response = await apiService.post(`${this.baseUrl}/create`, data)
+      // Préparer les données pour l'envoi
+      const formData = new FormData()
+      
+      // Données de base
+      formData.append('name', data.name)
+      formData.append('slug', data.slug)
+      if (data.description) formData.append('description', data.description)
+      if (data.logo) formData.append('logo', data.logo)
+      if (data.productType) formData.append('productType', data.productType)
+      if (data.productCategories) formData.append('productCategories', JSON.stringify(data.productCategories))
+      
+      // Adresse
+      if (data.address?.city) formData.append('address[city]', data.address.city)
+      
+      // Contact
+      if (data.contact?.email) formData.append('contact[email]', data.contact.email)
+      if (data.contact?.phone) formData.append('contact[phone]', data.contact.phone)
+      
+      // Paramètres
+      if (data.settings?.paymentMethods) formData.append('settings[paymentMethods]', JSON.stringify(data.settings.paymentMethods))
+      if (data.settings?.currency) formData.append('settings[currency]', data.settings.currency)
+      
+      // Configuration Monneroo
+      if (data.settings?.monneroo) {
+        formData.append('settings[monneroo][enabled]', data.settings.monneroo.enabled.toString())
+        if (data.settings.monneroo.secretKey) formData.append('settings[monneroo][secretKey]', data.settings.monneroo.secretKey)
+        if (data.settings.monneroo.environment) formData.append('settings[monneroo][environment]', data.settings.monneroo.environment)
+      }
+      
+      const response = await apiService.post(`${this.baseUrl}/create`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
       return response.data
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Erreur lors de la création de la boutique')

@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Store;
+use App\Mail\StoreCreatedMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class StoreController extends Controller
@@ -68,16 +71,23 @@ class StoreController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:stores,slug',
             'description' => 'nullable|string|max:1000',
-            'category' => 'required|string|max:255',
+            'logo' => 'nullable|file|image|max:2048',
+            'productType' => 'nullable|string|max:255',
+            'productCategories' => 'nullable|string', // JSON string
             'address' => 'nullable|array',
-            'address.street' => 'nullable|string|max:255',
             'address.city' => 'nullable|string|max:255',
-            'address.country' => 'nullable|string|max:255',
             'contact' => 'nullable|array',
             'contact.email' => 'nullable|email|max:255',
             'contact.phone' => 'nullable|string|max:20',
             'settings' => 'nullable|array',
+            'settings.paymentMethods' => 'nullable|string', // JSON string
+            'settings.currency' => 'nullable|string|max:10',
+            'settings.monneroo' => 'nullable|array',
+            'settings.monneroo.enabled' => 'nullable|boolean',
+            'settings.monneroo.secretKey' => 'nullable|string',
+            'settings.monneroo.environment' => 'nullable|string|in:sandbox,production',
         ]);
 
         if ($validator->fails()) {
@@ -108,28 +118,89 @@ class StoreController extends Controller
         }
 
         try {
-            // Générer un slug unique
-            $slug = Str::slug($request->name);
-            $originalSlug = $slug;
-            $counter = 1;
+            // Traiter le logo si fourni
+            $logoPath = null;
+            if ($request->hasFile('logo')) {
+                $logo = $request->file('logo');
+                $logoPath = $logo->store('store-logos', 'public');
+            }
+
+            // Préparer les données de la boutique
+            $storeData = [
+                'id' => Str::uuid(),
+                'owner_id' => $user->id,
+                'name' => $request->name,
+                'slug' => $request->slug,
+                'description' => $request->description,
+                'logo' => $logoPath,
+                'category' => $request->productType ?? 'digital',
+                'status' => 'active',
+            ];
+
+            // Préparer l'adresse
+            $address = [];
+            if ($request->input('address.city')) {
+                $address['city'] = $request->input('address.city');
+            }
+
+            // Préparer le contact
+            $contact = [];
+            if ($request->input('contact.email')) {
+                $contact['email'] = $request->input('contact.email');
+            }
+            if ($request->input('contact.phone')) {
+                $contact['phone'] = $request->input('contact.phone');
+            }
+
+            // Préparer les paramètres
+            $settings = [];
             
-            while (Store::where('slug', $slug)->exists()) {
-                $slug = $originalSlug . '-' . $counter;
-                $counter++;
+            // Méthodes de paiement
+            if ($request->input('settings.paymentMethods')) {
+                $settings['paymentMethods'] = json_decode($request->input('settings.paymentMethods'), true);
+            }
+
+            // Configuration Monneroo
+            if ($request->input('settings.monneroo.enabled')) {
+                $settings['monneroo'] = [
+                    'enabled' => $request->input('settings.monneroo.enabled') === 'true',
+                    'secretKey' => $request->input('settings.monneroo.secretKey'),
+                    'environment' => $request->input('settings.monneroo.environment'),
+                ];
+
+                // Sauvegarder la configuration Monneroo dans la table dédiée
+                if ($request->input('settings.monneroo.secretKey')) {
+                    DB::table('moneroo_configs')->updateOrInsert(
+                        ['user_id' => $user->id],
+                        [
+                            'secret_key' => encrypt($request->input('settings.monneroo.secretKey')),
+                            'environment' => $request->input('settings.monneroo.environment'),
+                            'is_active' => true,
+                            'updated_at' => now(),
+                        ]
+                    );
+                }
+            }
+
+            // Type de produits et catégories
+            if ($request->productType) {
+                $settings['productType'] = $request->productType;
+            }
+            if ($request->productCategories) {
+                $settings['productCategories'] = json_decode($request->productCategories, true);
+            }
+
+            // Devise
+            if ($request->input('settings.currency')) {
+                $settings['currency'] = $request->input('settings.currency');
             }
 
             // Créer la boutique
             $store = Store::create([
-                'id' => Str::uuid(),
-                'owner_id' => $user->id,
-                'name' => $request->name,
-                'slug' => $slug,
-                'description' => $request->description,
-                'category' => $request->category,
-                'address' => $request->address ? json_encode($request->address) : json_encode([]),
-                'contact' => $request->contact ? json_encode($request->contact) : json_encode([]),
-                'settings' => $request->settings ? json_encode($request->settings) : json_encode([]),
-                'status' => 'active',
+                ...$storeData,
+                'address' => json_encode($address),
+                'contact' => json_encode($contact),
+                'settings' => json_encode($settings),
             ]);
 
             // Mettre à jour le rôle de l'utilisateur en "store_owner"
@@ -137,6 +208,29 @@ class StoreController extends Controller
                 'role' => 'store_owner',
                 'updated_at' => now(),
             ]);
+
+            // Envoyer l'email de confirmation
+            try {
+                $paymentMethods = [];
+                if ($settings['paymentMethods'] ?? false) {
+                    $paymentMethods = $settings['paymentMethods'];
+                }
+                if (isset($settings['monneroo']['enabled']) && $settings['monneroo']['enabled']) {
+                    $paymentMethods['monneroo'] = $settings['monneroo'];
+                }
+
+                Mail::to($user->email)->send(new StoreCreatedMail(
+                    $store->name,
+                    $store->slug,
+                    $paymentMethods,
+                    $user->name
+                ));
+
+                Log::info("Email de confirmation envoyé à: {$user->email}");
+            } catch (\Exception $e) {
+                Log::error("Erreur lors de l'envoi de l'email de confirmation: " . $e->getMessage());
+                // Ne pas faire échouer la création de boutique si l'email échoue
+            }
 
             Log::info("Boutique créée pour l'utilisateur: {$user->email} - Boutique: {$store->name}");
 
