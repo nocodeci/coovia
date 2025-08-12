@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Media;
+use App\Models\StoreMedia;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -21,7 +21,7 @@ class MediaController extends Controller
         try {
             $store = Store::findOrFail($storeId);
             
-            $query = Media::where('store_id', $storeId);
+            $query = StoreMedia::where('store_id', $storeId);
 
             // Filter by type
             if ($request->has('type') && $request->type !== 'all') {
@@ -91,6 +91,7 @@ class MediaController extends Controller
                 'data' => $uploadedMedia,
             ]);
         } catch (\Exception $e) {
+            \Log::error('Erreur upload média: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors du téléchargement: ' . $e->getMessage(),
@@ -143,17 +144,38 @@ class MediaController extends Controller
     public function destroy(string $storeId, string $mediaId): JsonResponse
     {
         try {
-            $media = Media::where('store_id', $storeId)
+            $media = StoreMedia::where('store_id', $storeId)
                 ->where('id', $mediaId)
                 ->firstOrFail();
 
-            // Delete from storage
-            if (Storage::disk('public')->exists($media->url)) {
-                Storage::disk('public')->delete($media->url);
-            }
+            // Supprimer de Cloudflare R2 si configuré
+            $cloudflareService = new \App\Services\CloudflareUploadService();
+            
+            if ($cloudflareService->isConfigured()) {
+                try {
+                    // Supprimer le fichier principal
+                    if ($media->url && filter_var($media->url, FILTER_VALIDATE_URL)) {
+                        $cloudflareService->deleteLogo($media->url); // Réutiliser la méthode existante
+                    }
+                    
+                    // Supprimer la thumbnail
+                    if ($media->thumbnail && filter_var($media->thumbnail, FILTER_VALIDATE_URL)) {
+                        $cloudflareService->deleteLogo($media->thumbnail);
+                    }
+                    
+                    \Log::info("Média supprimé de Cloudflare R2: {$media->name}");
+                } catch (\Exception $e) {
+                    \Log::error("Erreur suppression Cloudflare: " . $e->getMessage());
+                }
+            } else {
+                // Fallback vers suppression locale
+                if (Storage::disk('public')->exists($media->url)) {
+                    Storage::disk('public')->delete($media->url);
+                }
 
-            if ($media->thumbnail && Storage::disk('public')->exists($media->thumbnail)) {
-                Storage::disk('public')->delete($media->thumbnail);
+                if ($media->thumbnail && Storage::disk('public')->exists($media->thumbnail)) {
+                    Storage::disk('public')->delete($media->thumbnail);
+                }
             }
 
             // Delete from database
@@ -164,6 +186,7 @@ class MediaController extends Controller
                 'message' => 'Média supprimé avec succès',
             ]);
         } catch (\Exception $e) {
+            \Log::error('Erreur suppression média: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la suppression: ' . $e->getMessage(),
@@ -174,31 +197,48 @@ class MediaController extends Controller
     /**
      * Process uploaded file.
      */
-    private function processUploadedFile($file, string $storeId): Media
+    private function processUploadedFile($file, string $storeId): StoreMedia
     {
         $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
         $filePath = 'media/' . $storeId . '/' . $fileName;
 
-        // Store the file
-        $file->storeAs('public/' . dirname($filePath), basename($filePath));
+        // Utiliser Cloudflare R2 si configuré, sinon fallback vers stockage local
+        $cloudflareService = new \App\Services\CloudflareUploadService();
+        
+        if ($cloudflareService->isConfigured()) {
+            try {
+                // Upload vers Cloudflare R2
+                $cloudflareUrl = $cloudflareService->uploadMedia($file, $storeId, $fileName);
+                if ($cloudflareUrl) {
+                    $filePath = $cloudflareUrl;
+                    \Log::info("Fichier uploadé vers Cloudflare R2: {$fileName}");
+                } else {
+                    \Log::warning("Échec upload Cloudflare, fallback vers stockage local: {$fileName}");
+                    $file->storeAs('public/' . dirname($filePath), basename($filePath));
+                }
+            } catch (\Exception $e) {
+                \Log::error("Erreur upload Cloudflare, fallback vers stockage local: " . $e->getMessage());
+                $file->storeAs('public/' . dirname($filePath), basename($filePath));
+            }
+        } else {
+            \Log::info("Cloudflare R2 non configuré, utilisation du stockage local: {$fileName}");
+            $file->storeAs('public/' . dirname($filePath), basename($filePath));
+        }
 
         // Determine file type
         $type = $this->getFileType($file->getMimeType());
 
         // Generate thumbnail for images
-        $thumbnail = null;
-        if ($type === 'image') {
-            $thumbnail = $this->generateThumbnail($file, $storeId);
-        }
+        $type === 'image' && $thumbnail = $this->generateThumbnail($file, $storeId);
 
         // Create media record
-        $media = Media::create([
+        $media = StoreMedia::create([
             'store_id' => $storeId,
             'name' => $file->getClientOriginalName(),
             'type' => $type,
             'size' => $file->getSize(),
             'url' => $filePath,
-            'thumbnail' => $thumbnail,
+            'thumbnail' => $thumbnail ?? null,
             'mime_type' => $file->getMimeType(),
             'metadata' => [
                 'original_name' => $file->getClientOriginalName(),
@@ -240,11 +280,34 @@ class MediaController extends Controller
             $thumbnailName = 'thumb_' . time() . '_' . Str::random(10) . '.jpg';
             $thumbnailPath = 'media/' . $storeId . '/thumbnails/' . $thumbnailName;
 
+            // Encoder l'image
+            $encoded = $image->toJpeg(80);
+
+            // Utiliser Cloudflare R2 si configuré, sinon fallback vers stockage local
+            $cloudflareService = new \App\Services\CloudflareUploadService();
+            
+            if ($cloudflareService->isConfigured()) {
+                try {
+                    // Upload thumbnail vers Cloudflare R2
+                    $cloudflareUrl = $cloudflareService->uploadThumbnail($encoded, $storeId, $thumbnailName);
+                    if ($cloudflareUrl) {
+                        \Log::info("Thumbnail uploadée vers Cloudflare R2: {$thumbnailName}");
+                        return $cloudflareUrl;
+                    } else {
+                        \Log::warning("Échec upload thumbnail Cloudflare, fallback vers stockage local: {$thumbnailName}");
+                    }
+                } catch (\Exception $e) {
+                    \Log::error("Erreur upload thumbnail Cloudflare, fallback vers stockage local: " . $e->getMessage());
+                }
+            }
+
+            // Fallback vers stockage local
+            \Log::info("Cloudflare R2 non configuré pour thumbnail, utilisation du stockage local: {$thumbnailName}");
+            
             // Créer le dossier thumbnails s'il n'existe pas
             Storage::disk('public')->makeDirectory(dirname($thumbnailPath));
 
-            // Encoder et sauvegarder l'image
-            $encoded = $image->toJpeg(80);
+            // Sauvegarder l'image
             Storage::disk('public')->put($thumbnailPath, $encoded);
 
             return $thumbnailPath;
@@ -259,7 +322,7 @@ class MediaController extends Controller
      */
     private function calculateStats(string $storeId): array
     {
-        $media = Media::where('store_id', $storeId);
+        $media = StoreMedia::where('store_id', $storeId);
         
         $totalFiles = $media->count();
         $totalSize = $media->sum('size');

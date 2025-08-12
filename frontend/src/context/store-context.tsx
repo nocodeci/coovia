@@ -8,6 +8,7 @@ interface Store {
   id: string
   name: string
   description?: string
+  logo?: string
   owner_id: string
   created_at: string
   updated_at: string
@@ -84,6 +85,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
           id: store.id,
           name: store.name,
           description: store.description,
+          logo: store.logo,
           owner_id: store.owner_id,
           created_at: store.created_at,
           updated_at: store.updated_at,
@@ -157,6 +159,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem("sanctum_token")
     
+    // Ne charger que si on a un token valide
     if (token) {
       // Vérifier immédiatement le cache
       const cachedStores = cache.get<Store[]>(CACHE_KEYS.STORES)
@@ -181,6 +184,10 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
       // Si pas de cache, charger immédiatement
       loadStores()
     } else {
+      // Pas de token, ne pas charger les boutiques
+      setStores([])
+      setCurrentStoreState(null)
+      setHasLoaded(true)
       setIsLoading(false)
     }
   }, [])

@@ -12,31 +12,32 @@ export function StoreGuard({ children }: StoreGuardProps) {
   const location = useLocation()
 
   useEffect(() => {
-    if (!isLoading) {
-      // Si on est sur store-selection, ne rien faire
-      if (location.pathname === '/store-selection') {
-        return
-      }
+    // Éviter les redirections multiples
+    if (isLoading) return
 
-      // Si aucune boutique n'est sélectionnée, rediriger vers store-selection
-      if (!currentStore) {
-        navigate({ to: "/store-selection" })
-        return
-      }
-
-      // Si on est sur une route avec storeId mais que la boutique ne correspond pas
-      const pathSegments = location.pathname.split('/')
-      const urlStoreId = pathSegments[1] // Le storeId est le premier segment après le slash
-      
-      if (urlStoreId && currentStore.id !== urlStoreId) {
-        navigate({ to: "/store-selection" })
-        return
-      }
+    // Si on est sur store-selection ou create-store, ne rien faire
+    if (location.pathname === '/store-selection' || location.pathname === '/create-store') {
+      return
     }
-  }, [currentStore, isLoading, location.pathname, navigate])
 
-  // Si on est sur store-selection, afficher le contenu sans vérification
-  if (location.pathname === '/store-selection') {
+    // Si aucune boutique n'est sélectionnée, rediriger vers store-selection
+    if (!currentStore) {
+      navigate({ to: "/store-selection" })
+      return
+    }
+
+    // Si on est sur une route avec storeId mais que la boutique ne correspond pas
+    const pathSegments = location.pathname.split('/')
+    const urlStoreId = pathSegments[1] // Le storeId est le premier segment après le slash
+    
+    if (urlStoreId && currentStore.id !== urlStoreId) {
+      navigate({ to: "/store-selection" })
+      return
+    }
+  }, [currentStore?.id, isLoading, location.pathname, navigate])
+
+  // Si on est sur store-selection ou create-store, afficher le contenu sans vérification
+  if (location.pathname === '/store-selection' || location.pathname === '/create-store') {
     return <>{children}</>
   }
 
