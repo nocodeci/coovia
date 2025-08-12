@@ -125,11 +125,20 @@ export function CreateStore() {
     setSlugAvailability(prev => ({ ...prev, checking: true }))
 
     try {
-      // Simulation de vérification - à remplacer par l'appel API réel
-      const response = await fetch(`/api/stores/check/${slug}`)
+      // Utiliser l'API backend pour vérifier la disponibilité (route publique)
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/stores/subdomain/${slug}/check`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Erreur de vérification')
+      }
+      
       const data = await response.json()
       
-      if (data.exists) {
+      if (data.success && data.data?.exists) {
         // Générer des suggestions
         const suggestions = generateSuggestions(slug)
         setSlugAvailability({
@@ -145,6 +154,7 @@ export function CreateStore() {
         })
       }
     } catch (error) {
+      console.error('Erreur lors de la vérification du slug:', error)
       // En cas d'erreur, on considère que c'est disponible
       setSlugAvailability({
         checking: false,
@@ -237,6 +247,28 @@ export function CreateStore() {
   ]
 
   const nextStep = () => {
+    // Validation des champs requis selon l'étape
+    if (currentStep === 1) {
+      if (!formData.name.trim()) {
+        toast.error('Nom de boutique requis', {
+          description: 'Veuillez saisir le nom de votre boutique.'
+        })
+        return
+      }
+      if (!formData.slug.trim()) {
+        toast.error('Sous-domaine requis', {
+          description: 'Veuillez saisir le sous-domaine de votre boutique.'
+        })
+        return
+      }
+      if (slugAvailability.available === false) {
+        toast.error('Sous-domaine indisponible', {
+          description: 'Veuillez choisir un autre sous-domaine.'
+        })
+        return
+      }
+    }
+    
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1)
     }
@@ -252,10 +284,34 @@ export function CreateStore() {
     setIsLoading(true)
     
     try {
+      // Vérifier que l'utilisateur est authentifié
+      const token = localStorage.getItem('sanctum_token')
+      if (!token) {
+        toast.error('Erreur d\'authentification', {
+          description: 'Vous devez être connecté pour créer une boutique.'
+        })
+        return
+      }
+      
+      // Validation des champs requis
+      if (!formData.name.trim()) {
+        toast.error('Nom de boutique requis', {
+          description: 'Veuillez saisir le nom de votre boutique.'
+        })
+        return
+      }
+      
+      if (!formData.slug.trim()) {
+        toast.error('Sous-domaine requis', {
+          description: 'Veuillez saisir le sous-domaine de votre boutique.'
+        })
+        return
+      }
+      
       // Préparer les données pour l'envoi
       const storeData = {
         name: formData.name,
-        slug: formData.slug,
+        slug: formData.slug, // Inclure le slug saisi par l'utilisateur
         description: formData.description,
         logo: formData.logo,
         productType: formData.productType,
@@ -274,11 +330,13 @@ export function CreateStore() {
         }
       }
 
+      console.log('Données envoyées pour création de boutique:', storeData)
       const response = await storeService.createStore(storeData)
       
       if (response.success) {
+        const finalSlug = response.data?.slug || formData.slug
         toast.success('Boutique créée avec succès!', {
-          description: `Votre boutique "${formData.name}" est maintenant active sur ${formData.slug}.wozif.store`
+          description: `Votre boutique "${formData.name}" est maintenant active sur ${finalSlug}.wozif.store`
         })
         
         // Rediriger vers la sélection de boutique ou le dashboard
@@ -290,8 +348,29 @@ export function CreateStore() {
       }
     } catch (error: any) {
       console.error('Erreur création boutique:', error)
-      toast.error('Erreur de connexion', {
-        description: error.message || 'Impossible de créer la boutique. Vérifiez votre connexion.'
+      
+      // Afficher un message d'erreur plus détaillé
+      let errorMessage = 'Impossible de créer la boutique.'
+      let errorDescription = 'Une erreur inattendue s\'est produite.'
+      
+      if (error.message) {
+        if (error.message.includes('Erreur de connexion au serveur')) {
+          errorMessage = 'Erreur de connexion'
+          errorDescription = 'Vérifiez votre connexion internet et réessayez.'
+        } else if (error.message.includes('Ce nom de boutique n\'est pas disponible')) {
+          errorMessage = 'Nom de boutique indisponible'
+          errorDescription = error.message
+        } else if (error.message.includes('Erreur lors de la création de la boutique')) {
+          errorMessage = 'Erreur de création'
+          errorDescription = error.message
+        } else {
+          errorDescription = error.message
+        }
+      }
+      
+      toast.error(errorMessage, {
+        description: errorDescription,
+        duration: 8000 // Afficher plus longtemps pour les erreurs de disponibilité
       })
     } finally {
       setIsLoading(false)
@@ -381,17 +460,13 @@ export function CreateStore() {
                     onChange={(e) => {
                       const name = e.target.value
                       updateFormData('name', name)
-                      // Générer automatiquement un slug si le champ slug est vide
-                      if (!formData.slug.trim()) {
-                        updateFormData('slug', generateSlug(name))
-                      }
                     }}
                     placeholder="Ma Boutique Digitale"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="slug">Sous-domaine de la boutique *</Label>
+                  <Label htmlFor="slug">Sous-domaine de la boutique <span className="text-red-500">*</span></Label>
                   <div className="flex items-center">
                     <Input
                       id="slug"
@@ -872,72 +947,79 @@ export function CreateStore() {
   const progress = (currentStep / steps.length) * 100
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
+    <div className="min-h-screen bg-background py-4 sm:py-8 px-2 sm:px-4">
+      <div className="w-full max-w-2xl mx-auto">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-            <img
-              src="/assets/images/logo.svg"
-              alt="Coovia"
-              className="h-8 w-auto"
-            />
+        <div className="flex justify-center mb-8 sm:mb-12">
+          <img
+            src="/assets/images/logo.svg"
+            alt="Coovia"
+            className="h-8 sm:h-10 w-auto"
+            onError={(e) => {
+              console.error('Erreur de chargement du logo')
+              const target = e.target as HTMLImageElement
+              target.style.display = 'none'
+              const fallback = document.createElement('div')
+              fallback.className = 'h-8 sm:h-10 flex items-center justify-center text-lg sm:text-xl font-bold text-primary bg-primary/10 px-3 sm:px-4 rounded-lg'
+              fallback.textContent = 'COOVIA'
+              target.parentNode?.appendChild(fallback)
+            }}
+          />
         </div>
-
-
 
         {/* Content */}
         <Card className="border-0 shadow-lg">
-          <CardContent className="p-8">
-          {/* Progress Steps */}
-          <div className="mb-8">
-              <div className="relative flex items-center justify-between mb-4">
+          <CardContent className="p-4 sm:p-6 lg:p-8">
+            {/* Progress Steps */}
+            <div className="mb-6 sm:mb-8">
+              <div className="relative flex flex-col sm:flex-row items-center justify-center sm:justify-between mb-4 gap-4 sm:gap-0">
                 {steps.map((step, index) => (
                   <div key={step.id} className="flex flex-col items-center relative">
-                    <div className={`flex items-center justify-center w-10 h-10 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${
+                    <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg border-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
                       currentStep >= step.id 
                         ? 'bg-primary border-primary text-primary-foreground shadow-sm' 
                         : 'bg-muted/50 border-muted text-muted-foreground'
                     }`}>
                       {currentStep > step.id ? (
-                        <CheckCircle2 className="w-5 h-5" />
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       ) : (
                         step.id
                       )}
                     </div>
-                    <div className="mt-2 text-center">
+                    <div className="mt-2 text-center max-w-[80px] sm:max-w-none">
                       <p className={`text-xs font-medium ${
                         currentStep >= step.id ? 'text-foreground' : 'text-muted-foreground'
                       }`}>
                         {step.title}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground hidden sm:block">
                         {step.description}
                       </p>
                     </div>
                     {index < steps.length - 1 && (
-                      <div className={`absolute top-5 left-full w-16 h-0.5 ${
+                      <div className={`absolute top-4 sm:top-5 left-full w-8 sm:w-16 h-0.5 ${
                         currentStep > step.id ? 'bg-primary' : 'bg-muted'
                       }`} style={{ transform: 'translateX(50%)' }} />
                     )}
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
+              </div>
               <Progress value={progress} className="h-1" />
-          </div>
+            </div>
 
-              {renderStepContent()}
+            {renderStepContent()}
 
-          {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-                className="gap-2"
-            >
+            {/* Navigation */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentStep === 1}
+                className="gap-2 w-full sm:w-auto"
+              >
                 <ArrowLeft className="w-4 h-4" />
-              Précédent
-            </Button>
+                Précédent
+              </Button>
 
               {currentStep < 4 ? (
                 <Button
@@ -948,7 +1030,7 @@ export function CreateStore() {
                     slugAvailability.available === false ||
                     (currentStep === 2 && (!formData.productType || formData.productCategories.length === 0))
                   }
-                  className="gap-2"
+                  className="gap-2 w-full sm:w-auto"
                 >
                   Continuer
                   <ArrowRight className="w-4 h-4" />
@@ -964,7 +1046,7 @@ export function CreateStore() {
                     !formData.productType ||
                     formData.productCategories.length === 0
                   }
-                  className="gap-2"
+                  className="gap-2 w-full sm:w-auto"
                 >
                   {isLoading ? 'Création...' : 'Créer ma boutique'}
                 </Button>

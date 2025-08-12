@@ -15,11 +15,10 @@ function AuthenticatedLayout() {
   const { user, isLoading: authLoading, isAuthenticated } = useSanctumAuth()
   const navigate = useNavigate()
   const hasRedirected = useRef(false)
-  const [redirecting, setRedirecting] = useState(false)
 
   useEffect(() => {
     // Éviter les redirections multiples
-    if (hasRedirected.current || redirecting) return
+    if (hasRedirected.current) return
 
     // Attendre que l'authentification soit vérifiée
     if (authLoading) return
@@ -33,8 +32,6 @@ function AuthenticatedLayout() {
 
     // Attendre que les boutiques soient chargées
     if (!hasLoaded || storesLoading) return
-
-    setRedirecting(true)
 
     // Si une boutique est déjà sélectionnée, rediriger vers son dashboard
     if (currentStore) {
@@ -63,19 +60,17 @@ function AuthenticatedLayout() {
       hasRedirected.current = true
       window.location.href = "/create-store"
     }
-  }, [currentStore, stores, storesLoading, hasLoaded, user, authLoading, isAuthenticated, navigate, redirecting])
+  }, [authLoading, isAuthenticated, user, hasLoaded, storesLoading, currentStore, stores.length, navigate])
 
   // Afficher un loader optimisé pendant la vérification
-  if (authLoading || storesLoading || redirecting) {
+  if (authLoading || storesLoading) {
     return (
       <OptimizedLoading 
         type="spinner"
         message={
           authLoading 
             ? "Vérification de votre compte..." 
-            : storesLoading 
-            ? "Chargement de vos boutiques..." 
-            : "Redirection en cours..."
+            : "Chargement de vos boutiques..."
         }
       />
     )

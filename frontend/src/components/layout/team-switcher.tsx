@@ -100,14 +100,32 @@ export function TeamSwitcher({
               size='lg'
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
-              <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
-                <Store className='size-4' />
+              <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden'>
+                {activeStore.logo ? (
+                  <img 
+                    src={activeStore.logo} 
+                    alt={activeStore.name}
+                    className='w-full h-full object-cover'
+                    onError={(e) => {
+                      // Fallback vers l'icône Store si l'image ne charge pas
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.parentElement?.querySelector('.store-fallback');
+                      if (fallback) {
+                        (fallback as HTMLElement).style.display = 'flex';
+                      }
+                    }}
+                  />
+                ) : null}
+                <div className='store-fallback flex items-center justify-center w-full h-full' style={{ display: activeStore.logo ? 'none' : 'flex' }}>
+                  <Store className='size-4' />
+                </div>
               </div>
               <div className='grid flex-1 text-left text-sm leading-tight'>
                 <span className='truncate font-semibold'>
                   {activeStore.name}
                 </span>
-                <span className='truncate text-xs'>{activeStore.status === 'active' ? 'Actif' : 'Inactif'}</span>
+                <span className='truncate text-xs'>Actif</span>
               </div>
               <ChevronsUpDown className='ml-auto' />
             </SidebarMenuButton>
@@ -127,10 +145,27 @@ export function TeamSwitcher({
                 onClick={() => handleStoreSelect(store)}
                 className='gap-2 p-2'
               >
-                <div className='flex size-6 items-center justify-center rounded-sm border'>
-                  <Store className='size-4 shrink-0' />
+                <div className='flex size-6 items-center justify-center rounded-sm border overflow-hidden'>
+                  {store.logo ? (
+                    <img 
+                      src={store.logo} 
+                      alt={store.name}
+                      className='w-full h-full object-cover'
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = target.parentElement?.querySelector('.store-item-fallback');
+                        if (fallback) {
+                          (fallback as HTMLElement).style.display = 'flex';
+                        }
+                      }}
+                    />
+                  ) : null}
+                  <div className='store-item-fallback flex items-center justify-center w-full h-full' style={{ display: store.logo ? 'none' : 'flex' }}>
+                    <Store className='size-3 shrink-0' />
+                  </div>
                 </div>
-                {store.name}
+                <span className='truncate'>{store.name}</span>
                 {store.id === activeStore.id && (
                   <DropdownMenuShortcut>✓</DropdownMenuShortcut>
                 )}
