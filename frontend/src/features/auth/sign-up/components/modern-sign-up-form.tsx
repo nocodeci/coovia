@@ -10,7 +10,7 @@ import { Eye, EyeOff, Loader2, Mail, Lock, User, Store } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useAuth } from "@/hooks/useAuth"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 
 const signUpSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -27,7 +27,7 @@ type SignUpFormData = z.infer<typeof signUpSchema>
 export function ModernSignUpForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const { register, isLoading } = useAuth()
+  const { register, isLoading } = useSanctumAuth()
   const navigate = useNavigate()
 
   const form = useForm<SignUpFormData>({

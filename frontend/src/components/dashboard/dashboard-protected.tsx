@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { useAuth } from '@/hooks/useAuth'
+import { useSanctumAuth } from '@/hooks/useSanctumAuth'
 import { ProtectedRouteAuth } from '@/components/auth/protected-route-auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 
 function DashboardContent() {
-  const { user, logout } = useAuth()
+  const { user, logout } = useSanctumAuth()
 
   const stats = [
     {

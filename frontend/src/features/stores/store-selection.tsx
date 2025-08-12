@@ -22,7 +22,7 @@ type Store = {
 
 export function StoreSelection() {
   const navigate = useNavigate()
-  const { user, logout, refreshAuth } = useAuth()
+  const { user, logout, refreshAuth } = useSanctumAuth()
   const { stores, setCurrentStore, isLoading, error, refreshStores } = useStore()
 
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)

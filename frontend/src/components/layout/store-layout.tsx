@@ -14,9 +14,19 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
   // Charger la boutique depuis l'URL
   React.useEffect(() => {
+    console.log('StoreLayout Debug:', {
+      storeId,
+      storesCount: stores.length,
+      currentStoreId: currentStore?.id,
+      stores: stores.map(s => ({ id: s.id, name: s.name }))
+    })
+    
     if (storeId && stores.length > 0) {
       const storeFromList = stores.find(store => store.id === storeId)
+      console.log('Store trouvé:', storeFromList)
+      
       if (storeFromList && (!currentStore || currentStore.id !== storeId)) {
+        console.log('Définition de la boutique actuelle:', storeFromList.name)
         setCurrentStore(storeFromList)
       }
     }

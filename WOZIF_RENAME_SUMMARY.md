@@ -50,7 +50,7 @@
 
 ### ✅ **Envoi d'emails Mailtrap**
 - **Configuration SMTP** : `live.smtp.mailtrap.io:587`
-- **Authentification** : `api:783efa0e0035c91f3f2eddc1d6ac6bd7`
+- **Authentification** : `api:YOUR_MAILTRAP_API_TOKEN`
 - **Expéditeur** : `hello@wozif.com`
 - **Template** : Email professionnel avec logo Wozif
 

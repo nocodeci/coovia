@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { useAuth } from '@/hooks/useAuth'
+import { useSanctumAuth } from '@/hooks/useSanctumAuth'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 
 export function UserNav() {
-  const { user, logout, isAdmin, isVendor, isCustomer } = useAuth()
+  const { user, logout, isAdmin, isVendor, isCustomer } = useSanctumAuth()
 
   if (!user) {
     return (

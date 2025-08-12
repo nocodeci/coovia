@@ -16,7 +16,7 @@ export function AuthGuard({
   requireAuth = true, 
   redirectTo = '/sign-in' 
 }: AuthGuardProps) {
-  const { isAuthenticated, hasCheckedAuth, isLoading } = useAuth()
+  const { isAuthenticated, hasCheckedAuth, isLoading } = useSanctumAuth()
   const navigate = useNavigate()
 
   useEffect(() => {

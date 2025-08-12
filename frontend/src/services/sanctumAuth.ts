@@ -39,7 +39,7 @@ class SanctumAuthService {
     this.token = localStorage.getItem('sanctum_token');
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}, skipRefresh = false): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
     const headers: HeadersInit = {
@@ -59,15 +59,15 @@ class SanctumAuthService {
     });
 
     if (!response.ok) {
-      if (response.status === 401) {
-        // Token expiré, essayer de rafraîchir
-        await this.refreshToken();
-        if (this.token) {
+      if (response.status === 401 && !skipRefresh && this.token) {
+        // Token expiré, essayer de rafraîchir (mais pas pour les routes publiques)
+        const refreshSuccess = await this.refreshTokenDirect();
+        if (refreshSuccess && this.token) {
           headers['Authorization'] = `Bearer ${this.token}`;
           const retryResponse = await fetch(url, {
             ...options,
             headers,
-            credentials: 'include', // Nécessaire pour Sanctum
+            credentials: 'include',
           });
           
           if (!retryResponse.ok) {
@@ -89,7 +89,7 @@ class SanctumAuthService {
       const response = await this.request<AuthResponse>('/auth/validate-email', {
         method: 'POST',
         body: JSON.stringify({ email }),
-      });
+      }, true); // skipRefresh = true car c'est une route publique
 
       return response;
     } catch (error) {
@@ -108,7 +108,7 @@ class SanctumAuthService {
           password, 
           temp_token: tempToken 
         }),
-      });
+      }, true); // skipRefresh = true car c'est une route publique
 
       return response;
     } catch (error) {
@@ -127,7 +127,7 @@ class SanctumAuthService {
           otp, 
           otp_token: otpToken 
         }),
-      });
+      }, true); // skipRefresh = true car c'est une route publique
 
       if (response.success && response.token) {
         this.token = response.token;
@@ -152,7 +152,7 @@ class SanctumAuthService {
       const response = await this.request<AuthResponse>('/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
-      });
+      }, true); // skipRefresh = true car c'est une route publique
 
       if (response.success && response.token) {
         this.token = response.token;
@@ -176,7 +176,7 @@ class SanctumAuthService {
       const response = await this.request<AuthResponse>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
-      });
+      }, true); // skipRefresh = true car c'est une route publique
 
       if (response.success && response.token) {
         this.token = response.token;
@@ -197,9 +197,12 @@ class SanctumAuthService {
 
   async logout(): Promise<void> {
     try {
-      await this.request('/auth/logout', {
-        method: 'POST',
-      });
+      // Seulement appeler l'API si on a un token
+      if (this.token) {
+        await this.request('/auth/logout', {
+          method: 'POST',
+        }, true); // skipRefresh = true
+      }
 
       this.token = null;
       localStorage.removeItem('sanctum_token');
@@ -232,17 +235,44 @@ class SanctumAuthService {
   }
 
   async refreshToken(): Promise<boolean> {
+    return this.refreshTokenDirect();
+  }
+
+  private async refreshTokenDirect(): Promise<boolean> {
     try {
-      const response = await this.request<AuthResponse>('/auth/refresh', {
+      const url = `${this.baseUrl}/auth/refresh`;
+      
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+      }
+
+      const response = await fetch(url, {
         method: 'POST',
+        headers,
+        credentials: 'include',
       });
 
-      if (response.success && response.token) {
-        this.token = response.token;
-        localStorage.setItem('sanctum_token', response.token);
+      if (!response.ok) {
+        // Si le refresh échoue, on nettoie le token
+        this.token = null;
+        localStorage.removeItem('sanctum_token');
+        useAuthStore.getState().logout();
+        return false;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.token) {
+        this.token = data.token;
+        localStorage.setItem('sanctum_token', data.token);
         
-        if (response.user) {
-          useAuthStore.getState().updateUser(response.user);
+        if (data.user) {
+          useAuthStore.getState().updateUser(data.user);
         }
         
         return true;
@@ -251,13 +281,17 @@ class SanctumAuthService {
       return false;
     } catch (error) {
       console.error('Erreur rafraîchissement token:', error);
+      // En cas d'erreur, on nettoie le token
+      this.token = null;
+      localStorage.removeItem('sanctum_token');
+      useAuthStore.getState().logout();
       return false;
     }
   }
 
   async getUser(): Promise<AuthResponse> {
     try {
-      const response = await this.request<AuthResponse>('/auth/me');
+      const response = await this.request<AuthResponse>('/auth/me', {}, true); // skipRefresh = true
       
       if (response.success && response.user) {
         useAuthStore.getState().updateUser(response.user);
@@ -272,7 +306,7 @@ class SanctumAuthService {
 
   async checkAuth(): Promise<AuthResponse> {
     try {
-      const response = await this.request<AuthResponse>('/auth/check');
+      const response = await this.request<AuthResponse>('/auth/check', {}, true); // skipRefresh = true
       
       if (response.success && response.user) {
         useAuthStore.getState().updateUser(response.user);

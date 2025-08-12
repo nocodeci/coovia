@@ -12,7 +12,7 @@ import { RecentSales } from "./components/recent-sales"
 import Paiement from "@/components/paiement"
 import { DashboardTopBar } from "./components/dashboard-top-bar"
 import { useParams, useNavigate } from "@tanstack/react-router"
-import { useAuth } from "@/hooks/useAuthQuery"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 import { useStores, useStoreStats } from "@/hooks/useStores"
 import { CircleLoader } from "@/components/ui/circle-loader"
 
@@ -46,7 +46,7 @@ export default function Dashboard() {
   const storeId = params.storeId
   
   // Hooks React Query pour les vraies données
-  const { data: user, isLoading: authLoading } = useAuth()
+  const { user, isLoading: authLoading } = useSanctumAuth()
   const { data: stores, isLoading: storesLoading } = useStores()
   const { data: stats, isLoading: statsLoading } = useStoreStats(storeId || '')
   

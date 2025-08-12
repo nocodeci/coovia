@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { useAuth } from '@/hooks/useAuth'
+import { useSanctumAuth } from '@/hooks/useSanctumAuth'
 import { useNavigate } from '@tanstack/react-router'
 import { Loader2, Shield, AlertCircle, UserCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,7 @@ export function ProtectedRouteAuth({
   requiredRole, 
   fallback 
 }: ProtectedRouteProps) {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading } = useSanctumAuth()
   const navigate = useNavigate()
 
   // Afficher un loader pendant la vérification de l'authentification
@@ -133,7 +133,7 @@ export function withAuth<P extends object>(
 
 // Hook pour vérifier les permissions
 export function usePermissions() {
-  const { user } = useAuth()
+  const { user } = useSanctumAuth()
 
   const hasRole = (role: string) => {
     return user?.role === role

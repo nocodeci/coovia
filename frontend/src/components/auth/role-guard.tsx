@@ -21,7 +21,7 @@ export function RoleGuard({
   fallback,
   showAccessDenied = true 
 }: RoleGuardProps) {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading } = useSanctumAuth()
 
   // Si en cours de chargement, afficher un loader
   if (isLoading) {

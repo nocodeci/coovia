@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
 import { queryKeys, invalidateCache } from '@/lib/query-client'
-import { apiService } from '@/lib/api'
+import apiService from '@/lib/api'
 import { toast } from 'sonner'
 
 /**

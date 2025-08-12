@@ -1,9 +1,9 @@
 import { useStore } from "@/context/store-context"
-import { useAuth } from "@/hooks/useAuth"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 
 export function DebugStoreInfo() {
   const { stores, isLoading, error, hasLoaded } = useStore()
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isLoading: authLoading } = useSanctumAuth()
 
   return (
     <div className="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs max-w-sm z-50">

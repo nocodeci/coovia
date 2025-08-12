@@ -4,10 +4,10 @@ import { useEffect } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { SignUpForm } from "./components/sign-up-form"
 import { ModernSignUpForm } from "./components/modern-sign-up-form"
-import { useAuth } from "@/hooks/useAuth"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 
 export default function SignUp() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated } = useSanctumAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -48,15 +48,17 @@ export default function SignUp() {
         <div className="flex flex-col items-start justify-start w-full mb-6 max-w-xs">
           <img 
             src="/assets/images/logo.svg" 
-            alt="coovia" 
+            alt="Wozif" 
             width="100" 
             height="16"
             className="h-8 w-auto"
           />
         </div>
         
-        <div className="w-full max-w-xs">
-          <ModernSignUpForm />
+        <div className="w-full max-w-sm">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            <ModernSignUpForm />
+          </div>
         </div>
       </div>
     </main>

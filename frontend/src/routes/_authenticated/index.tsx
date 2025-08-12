@@ -2,7 +2,7 @@
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useStore } from "@/context/store-context"
-import { useAuth } from "@/hooks/useAuth"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 import { useEffect, useRef, useState } from "react"
 import { OptimizedLoading } from "@/components/optimized-loading"
 
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/")({
 
 function AuthenticatedLayout() {
   const { currentStore, stores, isLoading: storesLoading, hasLoaded } = useStore()
-  const { user, isLoading: authLoading, hasCheckedAuth } = useAuth()
+  const { user, isLoading: authLoading, isAuthenticated } = useSanctumAuth()
   const navigate = useNavigate()
   const hasRedirected = useRef(false)
   const [redirecting, setRedirecting] = useState(false)
@@ -22,12 +22,12 @@ function AuthenticatedLayout() {
     if (hasRedirected.current || redirecting) return
 
     // Attendre que l'authentification soit vérifiée
-    if (!hasCheckedAuth || authLoading) return
+    if (authLoading) return
 
     // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
-    if (!user) {
+    if (!isAuthenticated || !user) {
       hasRedirected.current = true
-      navigate({ to: "/sign-in" })
+      window.location.href = "/sign-in"
       return
     }
 
@@ -55,23 +55,23 @@ function AuthenticatedLayout() {
           return
         }
       }
-      // Si pas de boutique sélectionnée ou la boutique n'existe plus, aller à la sélection
+      // Si pas de boutique sélectionnée ou la boutique n'existe plus, aller au dashboard principal
       hasRedirected.current = true
-      navigate({ to: "/store-selection" })
+      navigate({ to: "/dashboard" })
     } else {
-      // Si l'utilisateur n'a aucune boutique, rediriger directement vers la création
+      // Si l'utilisateur n'a aucune boutique, rediriger vers la création
       hasRedirected.current = true
-      navigate({ to: "/create-store" })
+      window.location.href = "/create-store"
     }
-  }, [currentStore, stores, storesLoading, hasLoaded, user, authLoading, hasCheckedAuth, navigate, redirecting])
+  }, [currentStore, stores, storesLoading, hasLoaded, user, authLoading, isAuthenticated, navigate, redirecting])
 
   // Afficher un loader optimisé pendant la vérification
-  if (authLoading || storesLoading || redirecting || !hasCheckedAuth) {
+  if (authLoading || storesLoading || redirecting) {
     return (
       <OptimizedLoading 
         type="spinner"
         message={
-          !hasCheckedAuth || authLoading 
+          authLoading 
             ? "Vérification de votre compte..." 
             : storesLoading 
             ? "Chargement de vos boutiques..." 

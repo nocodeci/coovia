@@ -4,11 +4,11 @@ import { useEffect } from "react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { ModernAuthForm } from "./components/modern-auth-form"
 import { MfaForm } from "./components/mfa-form"
-import { useAuth } from "@/hooks/useAuth"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function ModernSignIn() {
-  const { isAuthenticated, mfaRequired } = useAuth()
+  const { isAuthenticated, mfaRequired } = useSanctumAuth()
   const navigate = useNavigate()
 
   useEffect(() => {

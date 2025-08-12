@@ -9,7 +9,7 @@ import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useAuth } from "@/hooks/useAuth"
+import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 import { LoginCredentials } from "@/types/auth"
 
 const loginSchema = z.object({
@@ -21,7 +21,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 
 export function AuthForm() {
   const [showPassword, setShowPassword] = useState(false)
-  const { login, isLoading } = useAuth()
+  const { login, isLoading } = useSanctumAuth()
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),

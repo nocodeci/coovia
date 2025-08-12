@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useAuth } from '@/context/auth-context'
+import { useSanctumAuth } from '@/hooks/useSanctumAuth'
 import { 
   User, 
   LogOut, 
@@ -27,15 +27,12 @@ import {
 } from 'lucide-react'
 
 export function MainNav() {
-  const { user, isAuthenticated, isLoading, login, logout } = useAuth()
+  const { user, isAuthenticated, isLoading, logout } = useSanctumAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
 
-  const handleLogin = async () => {
-    try {
-      await login()
-    } catch (error) {
-      console.error('Erreur de connexion:', error)
-    }
+  const handleLogin = () => {
+    // Rediriger vers la page de connexion
+    window.location.href = '/sign-in'
   }
 
   const handleLogout = async () => {

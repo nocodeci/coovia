@@ -15,6 +15,7 @@ import { Route as ClerkRouteRouteImport } from './routes/clerk/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as BoutiqueStoreIdRouteImport } from './routes/boutique/$storeId'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedStoreIdRouteImport } from './routes/_authenticated/$storeId'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
@@ -89,6 +90,11 @@ const BoutiqueStoreIdRoute = BoutiqueStoreIdRouteImport.update({
   id: '/boutique/$storeId',
   path: '/boutique/$storeId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStoreIdRoute = AuthenticatedStoreIdRouteImport.update({
   id: '/$storeId',
@@ -357,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/$storeId': typeof AuthenticatedStoreIdRouteWithChildren
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/boutique/$storeId': typeof BoutiqueStoreIdRoute
   '/': typeof AuthenticatedIndexRoute
   '/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
@@ -406,6 +413,7 @@ export interface FileRoutesByTo {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/$storeId': typeof AuthenticatedStoreIdRouteWithChildren
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/boutique/$storeId': typeof BoutiqueStoreIdRoute
   '/': typeof AuthenticatedIndexRoute
   '/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
@@ -458,6 +466,7 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/$storeId': typeof AuthenticatedStoreIdRouteWithChildren
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/boutique/$storeId': typeof BoutiqueStoreIdRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/$storeId/apps': typeof AuthenticatedStoreIdAppsRoute
@@ -511,6 +520,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/$storeId'
+    | '/dashboard'
     | '/boutique/$storeId'
     | '/'
     | '/$storeId/apps'
@@ -560,6 +570,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/$storeId'
+    | '/dashboard'
     | '/boutique/$storeId'
     | '/'
     | '/$storeId/apps'
@@ -611,6 +622,7 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/$storeId'
+    | '/_authenticated/dashboard'
     | '/boutique/$storeId'
     | '/_authenticated/'
     | '/_authenticated/$storeId/apps'
@@ -707,6 +719,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/boutique/$storeId'
       preLoaderRoute: typeof BoutiqueStoreIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/$storeId': {
       id: '/_authenticated/$storeId'
@@ -1117,6 +1136,7 @@ const AuthenticatedStoreIdRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedStoreIdRoute: typeof AuthenticatedStoreIdRouteWithChildren
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
@@ -1133,6 +1153,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedStoreIdRoute: AuthenticatedStoreIdRouteWithChildren,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,

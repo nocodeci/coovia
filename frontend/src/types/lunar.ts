@@ -168,7 +168,7 @@ export interface CreateProductForm {
   stock_quantity: number;
   category_id?: string;
   brand_id?: string;
-  is_active: boolean;
+  status: 'active' | 'inactive' | 'pending';
   is_featured: boolean;
   images?: File[];
 }
