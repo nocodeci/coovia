@@ -31,8 +31,9 @@ class ApiService {
 
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
+    
+    // ✅ Récupérer les en-têtes de base (Accept, Authorization)
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
       ...(options.headers as Record<string, string>),
     }
@@ -44,13 +45,30 @@ class ApiService {
       headers['Authorization'] = `Bearer ${this.token}`
     }
 
+    console.log('🌐 Making request to:', url)
+    
     const config: RequestInit = {
-      ...options,
-      headers,
+      method: options.method,
+      headers: headers,
     }
 
-    console.log('🌐 Making request to:', url)
-    console.log('🔑 Headers:', headers)
+    // ✅ CORRECTION CLÉ : Gestion conditionnelle du body et Content-Type
+    if (options.body) {
+      if (options.body instanceof FormData) {
+        // Si c'est un FormData, on ne touche PAS au 'Content-Type'
+        // Le navigateur le fera automatiquement et correctement
+        config.body = options.body
+        console.log('🔍 FormData detected, letting browser set Content-Type')
+      } else {
+        // Si ce ne sont pas des FormData, ce sont des données JSON
+        headers['Content-Type'] = 'application/json'
+        config.body = options.body
+        console.log('🔍 JSON data detected, setting Content-Type to application/json')
+      }
+    }
+
+    console.log('🔑 Headers:', config.headers)
+    console.log('🔍 Body type:', typeof config.body, config.body instanceof FormData ? 'FormData' : 'not FormData')
 
     try {
       const response = await fetch(url, config)
@@ -79,6 +97,39 @@ class ApiService {
       console.error('🚨 API Error:', error)
       throw error
     }
+  }
+
+  // Méthodes HTTP spécifiques
+  async get<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { ...options, method: 'GET' })
+  }
+
+  async post<T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<ApiResponse<T>> {
+    console.log('🔍 API Service - data type:', typeof data, data instanceof FormData ? 'FormData' : 'not FormData')
+    
+    // ✅ Simplification : la logique de gestion du body est maintenant dans request()
+    const body = data instanceof FormData ? data : JSON.stringify(data)
+    
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body,
+    })
+  }
+
+  async put<T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<ApiResponse<T>> {
+    // ✅ Simplification : la logique de gestion du body est maintenant dans request()
+    const body = data instanceof FormData ? data : JSON.stringify(data)
+    
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
+      body,
+    })
+  }
+
+  async delete<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { ...options, method: 'DELETE' })
   }
 
   // Auth methods - OPTIMISÉ
@@ -465,6 +516,9 @@ class ApiService {
     files.forEach((file, index) => {
       formData.append(`files[${index}]`, file)
     })
+
+    console.log('🔍 uploadMedia - FormData created:', formData instanceof FormData)
+    console.log('🔍 uploadMedia - Files count:', files.length)
 
     return this.request(`/stores/${storeId}/media`, {
       method: 'POST',
