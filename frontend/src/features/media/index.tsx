@@ -1,6 +1,53 @@
 import React, { useState, useCallback, useEffect } from 'react'
-import { Upload, Folder, Image, File, Trash2, Download, Eye, Search, Filter, Grid, List, AlertCircle } from 'lucide-react'
+import { 
+  Upload, 
+  Folder, 
+  Image, 
+  File, 
+  Trash2, 
+  Download, 
+  Eye, 
+  Search, 
+  Filter, 
+  Grid, 
+  List, 
+  AlertCircle,
+  MoreVertical,
+  Calendar,
+  HardDrive,
+  FileImage,
+  FileVideo,
+  FileAudio,
+  FileText,
+  Plus,
+  X,
+  Check,
+  Loader2
+} from 'lucide-react'
 import { mediaService, MediaItem, MediaStats } from '@/services/mediaService'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Progress } from '@/components/ui/progress'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu'
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog'
+import MediaPreview from '@/components/MediaPreview'
 
 interface MediaLibraryProps {
   storeId: string
@@ -18,6 +65,9 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
   const [stats, setStats] = useState<MediaStats | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
+  const [previewMedia, setPreviewMedia] = useState<MediaItem | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   // Charger les médias au montage du composant
   useEffect(() => {
@@ -50,7 +100,7 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
     const file = event.target.files?.[0]
     if (file) {
       setSelectedFile(file)
-      setError(null) // Réinitialiser les erreurs précédentes
+      setError(null)
     }
   }, [])
 
@@ -81,6 +131,7 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
       setSelectedFile(null)
       setIsUploading(false)
       setUploadProgress(0)
+      setIsUploadDialogOpen(false)
       
       // Réinitialiser l'input file
       const fileInput = document.getElementById('file-upload') as HTMLInputElement
@@ -129,205 +180,374 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
     )
   }, [])
 
+  const handlePreview = useCallback((media: MediaItem) => {
+    setPreviewMedia(media)
+    setIsPreviewOpen(true)
+  }, [])
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedItems.length === mediaItems.length) {
+      setSelectedItems([])
+    } else {
+      setSelectedItems(mediaItems.map(item => item.id))
+    }
+  }, [selectedItems.length, mediaItems])
+
+  const handleBulkDelete = useCallback(async () => {
+    const isConfirmed = window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedItems.length} fichier(s) ?`)
+    if (!isConfirmed) {
+      return
+    }
+
+    try {
+      // Supprimer tous les fichiers sélectionnés
+      await Promise.all(selectedItems.map(id => mediaService.deleteMedia(storeId, id)))
+      
+      // Mettre à jour la liste locale
+      setMediaItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
+      setSelectedItems([])
+      
+      // Recharger les stats
+      await loadMedia()
+      
+      console.log('Fichiers supprimés avec succès')
+    } catch (error) {
+      console.error('Erreur lors de la suppression en masse:', error)
+      setError('Erreur lors de la suppression en masse')
+    }
+  }, [selectedItems, storeId, loadMedia])
+
   // Les données sont déjà filtrées par l'API
   const filteredItems = mediaItems
 
   const getFileIcon = (type: string) => {
     switch (type) {
-      case 'image': return <Image className="w-5 h-5 text-blue-500" />
-      case 'video': return <File className="w-5 h-5 text-red-500" />
-      case 'audio': return <File className="w-5 h-5 text-purple-500" />
-      default: return <File className="w-5 h-5 text-green-500" />
+      case 'image': return <FileImage className="w-5 h-5 text-blue-500" />
+      case 'video': return <FileVideo className="w-5 h-5 text-red-500" />
+      case 'audio': return <FileAudio className="w-5 h-5 text-purple-500" />
+      default: return <FileText className="w-5 h-5 text-green-500" />
     }
   }
 
+  const getFileTypeColor = (type: string) => {
+    switch (type) {
+      case 'image': return 'bg-blue-100 text-blue-800'
+      case 'video': return 'bg-red-100 text-red-800'
+      case 'audio': return 'bg-purple-100 text-purple-800'
+      default: return 'bg-green-100 text-green-800'
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Bibliothèque Media</h1>
-              <p className="text-gray-600 mt-2">Store ID: {storeId}</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => document.getElementById('file-upload')?.click()}
-                disabled={isUploading}
-                className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Sélectionner Fichier
-              </button>
-              <button
-                onClick={handleUpload}
-                disabled={isUploading || !selectedFile}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {isUploading ? 'Upload en cours...' : 'Upload Fichier'}
-              </button>
-              <input
-                id="file-upload"
-                type="file"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                Bibliothèque Media
+              </h1>
+              <p className="text-slate-600 mt-2 flex items-center">
+                <HardDrive className="w-4 h-4 mr-2" />
+                Store ID: {storeId}
+              </p>
             </div>
             
-            {/* Affichage du fichier sélectionné */}
-            {selectedFile && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <File className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-900">{selectedFile.name}</span>
-                    <span className="text-xs text-blue-600">({mediaService.formatFileSize(selectedFile.size)})</span>
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter un fichier
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Ajouter un fichier</DialogTitle>
+                  <DialogDescription>
+                    Sélectionnez un fichier à uploader dans votre bibliothèque media.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid w-full max-w-sm items-center gap-1.5">
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      onChange={handleFileSelect}
+                      className="cursor-pointer"
+                    />
                   </div>
-                  <button
-                    onClick={() => setSelectedFile(null)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    ×
-                  </button>
+                  
+                  {selectedFile && (
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <File className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-medium">{selectedFile.name}</span>
+                            <Badge variant="secondary">{mediaService.formatFileSize(selectedFile.size)}</Badge>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedFile(null)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  
+                  {isUploading && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Upload en cours...</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <Progress value={uploadProgress} className="w-full" />
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsUploadDialogOpen(false)}
+                      disabled={isUploading}
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={handleUpload}
+                      disabled={isUploading || !selectedFile}
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Upload...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            {/* Barre de progression */}
-            {isUploading && (
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-                  <span>Upload en cours...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats Cards */}
         {stats && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{stats.total_files}</div>
-                <div className="text-sm text-gray-600">Total Fichiers</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{mediaService.formatFileSize(stats.total_size)}</div>
-                <div className="text-sm text-gray-600">Espace Utilisé</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{stats.files_by_type.image}</div>
-                <div className="text-sm text-gray-600">Images</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{stats.files_by_type.video}</div>
-                <div className="text-sm text-gray-600">Vidéos</div>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-600">Total Fichiers</p>
+                    <p className="text-3xl font-bold text-blue-900">{stats.total_files}</p>
+                  </div>
+                  <Folder className="w-8 h-8 text-blue-600" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-600">Espace Utilisé</p>
+                    <p className="text-3xl font-bold text-green-900">{mediaService.formatFileSize(stats.total_size)}</p>
+                  </div>
+                  <HardDrive className="w-8 h-8 text-green-600" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-600">Images</p>
+                    <p className="text-3xl font-bold text-purple-900">{stats.files_by_type.image}</p>
+                  </div>
+                  <FileImage className="w-8 h-8 text-purple-600" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-red-600">Vidéos</p>
+                    <p className="text-3xl font-bold text-red-900">{stats.files_by_type.video}</p>
+                  </div>
+                  <FileVideo className="w-8 h-8 text-red-600" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {/* Toolbar */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Rechercher des fichiers..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                {/* Search */}
+                <div className="relative w-80">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                  <Input
+                    type="text"
+                    placeholder="Rechercher des fichiers..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Filter */}
+                <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filtrer par type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les types</SelectItem>
+                    <SelectItem value="image">Images</SelectItem>
+                    <SelectItem value="video">Vidéos</SelectItem>
+                    <SelectItem value="document">Documents</SelectItem>
+                    <SelectItem value="audio">Audio</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Filter */}
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value as any)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">Tous les types</option>
-                <option value="image">Images</option>
-                <option value="video">Vidéos</option>
-                <option value="document">Documents</option>
-                <option value="audio">Audio</option>
-              </select>
+              <div className="flex items-center space-x-2">
+                {/* View Mode */}
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-
-            <div className="flex items-center space-x-2">
-              {/* View Mode */}
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
-              >
-                <Grid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-              <span className="text-red-700">{error}</span>
-            </div>
-          </div>
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">{error}</AlertDescription>
+          </Alert>
         )}
 
-        {/* Loading State */}
+        {/* Bulk Actions */}
+        {selectedItems.length > 0 && (
+          <Card className="mb-6 border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    {selectedItems.length} élément(s) sélectionné(s)
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                  >
+                    {selectedItems.length === mediaItems.length ? 'Désélectionner tout' : 'Sélectionner tout'}
+                  </Button>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedItems([])}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Annuler
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Supprimer ({selectedItems.length})
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Content */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Chargement des médias...</h3>
-            <p className="text-gray-500">Veuillez patienter</p>
-          </div>
+          <Card>
+            <CardContent className="p-12">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-slate-900 mb-2">Chargement des médias...</h3>
+                <p className="text-slate-500">Veuillez patienter</p>
+              </div>
+            </CardContent>
+          </Card>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-12">
-            <Folder className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun fichier trouvé</h3>
-            <p className="text-gray-500">Aucun fichier ne correspond à votre recherche.</p>
-          </div>
+          <Card>
+            <CardContent className="p-12">
+              <div className="text-center">
+                <Folder className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-slate-900 mb-2">Aucun fichier trouvé</h3>
+                <p className="text-slate-500 mb-4">Aucun fichier ne correspond à votre recherche.</p>
+                <Button onClick={() => setIsUploadDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter votre premier fichier
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'space-y-2'}>
             {filteredItems.map((item) => (
-              <div
+              <Card
                 key={item.id}
-                className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow ${
-                  selectedItems.includes(item.id) ? 'ring-2 ring-blue-500' : ''
+                className={`group cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                  selectedItems.includes(item.id) ? 'ring-2 ring-blue-500 shadow-lg' : ''
                 }`}
+                onClick={() => handleSelect(item.id)}
               >
                 {viewMode === 'grid' ? (
                   // Grid View
-                  <div className="relative group">
-                    <div className="aspect-square bg-gray-100 relative">
+                  <div className="relative">
+                    <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden rounded-t-lg">
                       {(() => {
                         const imageUrl = item.thumbnail || item.url;
                         return imageUrl ? (
                           <img
                             src={imageUrl}
                             alt={item.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -339,107 +559,185 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
                       {/* Overlay Actions */}
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
                         <div className="flex space-x-2">
-                          <button className="p-2 bg-white rounded-full hover:bg-gray-100">
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePreview(item);
+                            }}
+                          >
                             <Eye className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 bg-white rounded-full hover:bg-gray-100">
+                          </Button>
+                          <Button size="sm" variant="secondary" className="h-8 w-8 p-0">
                             <Download className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(item.id)}
-                            className="p-2 bg-white rounded-full hover:bg-red-100 text-red-600"
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(item.id);
+                            }}
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </Button>
                         </div>
                       </div>
 
-                      {/* Selection Checkbox */}
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(item.id)}
-                        onChange={() => handleSelect(item.id)}
-                        className="absolute top-2 left-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                      />
+                      {/* Selection Indicator */}
+                      {selectedItems.includes(item.id) && (
+                        <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+
+                      {/* File Type Badge */}
+                      <div className="absolute top-2 left-2">
+                        <Badge className={getFileTypeColor(item.type)}>
+                          {item.type}
+                        </Badge>
+                      </div>
                     </div>
                     
-                    <div className="p-4">
-                      <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {mediaService.formatFileSize(item.size)} • {new Date(item.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-slate-900 truncate">{item.name}</h3>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <p className="text-sm text-slate-500">
+                              {mediaService.formatFileSize(item.size)}
+                            </p>
+                            <span className="text-slate-300">•</span>
+                            <p className="text-sm text-slate-500 flex items-center">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {formatDate(item.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                                                     <DropdownMenuContent align="end">
+                             <DropdownMenuItem onClick={(e) => {
+                               e.stopPropagation();
+                               handlePreview(item);
+                             }}>
+                               <Eye className="w-4 h-4 mr-2" />
+                               Aperçu
+                             </DropdownMenuItem>
+                             <DropdownMenuItem>
+                               <Download className="w-4 h-4 mr-2" />
+                               Télécharger
+                             </DropdownMenuItem>
+                             <DropdownMenuItem className="text-red-600" onClick={(e) => {
+                               e.stopPropagation();
+                               handleDelete(item.id);
+                             }}>
+                               <Trash2 className="w-4 h-4 mr-2" />
+                               Supprimer
+                             </DropdownMenuItem>
+                           </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </CardContent>
                   </div>
                 ) : (
                   // List View
-                  <div className="flex items-center p-4 hover:bg-gray-50">
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.includes(item.id)}
-                      onChange={() => handleSelect(item.id)}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 mr-4"
-                    />
-                    
-                    <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center mr-4">
-                      {(() => {
-                        const imageUrl = item.thumbnail || item.url;
-                        return imageUrl ? (
-                          <img
-                            src={imageUrl}
-                            alt={item.name}
-                            className="w-full h-full object-cover rounded"
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded flex items-center justify-center">
+                          {(() => {
+                            const imageUrl = item.thumbnail || item.url;
+                            return imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt={item.name}
+                                className="w-full h-full object-cover rounded"
+                              />
+                            ) : (
+                              getFileIcon(item.type)
+                            );
+                          })()}
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(item.id)}
+                            onChange={() => handleSelect(item.id)}
+                            className="w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500"
                           />
-                        ) : (
-                          getFileIcon(item.type)
-                        );
-                      })()}
+                          <Badge className={getFileTypeColor(item.type)}>
+                            {item.type}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-slate-900 truncate">{item.name}</h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <p className="text-sm text-slate-500">
+                            {mediaService.formatFileSize(item.size)}
+                          </p>
+                          <span className="text-slate-300">•</span>
+                          <p className="text-sm text-slate-500 flex items-center">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {formatDate(item.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                      
+                                             <div className="flex items-center space-x-2">
+                         <Button 
+                           variant="ghost" 
+                           size="sm"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             handlePreview(item);
+                           }}
+                         >
+                           <Eye className="w-4 h-4" />
+                         </Button>
+                         <Button variant="ghost" size="sm">
+                           <Download className="w-4 h-4" />
+                         </Button>
+                         <Button 
+                           variant="ghost" 
+                           size="sm"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             handleDelete(item.id);
+                           }}
+                         >
+                           <Trash2 className="w-4 h-4" />
+                         </Button>
+                       </div>
                     </div>
-                    
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{item.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        {mediaService.formatFileSize(item.size)} • {new Date(item.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <button className="p-2 text-gray-400 hover:text-gray-600">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-gray-600">
-                        <Download className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(item.id)}
-                        className="p-2 text-gray-400 hover:text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                  </CardContent>
                 )}
-              </div>
+              </Card>
             ))}
           </div>
         )}
 
-        {/* Bulk Actions */}
-        {selectedItems.length > 0 && (
-          <div className="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {selectedItems.length} élément(s) sélectionné(s)
-              </span>
-              <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                <Trash2 className="w-4 h-4 inline mr-2" />
-                Supprimer
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                <Download className="w-4 h-4 inline mr-2" />
-                Télécharger
-              </button>
-            </div>
-          </div>
+        {/* Media Preview */}
+        {previewMedia && (
+          <MediaPreview
+            media={previewMedia}
+            isOpen={isPreviewOpen}
+            onClose={() => {
+              setIsPreviewOpen(false)
+              setPreviewMedia(null)
+            }}
+          />
         )}
       </div>
     </div>
