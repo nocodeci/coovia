@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\PaymentController as MainPaymentController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\CloudflareController;
+use App\Http\Controllers\Api\SimpleMediaController;
 use App\Http\Controllers\Api\BoutiqueController;
 use App\Http\Controllers\MonerooController;
 use App\Http\Controllers\TestMonerooController;
@@ -285,10 +287,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Routes publiques pour les médias (développement seulement)
 Route::prefix('public/stores/{storeId}/media')->group(function () {
-    Route::get('/', [MediaController::class, 'index']);
-    Route::post('/', [MediaController::class, 'store']);
-    Route::put('/{mediaId}', [MediaController::class, 'update']);
-    Route::delete('/{mediaId}', [MediaController::class, 'destroy']);
+    Route::get('/', [SimpleMediaController::class, 'index']);
+    Route::post('/', [SimpleMediaController::class, 'upload']);
+    // Les routes update et destroy peuvent être ajoutées plus tard
 });
 
 // Routes publiques pour les produits (développement seulement)
@@ -461,5 +462,22 @@ Route::prefix('lunar')->group(function () {
         Route::post('products', [LunarProductController::class, 'store']);
         Route::put('products/{id}', [LunarProductController::class, 'update']);
         Route::delete('products/{id}', [LunarProductController::class, 'destroy']);
+    });
+});
+
+// Routes Cloudflare R2 pour les uploads de médias
+Route::prefix('cloudflare')->group(function () {
+    // Routes publiques pour les uploads
+    Route::post('/upload', [CloudflareController::class, 'upload']);
+    Route::post('/upload-multiple', [CloudflareController::class, 'uploadMultiple']);
+    Route::post('/upload-frontend', [CloudflareController::class, 'uploadFromFrontend']);
+    Route::delete('/delete', [CloudflareController::class, 'delete']);
+    Route::get('/info', [CloudflareController::class, 'info']);
+    
+    // Routes protégées (avec authentification)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/upload-secure', [CloudflareController::class, 'upload']);
+        Route::post('/upload-multiple-secure', [CloudflareController::class, 'uploadMultiple']);
+        Route::delete('/delete-secure', [CloudflareController::class, 'delete']);
     });
 });

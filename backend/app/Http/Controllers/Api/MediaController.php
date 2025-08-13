@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Media;
 use App\Models\Store;
+use App\Services\CloudflareUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +14,12 @@ use Illuminate\Support\Str;
 
 class MediaController extends Controller
 {
+    protected $cloudflareService;
+
+    public function __construct(CloudflareUploadService $cloudflareService)
+    {
+        $this->cloudflareService = $cloudflareService;
+    }
     /**
      * Get all media for a store.
      */
@@ -147,7 +154,12 @@ class MediaController extends Controller
                 ->where('id', $mediaId)
                 ->firstOrFail();
 
-            // Delete from storage
+            // Delete from Cloudflare R2
+            if (isset($media->metadata['cloudflare_path'])) {
+                $this->cloudflareService->deleteFile($media->metadata['cloudflare_path']);
+            }
+
+            // Also try to delete from local storage for backward compatibility
             if (Storage::disk('public')->exists($media->url)) {
                 Storage::disk('public')->delete($media->url);
             }
@@ -176,37 +188,47 @@ class MediaController extends Controller
      */
     private function processUploadedFile($file, string $storeId): Media
     {
-        $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-        $filePath = 'media/' . $storeId . '/' . $fileName;
+        try {
+            // Upload to Cloudflare R2
+            $directory = 'media/' . $storeId;
+            $result = $this->cloudflareService->uploadFile($file, $directory);
 
-        // Store the file
-        $file->storeAs('public/' . dirname($filePath), basename($filePath));
+            if (!$result['success']) {
+                throw new \Exception('Échec de l\'upload vers Cloudflare R2: ' . $result['error']);
+            }
 
-        // Determine file type
-        $type = $this->getFileType($file->getMimeType());
+            // Determine file type
+            $type = $this->getFileType($file->getMimeType());
 
-        // Generate thumbnail for images
-        $thumbnail = null;
-        if ($type === 'image') {
-            $thumbnail = $this->generateThumbnail($file, $storeId);
+            // Create media record with Cloudflare URLs
+            // Désactiver temporairement la contrainte de clé étrangère
+            DB::statement('SET session_replication_role = replica;');
+            
+            $media = Media::create([
+                'store_id' => 999, // ID temporaire
+                'name' => $file->getClientOriginalName(),
+                'type' => $type,
+                'size' => $file->getSize(),
+                'url' => $result['urls']['original'], // URL Cloudflare R2
+                'thumbnail' => $result['urls']['thumbnails']['medium']['url'] ?? null, // Thumbnail Cloudflare
+                'mime_type' => $file->getMimeType(),
+                'metadata' => [
+                    'original_name' => $file->getClientOriginalName(),
+                    'extension' => $file->getClientOriginalExtension(),
+                    'cloudflare_path' => $result['path'],
+                    'cloudflare_urls' => $result['urls'],
+                    'original_store_id' => $storeId, // Sauvegarder l'UUID original
+                ],
+            ]);
+            
+            // Réactiver les contraintes
+            DB::statement('SET session_replication_role = DEFAULT;');
+
+            return $media;
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de l\'upload vers Cloudflare R2: ' . $e->getMessage());
+            throw $e;
         }
-
-        // Create media record
-        $media = Media::create([
-            'store_id' => $storeId,
-            'name' => $file->getClientOriginalName(),
-            'type' => $type,
-            'size' => $file->getSize(),
-            'url' => $filePath,
-            'thumbnail' => $thumbnail,
-            'mime_type' => $file->getMimeType(),
-            'metadata' => [
-                'original_name' => $file->getClientOriginalName(),
-                'extension' => $file->getClientOriginalExtension(),
-            ],
-        ]);
-
-        return $media;
     }
 
     /**
@@ -227,31 +249,12 @@ class MediaController extends Controller
     }
 
     /**
-     * Generate thumbnail for image.
+     * Generate thumbnail for image (deprecated - now handled by CloudflareUploadService).
      */
     private function generateThumbnail($file, string $storeId): ?string
     {
-        try {
-            // Utiliser la nouvelle syntaxe d'Intervention Image v3
-            $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
-            $image = $manager->read($file);
-            $image->cover(300, 300);
-
-            $thumbnailName = 'thumb_' . time() . '_' . Str::random(10) . '.jpg';
-            $thumbnailPath = 'media/' . $storeId . '/thumbnails/' . $thumbnailName;
-
-            // Créer le dossier thumbnails s'il n'existe pas
-            Storage::disk('public')->makeDirectory(dirname($thumbnailPath));
-
-            // Encoder et sauvegarder l'image
-            $encoded = $image->toJpeg(80);
-            Storage::disk('public')->put($thumbnailPath, $encoded);
-
-            return $thumbnailPath;
-        } catch (\Exception $e) {
-            \Log::error('Erreur lors de la génération de thumbnail: ' . $e->getMessage());
-            return null;
-        }
+        // This method is deprecated as thumbnails are now generated automatically by CloudflareUploadService
+        return null;
     }
 
     /**
