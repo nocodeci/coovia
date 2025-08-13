@@ -39,15 +39,18 @@ export default function MediaDisplay({
           className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200"
         >
           <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-            {item.thumbnail ? (
-              <img
-                src={`http://localhost:8000/storage/${item.thumbnail}`}
-                alt={item.name}
-                className="w-full h-full object-cover rounded"
-              />
-            ) : (
-              getFileIcon(item.type)
-            )}
+            {(() => {
+              const imageUrl = item.thumbnail || item.url;
+              return imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={item.name}
+                  className="w-full h-full object-cover rounded"
+                />
+              ) : (
+                getFileIcon(item.type)
+              );
+            })()}
           </div>
           
           <div className="flex-1 min-w-0">

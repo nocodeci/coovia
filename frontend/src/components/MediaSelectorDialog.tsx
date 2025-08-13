@@ -240,23 +240,20 @@ export default function MediaSelectorDialog({
                     // Grid View
                     <div className="p-3">
                       <div className="aspect-square bg-gray-100 rounded-lg relative overflow-hidden mb-2">
-                        {item.thumbnail ? (
-                          <img
-                            src={`http://localhost:8000/storage/${item.thumbnail}`}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : item.type === 'image' ? (
-                          <img
-                            src={`http://localhost:8000/storage/${item.url}`}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            {getFileIcon(item.type)}
-                          </div>
-                        )}
+                        {(() => {
+                          const imageUrl = item.thumbnail || item.url;
+                          return imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              {getFileIcon(item.type)}
+                            </div>
+                          );
+                        })()}
                         
                         {/* Selection Indicator */}
                         {isSelected(item.id) && (
@@ -277,21 +274,18 @@ export default function MediaSelectorDialog({
                     // List View
                     <div className="flex items-center p-4 hover:bg-gray-50">
                       <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center mr-4">
-                        {item.thumbnail ? (
-                          <img
-                            src={`http://localhost:8000/storage/${item.thumbnail}`}
-                            alt={item.name}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        ) : item.type === 'image' ? (
-                          <img
-                            src={`http://localhost:8000/storage/${item.url}`}
-                            alt={item.name}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        ) : (
-                          getFileIcon(item.type)
-                        )}
+                        {(() => {
+                          const imageUrl = item.thumbnail || item.url;
+                          return imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover rounded"
+                            />
+                          ) : (
+                            getFileIcon(item.type)
+                          );
+                        })()}
                       </div>
                       
                       <div className="flex-1">

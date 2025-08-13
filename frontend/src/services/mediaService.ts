@@ -87,7 +87,7 @@ class MediaService {
   /**
    * Upload de fichiers
    */
-  async uploadMedia(storeId: string, files: File[]): Promise<UploadResponse> {
+  async uploadMedia(storeId: string, files: File[], onProgress?: (progress: number) => void): Promise<UploadResponse> {
     try {
       const formData = new FormData()
       files.forEach(file => {
@@ -97,6 +97,9 @@ class MediaService {
       const response = await axios.post(`${API_BASE_URL}/public/stores/${storeId}/media`, formData, {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1))
+          if (onProgress) {
+            onProgress(percentCompleted)
+          }
           console.log('Upload progress:', percentCompleted)
         }
       })

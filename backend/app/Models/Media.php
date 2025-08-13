@@ -93,4 +93,37 @@ class Media extends Model
     {
         return $this->type === 'document';
     }
+
+    /**
+     * Get the proxy URL for the media file.
+     */
+    public function getProxyUrlAttribute(): string
+    {
+        $storeId = $this->metadata['original_store_id'] ?? $this->store_id;
+        // Forcer l'URL locale pour le développement
+        $baseUrl = 'http://localhost:8000';
+        return $baseUrl . "/api/media-proxy/{$storeId}/{$this->id}";
+    }
+
+    /**
+     * Get the proxy URL for the thumbnail.
+     */
+    public function getProxyThumbnailUrlAttribute(): string
+    {
+        $storeId = $this->metadata['original_store_id'] ?? $this->store_id;
+        // Forcer l'URL locale pour le développement
+        $baseUrl = 'http://localhost:8000';
+        return $baseUrl . "/api/media-proxy/{$storeId}/{$this->id}/thumbnail/medium";
+    }
+
+    /**
+     * Get the proxy URL for a specific thumbnail size.
+     */
+    public function getProxyThumbnailUrlBySizeAttribute(string $size): string
+    {
+        $storeId = $this->metadata['original_store_id'] ?? $this->store_id;
+        // Forcer l'URL locale pour le développement
+        $baseUrl = 'http://localhost:8000';
+        return $baseUrl . "/api/media-proxy/{$storeId}/{$this->id}/thumbnail/{$size}";
+    }
 } 

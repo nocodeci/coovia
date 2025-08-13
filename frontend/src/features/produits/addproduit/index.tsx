@@ -618,10 +618,8 @@ export default function AddProduct({ storeId }: AddProductProps) {
           featuredImage: media
         }))
         // Mettre à jour l'image featured pour la compatibilité
-        // Utiliser la thumbnail si disponible, sinon l'URL du fichier
-        const imageUrl = media.thumbnail 
-          ? `http://localhost:8000/storage/${media.thumbnail}`
-          : `http://localhost:8000/storage/${media.url}`
+        // Utiliser directement l'URL Cloudflare
+        const imageUrl = media.thumbnail || media.url
         setFeaturedImage(imageUrl)
         break
     }
@@ -1009,13 +1007,13 @@ export default function AddProduct({ storeId }: AddProductProps) {
                             <div className="flex items-center gap-3">
                               {file.thumbnail ? (
                                 <img
-                                  src={`http://localhost:8000/storage/${file.thumbnail}`}
+                                  src={file.thumbnail}
                                   alt={file.name}
                                   className="w-12 h-12 object-cover rounded"
                                 />
                               ) : file.type === 'image' ? (
                                 <img
-                                  src={`http://localhost:8000/storage/${file.url}`}
+                                  src={file.url}
                                   alt={file.name}
                                   className="w-12 h-12 object-cover rounded"
                                 />
@@ -1080,7 +1078,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   {selectedMedia.featuredImage ? (
                     <div className="relative group w-full h-64 rounded-lg overflow-hidden">
                       <img
-                        src={`http://localhost:8000/storage/${selectedMedia.featuredImage.thumbnail || selectedMedia.featuredImage.url}`}
+                        src={selectedMedia.featuredImage.thumbnail || selectedMedia.featuredImage.url}
                         alt="Image du produit"
                         className="w-full h-full object-cover rounded-lg"
                       />

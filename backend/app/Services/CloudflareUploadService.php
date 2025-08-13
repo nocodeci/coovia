@@ -16,7 +16,7 @@ class CloudflareUploadService
     public function __construct()
     {
         $this->config = config('cloudflare');
-        $this->disk = Storage::disk('cloudflare');
+        $this->disk = Storage::disk('r2');
     }
 
     /**

@@ -17,6 +17,7 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
   const [stats, setStats] = useState<MediaStats | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   // Charger les médias au montage du composant
   useEffect(() => {
@@ -45,47 +46,80 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
     }
   }
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (!files) return
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      setError(null) // Réinitialiser les erreurs précédentes
+    }
+  }, [])
+
+  const handleUpload = useCallback(async () => {
+    if (!storeId || !selectedFile) {
+      setError('Veuillez sélectionner un fichier')
+      return
+    }
 
     setIsUploading(true)
     setUploadProgress(0)
+    setError(null)
     
     try {
-      const response = await mediaService.uploadMedia(storeId, Array.from(files))
+      const response = await mediaService.uploadMedia(storeId, [selectedFile], (progress) => {
+        setUploadProgress(progress)
+      })
       
-      // Recharger les médias après upload
+      // Ajouter les nouveaux médias au début de la liste
+      if (response.data && response.data.length > 0) {
+        setMediaItems(prevMedias => [...response.data, ...prevMedias])
+      }
+      
+      // Recharger les stats
       await loadMedia()
       
-      // Afficher un message de succès
-      console.log(response.message)
-    } catch (error) {
-      console.error('Erreur lors de l\'upload:', error)
-      setError('Erreur lors de l\'upload des fichiers')
-    } finally {
+      // Réinitialiser les états
+      setSelectedFile(null)
       setIsUploading(false)
       setUploadProgress(0)
+      
       // Réinitialiser l'input file
-      event.target.value = ''
+      const fileInput = document.getElementById('file-upload') as HTMLInputElement
+      if (fileInput) {
+        fileInput.value = ''
+      }
+      
+      console.log('Upload réussi:', response.message)
+    } catch (error) {
+      console.error('Erreur lors de l\'upload:', error)
+      setError('Erreur lors de l\'upload du fichier')
+      setIsUploading(false)
+      setUploadProgress(0)
     }
-  }, [storeId])
+  }, [storeId, selectedFile, loadMedia])
 
   const handleDelete = useCallback(async (id: string) => {
+    // Demander confirmation à l'utilisateur
+    const isConfirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ce fichier ?")
+    if (!isConfirmed) {
+      return
+    }
+
     try {
       await mediaService.deleteMedia(storeId, id)
       
-      // Mettre à jour la liste locale
+      // Mettre à jour la liste locale instantanément
       setMediaItems(prev => prev.filter(item => item.id !== id))
       setSelectedItems(prev => prev.filter(item => item !== id))
       
       // Recharger les stats
       await loadMedia()
+      
+      console.log('Fichier supprimé avec succès')
     } catch (error) {
       console.error('Erreur lors de la suppression:', error)
       setError('Erreur lors de la suppression du fichier')
     }
-  }, [storeId])
+  }, [storeId, loadMedia])
 
   const handleSelect = useCallback((id: string) => {
     setSelectedItems(prev => 
@@ -121,19 +155,61 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
               <button
                 onClick={() => document.getElementById('file-upload')?.click()}
                 disabled={isUploading}
+                className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Sélectionner Fichier
+              </button>
+              <button
+                onClick={handleUpload}
+                disabled={isUploading || !selectedFile}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                {isUploading ? 'Upload en cours...' : 'Upload Fichiers'}
+                {isUploading ? 'Upload en cours...' : 'Upload Fichier'}
               </button>
               <input
                 id="file-upload"
                 type="file"
-                multiple
-                onChange={handleFileUpload}
+                onChange={handleFileSelect}
                 className="hidden"
               />
             </div>
+            
+            {/* Affichage du fichier sélectionné */}
+            {selectedFile && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <File className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">{selectedFile.name}</span>
+                    <span className="text-xs text-blue-600">({mediaService.formatFileSize(selectedFile.size)})</span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedFile(null)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Barre de progression */}
+            {isUploading && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                  <span>Upload en cours...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -245,17 +321,20 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
                   // Grid View
                   <div className="relative group">
                     <div className="aspect-square bg-gray-100 relative">
-                      {item.thumbnail ? (
-                        <img
-                          src={mediaService.getThumbnailUrl(item.thumbnail)}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          {getFileIcon(item.type)}
-                        </div>
-                      )}
+                      {(() => {
+                        const imageUrl = item.thumbnail || item.url;
+                        return imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            {getFileIcon(item.type)}
+                          </div>
+                        );
+                      })()}
                       
                       {/* Overlay Actions */}
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -302,15 +381,18 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
                     />
                     
                     <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center mr-4">
-                      {item.thumbnail ? (
-                        <img
-                          src={mediaService.getThumbnailUrl(item.thumbnail)}
-                          alt={item.name}
-                          className="w-full h-full object-cover rounded"
-                        />
-                      ) : (
-                        getFileIcon(item.type)
-                      )}
+                      {(() => {
+                        const imageUrl = item.thumbnail || item.url;
+                        return imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={item.name}
+                            className="w-full h-full object-cover rounded"
+                          />
+                        ) : (
+                          getFileIcon(item.type)
+                        );
+                      })()}
                     </div>
                     
                     <div className="flex-1">

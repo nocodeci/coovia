@@ -236,17 +236,20 @@ export default function MediaSelector({
                     // Grid View
                     <div className="p-4">
                       <div className="aspect-square bg-gray-100 rounded-lg relative overflow-hidden mb-3">
-                        {item.thumbnail ? (
-                          <img
-                            src={mediaService.getThumbnailUrl(item.thumbnail)}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            {getFileIcon(item.type)}
-                          </div>
-                        )}
+                        {(() => {
+                          const imageUrl = item.thumbnail || item.url;
+                          return imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              {getFileIcon(item.type)}
+                            </div>
+                          );
+                        })()}
                         
                         {/* Selection Indicator */}
                         {isSelected(item.id) && (
@@ -267,15 +270,18 @@ export default function MediaSelector({
                     // List View
                     <div className="flex items-center p-4 hover:bg-gray-50">
                       <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center mr-4">
-                        {item.thumbnail ? (
-                          <img
-                            src={mediaService.getThumbnailUrl(item.thumbnail)}
-                            alt={item.name}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        ) : (
-                          getFileIcon(item.type)
-                        )}
+                        {(() => {
+                          const imageUrl = item.thumbnail || item.url;
+                          return imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover rounded"
+                            />
+                          ) : (
+                            getFileIcon(item.type)
+                          );
+                        })()}
                       </div>
                       
                       <div className="flex-1">
