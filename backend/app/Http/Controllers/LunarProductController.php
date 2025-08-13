@@ -17,7 +17,7 @@ use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\ProductAttribute;
 use App\Models\ProductReview;
-use App\Services\CloudflareStorageService;
+use App\Services\CloudflareUploadService;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductCollection;
 use App\Http\Requests\ProductRequest;
@@ -26,7 +26,7 @@ class LunarProductController extends Controller
 {
     protected $cloudflareService;
 
-    public function __construct(CloudflareStorageService $cloudflareService)
+    public function __construct(CloudflareUploadService $cloudflareService)
     {
         $this->cloudflareService = $cloudflareService;
         $this->middleware('auth:sanctum')->except(['index', 'show', 'search', 'featured', 'byCategory', 'byBrand']);
