@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { ChevronsUpDown, Store, Plus } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,104 +54,109 @@ export function TeamSwitcher({
 
   if (!activeStore) {
     return (
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <div className="flex items-center mb-6">
-            <img 
-              src="/assets/images/logo.svg" 
-              alt="coovia" 
-              width="120" 
-              height="32" 
-              className="h-8 w-auto"
-            />
+      <div className="team-switcher-container">
+        <div className="flex items-center justify-center mb-4">
+          <img 
+            src="/assets/images/logo.svg" 
+            alt="coovia" 
+            width="120" 
+            height="32" 
+            className="h-8 w-auto team-switcher-logo"
+          />
+        </div>
+        <Button 
+          variant="outline" 
+          className="team-switcher-button w-full justify-start gap-2 h-12"
+          onClick={handleBackToStoreSelection}
+        >
+          <div className="team-switcher-avatar flex aspect-square size-8 items-center justify-center rounded-lg">
+            <Store className="size-4" />
           </div>
-          <SidebarMenuButton size='lg' onClick={handleBackToStoreSelection}>
-            <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
-              <Store className='size-4' />
+          <div className="flex-1 text-left">
+            <div className="text-sm font-semibold">
+              {isLoading ? 'Chargement...' : 'Sélectionner une boutique'}
             </div>
-            <div className='grid flex-1 text-left text-sm leading-tight'>
-              <span className='truncate font-semibold'>
-                {isLoading ? 'Chargement...' : 'Sélectionner une boutique'}
-              </span>
-              <span className='truncate text-xs'>
-                {isLoading ? 'Vérification des boutiques' : 'Cliquez pour choisir'}
-              </span>
+            <div className="text-xs text-muted-foreground">
+              {isLoading ? 'Vérification des boutiques' : 'Cliquez pour choisir'}
             </div>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
+          </div>
+        </Button>
+      </div>
     )
   }
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-                  <div className="flex items-center mb-6">
-            <img 
-              src="/assets/images/logo.svg" 
-              alt="coovia" 
-              width="120" 
-              height="32" 
-              className="h-8 w-auto"
-            />
-          </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size='lg'
-              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
-            >
-              <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden'>
-                {activeStore.logo ? (
-                  <img 
-                    src={activeStore.logo} 
-                    alt={activeStore.name}
-                    className='w-full h-full object-cover'
-                    onError={(e) => {
-                      // Fallback vers l'icône Store si l'image ne charge pas
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const fallback = target.parentElement?.querySelector('.store-fallback');
-                      if (fallback) {
-                        (fallback as HTMLElement).style.display = 'flex';
-                      }
-                    }}
-                  />
-                ) : null}
-                <div className='store-fallback flex items-center justify-center w-full h-full' style={{ display: activeStore.logo ? 'none' : 'flex' }}>
-                  <Store className='size-4' />
+    <div className="team-switcher-container">
+      <div className="flex items-center justify-center mb-4">
+        <img 
+          src="/assets/images/logo.svg" 
+          alt="coovia" 
+          width="120" 
+          height="32" 
+          className="h-8 w-auto team-switcher-logo"
+        />
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="team-switcher-button w-full justify-start gap-2 h-12 group"
+          >
+            <div className="team-switcher-avatar flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+              {activeStore.logo ? (
+                <img 
+                  src={activeStore.logo} 
+                  alt={activeStore.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.parentElement?.querySelector('.store-fallback');
+                    if (fallback) {
+                      (fallback as HTMLElement).style.display = 'flex';
+                    }
+                  }}
+                />
+              ) : null}
+              <div className="store-fallback flex items-center justify-center w-full h-full" style={{ display: activeStore.logo ? 'none' : 'flex' }}>
+                <div className="w-full h-full bg-gradient-to-br from-primary/50 to-primary/30 rounded-lg flex items-center justify-center">
+                  <Store className="size-4 text-primary" />
                 </div>
               </div>
-              <div className='grid flex-1 text-left text-sm leading-tight'>
-                <span className='truncate font-semibold'>
-                  {activeStore.name}
-                </span>
-                <span className='truncate text-xs'>Actif</span>
+            </div>
+            <div className="flex-1 text-left">
+              <div className="text-sm font-semibold truncate">
+                {activeStore.name}
               </div>
-              <ChevronsUpDown className='ml-auto' />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
+              <div className="text-xs text-muted-foreground team-switcher-active-indicator">
+                Actif
+              </div>
+            </div>
+            <ChevronsUpDown className="team-switcher-chevron ml-auto h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
           <DropdownMenuContent
-            className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
-            align='start'
+            className="team-switcher-dropdown w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            align="start"
             side={isMobile ? 'bottom' : 'right'}
             sideOffset={4}
           >
-            <DropdownMenuLabel className='text-muted-foreground text-xs'>
+            <DropdownMenuLabel className="text-muted-foreground text-xs font-semibold">
               Vos boutiques
             </DropdownMenuLabel>
             {stores.map((store) => (
               <DropdownMenuItem
                 key={store.id}
                 onClick={() => handleStoreSelect(store)}
-                className='gap-2 p-2'
+                className={`team-switcher-item gap-2 p-2 ${store.id === activeStore.id ? 'data-[active=true]' : ''}`}
+                title={store.logo ? `Logo: ${store.logo}` : 'Aucun logo'}
               >
-                <div className='flex size-6 items-center justify-center rounded-sm border overflow-hidden'>
+                <div className="team-switcher-avatar flex size-6 items-center justify-center rounded-sm border overflow-hidden">
                   {store.logo ? (
                     <img 
                       src={store.logo} 
                       alt={store.name}
-                      className='w-full h-full object-cover'
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
@@ -161,26 +167,34 @@ export function TeamSwitcher({
                       }}
                     />
                   ) : null}
-                  <div className='store-item-fallback flex items-center justify-center w-full h-full' style={{ display: store.logo ? 'none' : 'flex' }}>
-                    <Store className='size-3 shrink-0' />
+                  <div className="store-item-fallback flex items-center justify-center w-full h-full" style={{ display: store.logo ? 'none' : 'flex' }}>
+                    <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/20 rounded-sm flex items-center justify-center">
+                      <Store className="size-3 shrink-0 text-primary" />
+                    </div>
                   </div>
                 </div>
-                <span className='truncate'>{store.name}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="truncate font-medium block">{store.name}</span>
+                  {store.logo && (
+                    <span className="text-xs text-muted-foreground truncate block">
+                      Logo disponible
+                    </span>
+                  )}
+                </div>
                 {store.id === activeStore.id && (
-                  <DropdownMenuShortcut>✓</DropdownMenuShortcut>
+                  <DropdownMenuShortcut className="team-switcher-active-indicator">✓</DropdownMenuShortcut>
                 )}
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className='gap-2 p-2' onClick={handleBackToStoreSelection}>
-              <div className='bg-background flex size-6 items-center justify-center rounded-md border'>
-                <Plus className='size-4' />
+            <DropdownMenuItem className="team-switcher-item gap-2 p-2" onClick={handleBackToStoreSelection}>
+              <div className="bg-background flex size-6 items-center justify-center rounded-md border">
+                <Plus className="size-4" />
               </div>
-              <div className='text-muted-foreground font-medium'>Changer de boutique</div>
+              <div className="text-muted-foreground font-medium">Changer de boutique</div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  )
-}
+      </div>
+    )
+  }

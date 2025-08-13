@@ -15,7 +15,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const sidebarData = getSidebarData(currentStore?.id)
 
   return (
-    <Sidebar collapsible="icon" variant="floating" {...props}>
+    <Sidebar collapsible={false} variant="floating" {...props}>
       <SidebarHeader>
         {isLoading ? (
           <SidebarLoading />
@@ -31,7 +31,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <NavUser user={sidebarData.user} />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }
