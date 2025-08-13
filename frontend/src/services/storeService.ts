@@ -2,7 +2,7 @@ import apiService from '@/lib/api'
 
 export interface CreateStoreData {
   name: string
-  slug: string
+  slug?: string // Rendre optionnel pour permettre la génération automatique
   description?: string
   logo?: File
   productType?: string
@@ -28,6 +28,7 @@ export interface CreateStoreData {
 export interface Store {
   id: number
   name: string
+  slug?: string
   description?: string
   address?: string
   phone?: string
@@ -40,6 +41,7 @@ export interface Store {
 export interface StoreResponse {
   success: boolean
   message: string
+  data?: Store // Ajouter la propriété data pour la réponse de création
   store?: Store
   user?: {
     id: number
@@ -50,7 +52,7 @@ export interface StoreResponse {
 }
 
 class StoreService {
-  private baseUrl = '/api/stores'
+  private baseUrl = '/stores'
 
   /**
    * Créer une nouvelle boutique pour un utilisateur
@@ -58,12 +60,44 @@ class StoreService {
    */
   async createStore(data: CreateStoreData): Promise<StoreResponse> {
     try {
+      // Validation des données requises
+      if (!data.name) {
+        throw new Error('Le nom de la boutique est requis')
+      }
+      
+      if (!data.slug) {
+        throw new Error('Le sous-domaine de la boutique est requis')
+      }
+      
+      // Utiliser le slug fourni par l'utilisateur
+      let slug = data.slug
+      
+      // Nettoyer le slug (supprimer les caractères spéciaux et les espaces)
+      slug = slug.replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '')
+      
+      // Vérifier si le slug est valide
+      if (slug.length < 3) {
+        throw new Error('Le sous-domaine doit contenir au moins 3 caractères')
+      }
+      
+      // Vérifier si le slug est disponible
+      const slugCheck = await this.checkSlugAvailability(slug)
+      if (!slugCheck.available) {
+        // Générer des suggestions
+        const suggestions = this.generateSuggestions(slug)
+        const suggestionsText = suggestions.length > 0 ? ` Suggestions: ${suggestions.join(', ')}` : ''
+        throw new Error(`Ce nom de boutique n'est pas disponible.${suggestionsText}`)
+      }
+      
       // Préparer les données pour l'envoi
       const formData = new FormData()
       
+      // Log pour debug (à supprimer plus tard)
+      console.log('🔍 StoreService - Création boutique:', { name: data.name, slug })
+      
       // Données de base
       formData.append('name', data.name)
-      formData.append('slug', data.slug)
+      formData.append('slug', slug)
       if (data.description) formData.append('description', data.description)
       if (data.logo) formData.append('logo', data.logo)
       if (data.productType) formData.append('productType', data.productType)
@@ -87,20 +121,73 @@ class StoreService {
         if (data.settings.monneroo.environment) formData.append('settings[monneroo][environment]', data.settings.monneroo.environment)
       }
       
-      const response = await apiService.post(`${this.baseUrl}/create`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
-      return response.data
+      // Debug: vérifier le contenu du FormData (à supprimer plus tard)
+      const entries = Array.from(formData.entries())
+      console.log('🔍 StoreService - FormData créé avec', entries.length, 'champs')
+      
+      const response = await apiService.post(`${this.baseUrl}`, formData)
+      return response
     } catch (error: any) {
+      console.error('StoreService.createStore error:', error)
+      
+      // Si c'est une erreur de parsing JSON (souvent une erreur 404 ou 500)
+      if (error.message.includes('Unexpected token')) {
+        throw new Error('Erreur de communication avec le serveur. Vérifiez que le backend est accessible.')
+      }
+      
+      // Si c'est une erreur réseau
+      if (error.message === 'Network Error' || error.code === 'ERR_NETWORK') {
+        throw new Error('Erreur de connexion au serveur. Vérifiez votre connexion internet.')
+      }
+      
       // Retourner la réponse d'erreur du backend si disponible
       if (error.response?.data) {
+        console.error('Backend error response:', error.response.data)
         return error.response.data
       }
-      // Sinon, lancer une exception avec un message générique
-      throw new Error('Erreur lors de la création de la boutique')
+      
+      // Sinon, lancer une exception avec un message plus détaillé
+      throw new Error(`Erreur lors de la création de la boutique: ${error.message}`)
     }
+  }
+
+  /**
+   * Vérifier si un slug est disponible
+   */
+  async checkSlugAvailability(slug: string): Promise<{ available: boolean; message: string }> {
+    try {
+      const response = await apiService.get(`/stores/subdomain/${slug}/check`)
+      return {
+        available: response.success && !response.data?.exists,
+        message: response.data?.message || 'Slug disponible'
+      }
+    } catch (error: any) {
+      return {
+        available: false,
+        message: error.message || 'Erreur lors de la vérification'
+      }
+    }
+  }
+
+  /**
+   * Générer des suggestions de slugs alternatifs
+   */
+  private generateSuggestions(baseSlug: string): string[] {
+    const suggestions = []
+    const base = baseSlug.replace(/-[0-9]+$/, '') // Enlever les chiffres à la fin
+    
+    // Ajouter des suffixes numériques
+    for (let i = 1; i <= 3; i++) {
+      suggestions.push(`${base}-${i}`)
+    }
+    
+    // Ajouter des suffixes descriptifs
+    const suffixes = ['pro', 'store', 'shop', 'digital', 'online', 'my', 'best']
+    suffixes.forEach(suffix => {
+      suggestions.push(`${base}-${suffix}`)
+    })
+    
+    return suggestions.slice(0, 6) // Limiter à 6 suggestions
   }
 
   /**
@@ -109,7 +196,7 @@ class StoreService {
   async getMyStore(): Promise<StoreResponse> {
     try {
       const response = await apiService.get(`${this.baseUrl}/my-store`)
-      return response.data
+      return response
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Erreur lors de la récupération de la boutique')
     }
@@ -121,7 +208,7 @@ class StoreService {
   async updateStore(data: Partial<CreateStoreData>): Promise<StoreResponse> {
     try {
       const response = await apiService.put(`${this.baseUrl}/my-store`, data)
-      return response.data
+      return response
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Erreur lors de la mise à jour de la boutique')
     }
@@ -135,7 +222,7 @@ class StoreService {
       const response = await apiService.get(`${this.baseUrl}/my-store`)
       return {
         hasStore: true,
-        store: response.data.store
+        store: response.store
       }
     } catch (error: any) {
       if (error.response?.status === 404) {
