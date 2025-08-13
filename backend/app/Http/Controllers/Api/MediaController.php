@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\MediaResource;
+use App\Http\Resources\MediaCollection;
 use App\Models\Media;
 use App\Models\Store;
 use App\Services\CloudflareUploadService;
@@ -54,7 +56,7 @@ class MediaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $media,
+                'data' => new MediaCollection($media),
                 'stats' => $stats,
             ]);
         } catch (\Exception $e) {
@@ -95,7 +97,7 @@ class MediaController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => count($uploadedMedia) . ' fichier(s) téléchargé(s) avec succès',
-                'data' => $uploadedMedia,
+                'data' => MediaResource::collection($uploadedMedia),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -134,7 +136,7 @@ class MediaController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Média mis à jour avec succès',
-                'data' => $media,
+                'data' => new MediaResource($media),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -200,7 +202,7 @@ class MediaController extends Controller
             // Determine file type
             $type = $this->getFileType($file->getMimeType());
 
-            // Create media record with Cloudflare URLs
+            // Create media record with proxy URLs
             // Désactiver temporairement la contrainte de clé étrangère
             DB::statement('SET session_replication_role = replica;');
             
@@ -209,8 +211,8 @@ class MediaController extends Controller
                 'name' => $file->getClientOriginalName(),
                 'type' => $type,
                 'size' => $file->getSize(),
-                'url' => $result['urls']['original'], // URL Cloudflare R2
-                'thumbnail' => $result['urls']['thumbnails']['medium']['url'] ?? null, // Thumbnail Cloudflare
+                'url' => $result['urls']['original'], // URL Cloudflare R2 (pour référence)
+                'thumbnail' => $result['urls']['thumbnails']['medium']['url'] ?? null, // URL Cloudflare R2 (pour référence)
                 'mime_type' => $file->getMimeType(),
                 'metadata' => [
                     'original_name' => $file->getClientOriginalName(),

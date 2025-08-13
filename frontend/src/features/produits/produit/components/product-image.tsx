@@ -28,12 +28,12 @@ export function ProductImage({ images, productName, className = "h-10 w-10" }: P
     
     // Si c'est un objet média avec thumbnail
     if (typeof firstImage === 'object' && firstImage.thumbnail) {
-      return `http://localhost:8000/storage/${firstImage.thumbnail}`
+      return firstImage.thumbnail
     }
     
     // Si c'est un objet média avec url
     if (typeof firstImage === 'object' && firstImage.url) {
-      return `http://localhost:8000/storage/${firstImage.url}`
+      return firstImage.url
     }
     
     // Si c'est une chaîne (ancien format)

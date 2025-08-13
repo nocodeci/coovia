@@ -139,7 +139,7 @@ Route::prefix('moneroo-config')->group(function () {
 });
 
 // Routes d'authentification (publiques)
-Route::prefix('auth')->middleware(\App\Http\Middleware\Cors::class)->group(function () {
+Route::prefix('auth')->group(function () {
     // Nouvelles routes pour l'authentification en 3 étapes
     Route::post('validate-email', [AuthController::class, 'validateEmail']);
     Route::post('validate-password', [AuthController::class, 'validatePassword']);
@@ -289,9 +289,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Routes publiques pour les médias (développement seulement)
 Route::prefix('public/stores/{storeId}/media')->group(function () {
-    Route::get('/', [SimpleMediaController::class, 'index']);
-    Route::post('/', [SimpleMediaController::class, 'upload']);
-    // Les routes update et destroy peuvent être ajoutées plus tard
+            Route::get('/', [SimpleMediaController::class, 'index']);
+        Route::post('/', [SimpleMediaController::class, 'upload']);
+        Route::put('/{fileId}', [SimpleMediaController::class, 'update']);
+        Route::delete('/{fileId}', [SimpleMediaController::class, 'destroy']);
 });
 
 // Routes publiques pour les produits (développement seulement)
@@ -482,4 +483,11 @@ Route::prefix('cloudflare')->group(function () {
         Route::post('/upload-multiple-secure', [CloudflareController::class, 'uploadMultiple']);
         Route::delete('/delete-secure', [CloudflareController::class, 'delete']);
     });
+});
+
+// Routes pour le proxy média (servir les fichiers depuis Cloudflare R2)
+Route::prefix('media-proxy')->group(function () {
+    Route::get('/{storeId}/file', [App\Http\Controllers\Api\MediaProxyController::class, 'serveByPath']);
+    Route::get('/{storeId}/{mediaId}/thumbnail/{size?}', [App\Http\Controllers\Api\MediaProxyController::class, 'serveThumbnail']);
+    Route::get('/{storeId}/{mediaId}', [App\Http\Controllers\Api\MediaProxyController::class, 'serve']);
 });
