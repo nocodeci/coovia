@@ -16,7 +16,7 @@ export const storeService = {
   // Récupérer les données d'une boutique par son slug (sous-domaine)
   async getStoreBySlug(slug: string): Promise<Store | null> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/stores/${slug}`);
+      const response = await axios.get(`${API_BASE_URL}/api/boutique/${slug}`);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération de la boutique:', error);
@@ -24,10 +24,10 @@ export const storeService = {
     }
   },
 
-  // Récupérer les produits d'une boutique
+  // Récupérer les produits d'une boutique (endpoint public)
   async getStoreProducts(storeSlug: string) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/stores/${storeSlug}/products`);
+      const response = await axios.get(`${API_BASE_URL}/api/boutique/${storeSlug}/products`);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des produits:', error);
@@ -38,8 +38,8 @@ export const storeService = {
   // Vérifier si un sous-domaine existe
   async checkSubdomainExists(subdomain: string): Promise<boolean> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/stores/check/${subdomain}`);
-      return response.data.exists;
+      const response = await axios.get(`${API_BASE_URL}/api/boutique/${subdomain}`);
+      return response.status === 200;
     } catch (error) {
       return false;
     }

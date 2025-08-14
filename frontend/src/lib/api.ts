@@ -397,6 +397,44 @@ class ApiService {
     return response
   }
 
+  // Méthode pour récupérer les produits publics (sans authentification)
+  async getPublicStoreProducts(storeSlug: string) {
+    // Vérifier le cache d'abord
+    const cacheKey = `public_products_${storeSlug}`
+    const cachedProducts = cache.get(cacheKey)
+    if (cachedProducts) {
+      return { success: true, data: cachedProducts, message: 'Produits publics depuis le cache' }
+    }
+
+    try {
+      // Appel direct sans authentification
+      const response = await fetch(`${this.baseUrl}/boutique/${storeSlug}/products`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      
+      // Mettre en cache si succès
+      if (data && Array.isArray(data)) {
+        cache.set(cacheKey, data, 10 * 60 * 1000) // 10 minutes
+        return { success: true, data: data, message: 'Produits publics récupérés avec succès' }
+      }
+      
+      return { success: false, message: 'Format de réponse invalide' }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des produits publics:', error)
+      return { success: false, message: 'Erreur lors de la récupération des produits' }
+    }
+  }
+
   async createProduct(storeId: string, productData: any) {
     const response = await this.request(`/stores/${storeId}/products`, {
       method: 'POST',

@@ -200,10 +200,21 @@ class BoutiqueController extends Controller
             ], 404);
         }
 
-        $categories = Category::whereHas('products', function ($query) use ($store) {
-            $query->where('store_id', $store->id);
-        })->get();
+        // Extraire les catégories uniques des produits de cette boutique
+        $categories = Product::where('store_id', $store->id)
+            ->whereIn('status', ['active', 'draft'])
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->pluck('category')
+            ->filter()
+            ->values()
+            ->toArray();
 
-        return response()->json($categories);
+        return response()->json([
+            'success' => true,
+            'data' => $categories,
+            'message' => 'Catégories récupérées avec succès'
+        ]);
     }
 } 
