@@ -25,15 +25,10 @@ export async function getStoreSlug(storeId: string): Promise<string | null> {
 
 /**
  * Génère l'URL complète d'une boutique basée sur son slug
+ * Utilise la configuration de environment.ts
  */
 export function generateBoutiqueUrl(storeSlug: string): string {
-  // En développement, utiliser le format localhost
-  if (process.env.NODE_ENV === 'development') {
-    return getBoutiqueUrl(storeSlug)
-  }
-  
-  // En production, utiliser le format sous-domaine
-  return `https://${storeSlug}.wozif.store`
+  return getBoutiqueUrl(storeSlug)
 }
 
 /**

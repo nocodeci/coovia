@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Store;
 use App\Mail\StoreCreatedMail;
 use App\Services\SubdomainService;
-use App\Services\CloudflareUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class StoreController extends Controller
 {
@@ -201,23 +201,12 @@ class StoreController extends Controller
             // Traiter le logo si fourni
             $logoUrl = null;
             if ($request->hasFile('logo')) {
-                $cloudflareService = new CloudflareUploadService();
+                // Utiliser le stockage local par défaut
+                $logo = $request->file('logo');
+                $logoUrl = $logo->store('store-logos', 'public');
                 
-                // Vérifier si Cloudflare est configuré
-                if (!$cloudflareService->isConfigured()) {
-                    Log::warning('Cloudflare R2 non configuré, fallback vers stockage local');
-                    $logo = $request->file('logo');
-                    $logoUrl = $logo->store('store-logos', 'public');
-                } else {
-                    // Upload vers Cloudflare R2
-                    $logoUrl = $cloudflareService->uploadLogo($request->file('logo'), $data['slug']);
-                    
-                    if (!$logoUrl) {
-                        Log::error('Échec de l\'upload du logo vers Cloudflare, fallback vers stockage local');
-                        $logo = $request->file('logo');
-                        $logoUrl = $logo->store('store-logos', 'public');
-                    }
-                }
+                // Alternative : utiliser le disk par défaut configuré
+                // $logoUrl = $logo->store('store-logos');
             }
 
             // Préparer les données de la boutique
@@ -461,24 +450,9 @@ class StoreController extends Controller
             ]);
             
             if ($request->hasFile('logo')) {
-                $cloudflareService = new CloudflareUploadService();
-                
-                // Supprimer l'ancien logo si il existe
-                if ($store->logo) {
-                    $cloudflareService->deleteLogo($store->logo);
-                }
-                
-                // Upload du nouveau logo
-                if ($cloudflareService->isConfigured()) {
-                    $logoUrl = $cloudflareService->uploadLogo($request->file('logo'), $store->slug);
-                    if ($logoUrl) {
-                        $updateData['logo'] = $logoUrl;
-                    }
-                } else {
-                    Log::warning('Cloudflare R2 non configuré pour mise à jour du logo');
-                    $logo = $request->file('logo');
-                    $updateData['logo'] = $logo->store('store-logos', 'public');
-                }
+                // Utiliser le stockage local
+                $logo = $request->file('logo');
+                $updateData['logo'] = $logo->store('store-logos', 'public');
             }
             
             // Mettre à jour la boutique
@@ -597,17 +571,12 @@ class StoreController extends Controller
         }
 
         try {
-            // ✅ SUPPRIMER LE LOGO DE CLOUDFLARE
+            // ✅ SUPPRIMER LE LOGO (stockage local)
             try {
                 if ($store->logo) {
-                    $cloudflareService = new CloudflareUploadService();
-                    $logoDeleted = $cloudflareService->deleteLogo($store->logo);
-                    
-                    if ($logoDeleted) {
-                        Log::info("Logo supprimé avec succès de Cloudflare pour: {$store->slug}");
-                    } else {
-                        Log::warning("Échec de la suppression du logo de Cloudflare pour: {$store->slug}");
-                    }
+                    // Supprimer le fichier du stockage local
+                    Storage::disk('public')->delete($store->logo);
+                    Log::info("Logo supprimé avec succès du stockage local pour: {$store->slug}");
                 }
             } catch (\Exception $e) {
                 Log::error("Erreur lors de la suppression du logo: " . $e->getMessage());

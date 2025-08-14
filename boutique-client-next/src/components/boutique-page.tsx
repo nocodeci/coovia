@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, ShoppingBag, Heart, Star } from 'lucide-react';
 import { storeService } from '@/services/api';
 import { BoutiquePageProps, Store, Product } from '@/types/store';
+import { StoreBanner } from './store-banner';
 import {
   Button,
   Card,
@@ -94,19 +95,8 @@ export function BoutiquePage({ storeId }: BoutiquePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/5">
-      {/* Hero Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-              {store?.description || 'Découvrez notre collection de produits digitaux'}
-            </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              Des formations, templates et ressources numériques de qualité pour développer vos compétences et votre business.
-            </p>
-          </div>
-        </div>
-      </section>
+      {/* Bannière de la boutique avec photo de profil */}
+      {store && <StoreBanner store={store} />}
 
       {/* Search and Filters */}
       <section className="py-8 px-4">

@@ -28,6 +28,8 @@ export interface AuthResponse {
   temp_token?: string;
   otp_token?: string;
   step?: string;
+  is_new_user?: boolean;
+  redirect_to?: string;
 }
 
 class SanctumAuthService {

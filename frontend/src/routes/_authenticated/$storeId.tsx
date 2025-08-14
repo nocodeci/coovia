@@ -1,14 +1,16 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { StoreGuard } from '@/components/layout/store-guard'
 
 export const Route = createFileRoute('/_authenticated/$storeId')({
   component: StoreLayout,
 })
 
 function StoreLayout() {
-  // Le StoreGuard s'occupe de la vérification, on peut juste afficher le contenu
   return (
-    <div>
-      <Outlet />
-    </div>
+    <StoreGuard>
+      <div>
+        <Outlet />
+      </div>
+    </StoreGuard>
   )
 } 

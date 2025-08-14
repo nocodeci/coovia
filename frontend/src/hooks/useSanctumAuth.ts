@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { sanctumAuthService } from '../services/sanctumAuth';
 import { useAuthStore } from '../stores/authStore';
 
@@ -25,6 +25,7 @@ export interface AuthStep {
 export function useSanctumAuth() {
   const { user, token, isAuthenticated, isLoading, error, login: storeLogin, logout: storeLogout, updateUser, setLoading, setError, clearError } = useAuthStore();
   const [authStep, setAuthStep] = useState<AuthStep>({ step: 'email' });
+  const hasCheckedAuth = useRef(false);
 
   // Étape 1: Validation de l'email avec Just-in-time registration
   const validateEmail = async (email: string) => {
@@ -233,10 +234,15 @@ export function useSanctumAuth() {
   // Vérifier l'authentification au chargement de la page
   useEffect(() => {
     const checkAuth = async () => {
+      // Éviter les vérifications multiples
+      if (hasCheckedAuth.current || isLoading) return;
+      
+      hasCheckedAuth.current = true;
+      
       // Vérifier si on a un token stocké
       const storedToken = sanctumAuthService.getToken();
       
-      if (storedToken && !isLoading && !user) {
+      if (storedToken && !user) {
         try {
           console.log('Vérification automatique de l\'authentification...');
           const response = await getUser();
@@ -249,7 +255,7 @@ export function useSanctumAuth() {
           sanctumAuthService.setToken('');
           useAuthStore.getState().logout();
         }
-      } else if (!storedToken && !isLoading) {
+      } else if (!storedToken && !user) {
         // Pas de token, vérifier si on a une session côté serveur
         try {
           console.log('Vérification de la session côté serveur...');
