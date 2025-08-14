@@ -9,7 +9,6 @@ import {
   ShoppingCart,
   DollarSign,
   Star,
-  Eye,
   Edit,
   Settings,
   MoreHorizontal,
@@ -31,6 +30,7 @@ import { CreateStoreDialog } from "./components/create-store-dialog"
 import { DebugTokenUpdater } from "@/components/debug-token-updater"
 import type { Store } from "@/types/store"
 import apiService from "@/lib/api"
+import { openBoutique } from "@/utils/store-links"
 
 export function StoresManagement() {
   const [stores, setStores] = useState<Store[]>([])
@@ -121,28 +121,7 @@ export function StoresManagement() {
   }
 
   const handleViewStorefront = async (store: Store) => {
-    try {
-      // Récupérer le slug de la boutique depuis l'API
-      const response = await fetch(`http://localhost:8000/api/boutique/slug/${store.id}`)
-      if (response.ok) {
-        const storeData = await response.json()
-        const storeSlug = storeData.slug
-        console.log('Store slug from API:', storeSlug)
-        
-        // Rediriger vers l'application boutique-client
-        const boutiqueClientUrl = `http://localhost:3000/${storeSlug}`
-        console.log('Opening boutique-client URL:', boutiqueClientUrl)
-        window.open(boutiqueClientUrl, "_blank")
-      } else {
-        console.error('Erreur lors de la récupération du slug de la boutique')
-        // Fallback vers store-123
-        window.open('http://localhost:3000/store-123', '_blank')
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération du slug:', error)
-      // Fallback vers store-123
-      window.open('http://localhost:3000/store-123', '_blank')
-    }
+    await openBoutique(store.id)
   }
 
   const handleManageSettings = (storeId: string) => {

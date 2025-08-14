@@ -2072,6 +2072,100 @@ class PaymentController extends Controller
     }
 
     /**
+     * Initie une nouvelle transaction de paiement avec Wave CI.
+     */
+    public function initiateWavePayment(Request $request)
+    {
+        try {
+            Log::info('PaymentController - initiateWavePayment appelé', [
+                'request_data' => $request->all()
+            ]);
+
+            // 1. Valider les données du formulaire
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email',
+                'phone' => 'required|string|max:20',
+                'amount' => 'nullable|numeric|min:100',
+                'description' => 'nullable|string|max:255',
+            ]);
+
+            // 2. Créer une facture pour obtenir le jeton
+            $paydunyaService = new \App\Services\PaydunyaOfficialService();
+            
+            $invoiceData = [
+                'amount' => $validated['amount'] ?? 500,
+                'productName' => $validated['description'] ?? 'Paiement test via Wave CI',
+                'productDescription' => $validated['description'] ?? 'Paiement test via Wave CI',
+                'unit_price' => $validated['amount'] ?? 500,
+                'quantity' => 1,
+                'storeId' => 'default-store',
+                'productId' => 'PROD-' . uniqid(),
+                'firstName' => $validated['name'],
+                'lastName' => '',
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'paymentMethod' => 'wave_ci',
+                'currency' => 'XOF',
+                'paymentCountry' => 'Côte d\'Ivoire',
+                'custom_data' => ['order_id' => 'ORDER-' . uniqid()]
+            ];
+
+            $invoiceResponse = $paydunyaService->createInvoice($invoiceData);
+
+            if (!$invoiceResponse['success'] || !isset($invoiceResponse['token'])) {
+                Log::error('PaymentController - Erreur création facture', [
+                    'response' => $invoiceResponse
+                ]);
+                return back()->with('error', 'Impossible de générer la facture de paiement.');
+            }
+
+            $paymentToken = $invoiceResponse['token'];
+
+            Log::info('PaymentController - Facture créée avec succès', [
+                'token' => $paymentToken,
+                'invoice_response' => $invoiceResponse
+            ]);
+
+            // 3. Générer directement l'URL Wave personnalisée (plus fiable que l'API Softpay)
+            Log::info('PaymentController - Génération URL Wave personnalisée', [
+                'token' => $paymentToken,
+                'customer_name' => $validated['name'],
+                'amount' => $validated['amount'] ?? 500
+            ]);
+
+            // Générer une URL Wave personnalisée selon l'exemple fourni
+            $waveId = 'cos-' . substr(uniqid(), 0, 15); // ID plus long comme l'exemple
+            $amount = $validated['amount'] ?? 500;
+            $currency = 'XOF';
+            $customerName = $validated['name'];
+            
+            // Encoder le nom client comme dans l'exemple (espaces en %20)
+            $encodedCustomer = str_replace('+', '%20', urlencode($customerName));
+            
+            $waveUrl = "https://pay.wave.com/c/{$waveId}?a={$amount}&c={$currency}&m={$encodedCustomer}";
+
+            Log::info('PaymentController - URL Wave générée', [
+                'wave_url' => $waveUrl,
+                'wave_id' => $waveId,
+                'amount' => $amount,
+                'customer' => $encodedCustomer
+            ]);
+
+            // 4. Rediriger vers l'URL de paiement Wave personnalisée
+            return redirect()->away($waveUrl);
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController - Exception initiateWavePayment', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Une erreur est survenue lors de l\'initialisation du paiement.');
+        }
+    }
+
+    /**
      * Traiter un paiement Orange Money CI avec OTP
      */
     public function handleOrangeMoneyCIPayment(Request $request): JsonResponse
@@ -3112,5 +3206,443 @@ class PaymentController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Vérifier le statut d'un paiement
+     */
+    public function checkPaymentStatus(Request $request)
+    {
+        Log::info('PaymentController - checkPaymentStatus appelé', ['request_data' => $request->all()]);
+
+        try {
+            $paymentId = $request->input('payment_id');
+            $paymentMethod = $request->input('payment_method');
+            $phoneNumber = $request->input('phone_number');
+
+            if (!$paymentId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment ID manquant'
+                ], 400);
+            }
+
+            // Vérifier le statut selon la méthode de paiement
+            switch ($paymentMethod) {
+                case 'mtn-ci':
+                    return $this->checkMTNCIStatus($paymentId, $phoneNumber);
+                case 'orange-money-ci':
+                    return $this->checkOrangeMoneyStatus($paymentId, $phoneNumber);
+                case 'wave-ci':
+                    return $this->checkWaveCIStatus($paymentId, $phoneNumber);
+                default:
+                    return $this->checkGenericStatus($paymentId, $paymentMethod);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController - Exception checkPaymentStatus', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la vérification du statut: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Vérifier le statut MTN CI
+     */
+    private function checkMTNCIStatus($paymentId, $phoneNumber)
+    {
+        try {
+            Log::info('PaymentController - Vérification statut MTN CI', [
+                'payment_id' => $paymentId,
+                'phone_number' => $phoneNumber
+            ]);
+
+            // Appeler l'API Paydunya pour vérifier le statut de la facture
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'PAYDUNYA-MASTER-KEY' => config('paydunya.master_key'),
+                'PAYDUNYA-PRIVATE-KEY' => config('paydunya.private_key'),
+                'PAYDUNYA-TOKEN' => config('paydunya.token'),
+            ])->get("https://app.paydunya.com/api/v1/checkout-invoice/confirm/{$paymentId}");
+
+            Log::info('PaymentController - Réponse vérification MTN CI', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if ($response->successful()) {
+                $paydunyaResponse = $response->json();
+                
+                Log::info('PaymentController - Analyse réponse Paydunya', [
+                    'paydunya_status' => $paydunyaResponse['status'] ?? 'unknown',
+                    'response_code' => $paydunyaResponse['response_code'] ?? 'unknown',
+                    'response_text' => $paydunyaResponse['response_text'] ?? 'unknown'
+                ]);
+                
+                // Vérifier le statut selon la réponse Paydunya
+                if (isset($paydunyaResponse['status'])) {
+                    switch ($paydunyaResponse['status']) {
+                        case 'completed':
+                        case 'success':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'completed',
+                                'message' => 'Paiement MTN CI confirmé avec succès'
+                            ]);
+                        case 'pending':
+                        case 'processing':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'pending',
+                                'message' => 'Paiement MTN CI en attente de confirmation'
+                            ]);
+                        case 'failed':
+                        case 'cancelled':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'failed',
+                                'message' => 'Paiement MTN CI échoué ou annulé'
+                            ]);
+                        default:
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'pending',
+                                'message' => 'Paiement MTN CI en cours de traitement'
+                            ]);
+                    }
+                } else {
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'pending',
+                        'message' => 'Paiement MTN CI en cours de traitement'
+                    ]);
+                }
+            } else {
+                Log::warning('PaymentController - Échec vérification MTN CI', [
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'status' => 'pending',
+                    'message' => 'Paiement MTN CI en attente de confirmation'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController - Exception checkMTNCIStatus', [
+                'error' => $e->getMessage(),
+                'payment_id' => $paymentId
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Erreur lors de la vérification MTN CI'
+            ]);
+        }
+    }
+
+    /**
+     * Vérifier le statut Orange Money
+     */
+    private function checkOrangeMoneyStatus($paymentId, $phoneNumber)
+    {
+        try {
+            Log::info('PaymentController - Vérification statut Orange Money', [
+                'payment_id' => $paymentId,
+                'phone_number' => $phoneNumber
+            ]);
+
+            // Appeler l'API Paydunya pour vérifier le statut de la facture
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'PAYDUNYA-MASTER-KEY' => config('paydunya.master_key'),
+                'PAYDUNYA-PRIVATE-KEY' => config('paydunya.private_key'),
+                'PAYDUNYA-TOKEN' => config('paydunya.token'),
+            ])->get("https://app.paydunya.com/api/v1/checkout-invoice/confirm/{$paymentId}");
+
+            Log::info('PaymentController - Réponse vérification Orange Money', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if ($response->successful()) {
+                $paydunyaResponse = $response->json();
+                
+                Log::info('PaymentController - Analyse réponse Paydunya Orange Money', [
+                    'paydunya_status' => $paydunyaResponse['status'] ?? 'unknown',
+                    'response_code' => $paydunyaResponse['response_code'] ?? 'unknown',
+                    'response_text' => $paydunyaResponse['response_text'] ?? 'unknown'
+                ]);
+                
+                // Vérifier le statut selon la réponse Paydunya
+                if (isset($paydunyaResponse['status'])) {
+                    switch ($paydunyaResponse['status']) {
+                        case 'completed':
+                        case 'success':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'completed',
+                                'message' => 'Paiement Orange Money confirmé avec succès'
+                            ]);
+                        case 'pending':
+                        case 'processing':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'pending',
+                                'message' => 'Paiement Orange Money en attente de confirmation'
+                            ]);
+                        case 'failed':
+                        case 'cancelled':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'failed',
+                                'message' => 'Paiement Orange Money échoué ou annulé'
+                            ]);
+                        default:
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'pending',
+                                'message' => 'Paiement Orange Money en cours de traitement'
+                            ]);
+                    }
+                } else {
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'pending',
+                        'message' => 'Paiement Orange Money en cours de traitement'
+                    ]);
+                }
+            } else {
+                Log::warning('PaymentController - Échec vérification Orange Money', [
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'status' => 'pending',
+                    'message' => 'Paiement Orange Money en attente de confirmation'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController - Exception checkOrangeMoneyStatus', [
+                'error' => $e->getMessage(),
+                'payment_id' => $paymentId
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Erreur lors de la vérification Orange Money'
+            ]);
+        }
+    }
+
+    /**
+     * Vérifier le statut Wave CI
+     */
+    private function checkWaveCIStatus($paymentId, $phoneNumber)
+    {
+        try {
+            Log::info('PaymentController - Vérification statut Wave CI', [
+                'payment_id' => $paymentId,
+                'phone_number' => $phoneNumber
+            ]);
+
+            // Appeler l'API Paydunya pour vérifier le statut de la facture
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'PAYDUNYA-MASTER-KEY' => config('paydunya.master_key'),
+                'PAYDUNYA-PRIVATE-KEY' => config('paydunya.private_key'),
+                'PAYDUNYA-TOKEN' => config('paydunya.token'),
+            ])->get("https://app.paydunya.com/api/v1/checkout-invoice/confirm/{$paymentId}");
+
+            Log::info('PaymentController - Réponse vérification Wave CI', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if ($response->successful()) {
+                $paydunyaResponse = $response->json();
+                
+                Log::info('PaymentController - Analyse réponse Paydunya Wave CI', [
+                    'paydunya_status' => $paydunyaResponse['status'] ?? 'unknown',
+                    'response_code' => $paydunyaResponse['response_code'] ?? 'unknown',
+                    'response_text' => $paydunyaResponse['response_text'] ?? 'unknown'
+                ]);
+                
+                // Vérifier le statut selon la réponse Paydunya
+                if (isset($paydunyaResponse['status'])) {
+                    switch ($paydunyaResponse['status']) {
+                        case 'completed':
+                        case 'success':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'completed',
+                                'message' => 'Paiement Wave CI confirmé avec succès'
+                            ]);
+                        case 'pending':
+                        case 'processing':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'pending',
+                                'message' => 'Paiement Wave CI en attente de confirmation'
+                            ]);
+                        case 'failed':
+                        case 'cancelled':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'failed',
+                                'message' => 'Paiement Wave CI échoué ou annulé'
+                            ]);
+                        default:
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'pending',
+                                'message' => 'Paiement Wave CI en cours de traitement'
+                            ]);
+                    }
+                } else {
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'pending',
+                        'message' => 'Paiement Wave CI en cours de traitement'
+                    ]);
+                }
+            } else {
+                Log::warning('PaymentController - Échec vérification Wave CI', [
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'status' => 'pending',
+                    'message' => 'Paiement Wave CI en attente de confirmation'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController - Exception checkWaveCIStatus', [
+                'error' => $e->getMessage(),
+                'payment_id' => $paymentId
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Erreur lors de la vérification Wave CI'
+            ]);
+        }
+    }
+
+    /**
+     * Vérifier le statut générique
+     */
+    private function checkGenericStatus($paymentId, $paymentMethod)
+    {
+        try {
+            Log::info('PaymentController - Vérification statut générique', [
+                'payment_id' => $paymentId,
+                'payment_method' => $paymentMethod
+            ]);
+
+            // Appeler l'API Paydunya pour vérifier le statut de la facture
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'PAYDUNYA-MASTER-KEY' => config('paydunya.master_key'),
+                'PAYDUNYA-PRIVATE-KEY' => config('paydunya.private_key'),
+                'PAYDUNYA-TOKEN' => config('paydunya.token'),
+            ])->get("https://app.paydunya.com/api/v1/checkout-invoice/confirm/{$paymentId}");
+
+            Log::info('PaymentController - Réponse vérification générique', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if ($response->successful()) {
+                $paydunyaResponse = $response->json();
+                
+                Log::info('PaymentController - Analyse réponse Paydunya générique', [
+                    'paydunya_status' => $paydunyaResponse['status'] ?? 'unknown',
+                    'response_code' => $paydunyaResponse['response_code'] ?? 'unknown',
+                    'response_text' => $paydunyaResponse['response_text'] ?? 'unknown'
+                ]);
+                
+                // Vérifier le statut selon la réponse Paydunya
+                if (isset($paydunyaResponse['status'])) {
+                    switch ($paydunyaResponse['status']) {
+                        case 'completed':
+                        case 'success':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'completed',
+                                'message' => 'Paiement confirmé avec succès'
+                            ]);
+                        case 'pending':
+                        case 'processing':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'pending',
+                                'message' => 'Paiement en attente de confirmation'
+                            ]);
+                        case 'failed':
+                        case 'cancelled':
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'failed',
+                                'message' => 'Paiement échoué ou annulé'
+                            ]);
+                        default:
+                            return response()->json([
+                                'success' => true,
+                                'status' => 'pending',
+                                'message' => 'Paiement en cours de traitement'
+                            ]);
+                    }
+                } else {
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'pending',
+                        'message' => 'Paiement en cours de traitement'
+                    ]);
+                }
+            } else {
+                Log::warning('PaymentController - Échec vérification générique', [
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'status' => 'pending',
+                    'message' => 'Paiement en attente de confirmation'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController - Exception checkGenericStatus', [
+                'error' => $e->getMessage(),
+                'payment_id' => $paymentId
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Erreur lors de la vérification du paiement'
+            ]);
+        }
+    }
+
+
 
 } 

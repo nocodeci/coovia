@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { ClipboardPlus, Store } from "lucide-react"
+import { ClipboardPlus } from "lucide-react"
+import { ViewStoreButton } from "@/components/ui/view-store-button"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -198,45 +199,7 @@ export default function Dashboard() {
               <ClipboardPlus className="mr-2 h-4 w-4" />
               Ajouter un produit
             </Button>
-                    <Button
-          variant="outline"
-          onClick={async () => {
-            console.log('Navigating to boutique-client with storeId:', storeId)
-            console.log('Current URL:', window.location.href)
-            if (!storeId) {
-              console.error('storeId is undefined or null')
-              return
-            }
-            
-            try {
-              // Récupérer le slug de la boutique depuis l'API
-              const response = await fetch(`http://localhost:8000/api/boutique/slug/${storeId}`)
-              if (response.ok) {
-                const storeData = await response.json()
-                const storeSlug = storeData.slug
-                console.log('Store slug from API:', storeSlug)
-                
-                // Rediriger vers l'application boutique-client
-                const boutiqueClientUrl = `http://localhost:3000/${storeSlug}`
-                console.log('Boutique Client URL:', boutiqueClientUrl)
-                
-                // Ouvrir dans un nouvel onglet
-                window.open(boutiqueClientUrl, '_blank')
-              } else {
-                console.error('Erreur lors de la récupération du slug de la boutique')
-                // Fallback vers store-123
-                window.open('http://localhost:3000/store-123', '_blank')
-              }
-            } catch (error) {
-              console.error('Erreur lors de la récupération du slug:', error)
-              // Fallback vers store-123
-              window.open('http://localhost:3000/store-123', '_blank')
-            }
-          }}
-        >
-          <Store className="mr-2 h-4 w-4" />
-          Voir la boutique
-        </Button>
+                                <ViewStoreButton storeId={storeId || ''} />
           </div>
         </div>
 

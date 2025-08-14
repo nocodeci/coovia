@@ -222,6 +222,7 @@ Route::get('/products', function () {
 
 // Route publique pour vérifier la disponibilité des sous-domaines
 Route::get('stores/subdomain/{slug}/check', [StoreController::class, 'checkSubdomain']); // Vérifier un sous-domaine
+Route::get('stores/{slug}', [StoreController::class, 'getBySlug']); // Récupérer une boutique par slug
 
 // Routes protégées par authentification
 Route::middleware('auth:sanctum')->group(function () {
@@ -491,3 +492,5 @@ Route::prefix('media-proxy')->group(function () {
     Route::get('/{storeId}/{mediaId}/thumbnail/{size?}', [App\Http\Controllers\Api\MediaProxyController::class, 'serveThumbnail']);
     Route::get('/{storeId}/{mediaId}', [App\Http\Controllers\Api\MediaProxyController::class, 'serve']);
 });
+
+Route::post('/payment/status', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus']);

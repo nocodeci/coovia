@@ -18,6 +18,49 @@ use Illuminate\Support\Str;
 class StoreController extends Controller
 {
     /**
+     * Récupérer une boutique par son slug (route publique)
+     */
+    public function getBySlug($slug)
+    {
+        try {
+            $store = Store::where('slug', $slug)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$store) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Boutique non trouvée'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $store->id,
+                    'name' => $store->name,
+                    'description' => $store->description,
+                    'slug' => $store->slug,
+                    'logo' => $store->logo,
+                    'banner' => $store->banner,
+                    'theme' => $store->theme,
+                    'status' => $store->status,
+                    'created_at' => $store->created_at,
+                    'updated_at' => $store->updated_at,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de la récupération de la boutique par slug: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de la boutique'
+            ], 500);
+        }
+    }
+
+    /**
      * Récupérer toutes les boutiques de l'utilisateur authentifié
      */
     public function index(Request $request)
