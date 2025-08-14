@@ -1,47 +1,39 @@
-# Keys and sensitive data
-.keys/
-*.key
-*.pem
-*.p12
-*.pfx
+# Dependencies
+node_modules/
+vendor/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+.env.test
 
 # Laravel
-/vendor/
-/node_modules/
-/public/hot
-/public/storage
-/storage/*.key
-/storage/logs/*.log
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/bootstrap/cache/*
-.env
-.env.backup
-.phpunit.result.cache
-docker-compose.override.yml
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
-/.idea
-/.vscode
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+bootstrap/cache/
 
-# Testing
-/coverage
-.phpunit.cache
+# Next.js
+.next/
+out/
+build/
+dist/
 
-# Production
-/build
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Misc
+# OS
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+Thumbs.db
 
 # Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -59,7 +51,6 @@ coverage/
 .nyc_output
 
 # Dependency directories
-node_modules/
 jspm_packages/
 
 # Optional npm cache directory
@@ -77,27 +68,22 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
+# Vercel
+.vercel
 
-# next.js build output
-.next
+# Temporary files
+*.tmp
+*.temp
 
-# nuxt.js build output
-.nuxt
+# Backup files
+*.bak
+*.backup
 
-# vuepress build output
-.vuepress/dist
+# API Keys and sensitive data
+config/payment-providers.php
+config/paydunya.php
+.env.*.local
 
-# Serverless directories
-.serverless
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
+# Test files
+test_*.php
+*_test.php
