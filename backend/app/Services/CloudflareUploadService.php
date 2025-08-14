@@ -260,4 +260,33 @@ class CloudflareUploadService
             return ['exists' => false, 'error' => $e->getMessage()];
         }
     }
+
+    /**
+     * Vérifier si Cloudflare R2 est configuré
+     */
+    public function isConfigured(): bool
+    {
+        try {
+            // Vérifier si les variables d'environnement sont définies
+            $accessKey = config('filesystems.disks.r2.key');
+            $secretKey = config('filesystems.disks.r2.secret');
+            $bucket = config('filesystems.disks.r2.bucket');
+            $endpoint = config('filesystems.disks.r2.endpoint');
+
+            if (!$accessKey || !$secretKey || !$bucket || !$endpoint) {
+                return false;
+            }
+
+            // Vérifier si le disk R2 est configuré comme disk par défaut
+            $defaultDisk = config('filesystems.default');
+            if ($defaultDisk !== 'r2') {
+                return false;
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de la vérification de la configuration Cloudflare R2: " . $e->getMessage());
+            return false;
+        }
+    }
 }

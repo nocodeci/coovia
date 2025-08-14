@@ -34,6 +34,8 @@ export function getApiUrl(endpoint: string): string {
 }
 
 // Fonction pour obtenir l'URL de la boutique
+// En développement: http://localhost:3000/{slug} (boutique-client-next)
+// En production: https://{slug}.wozif.store (sous-domaines Vercel)
 export function getBoutiqueUrl(slug: string): string {
   // En développement, utiliser le format localhost
   if (isDevelopment) {

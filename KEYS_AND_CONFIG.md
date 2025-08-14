@@ -5,8 +5,8 @@
 ### **Compte Vercel :**
 - **Email** : yohankoffik@gmail.com
 - **Organisation** : nocodecis-projects
-- **Projet Frontend** : wozif
-- **URL de déploiement** : https://wozif-6zujfabwt-nocodecis-projects.vercel.app
+- **Projet Frontend** : woziff
+- **URL de déploiement** : https://woziff-g9e3xspw2-nocodecis-projects.vercel.app
 
 ### **Domaine :**
 - **Domaine principal** : wozif.store
@@ -140,7 +140,7 @@ php artisan serve
 ## 📊 Monitoring
 
 ### **Vercel Analytics :**
-- **Dashboard** : https://vercel.com/nocodecis-projects/wozif
+- **Dashboard** : https://vercel.com/nocodecis-projects/woziff
 - **Logs** : Dashboard → Project → Functions
 - **Performance** : Monitoring automatique
 
