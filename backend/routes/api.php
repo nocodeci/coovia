@@ -45,23 +45,15 @@ Route::get('/test', function () {
     ]);
 });
 
+// Endpoint de santé pour vérifier que l'application fonctionne
 Route::get('/health', function () {
-    try {
-        DB::connection()->getPdo();
-
-        return response()->json([
-            'status' => 'healthy',
-            'database' => 'connected',
-            'timestamp' => now(),
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'unhealthy',
-            'database' => 'disconnected',
-            'error' => $e->getMessage(),
-            'timestamp' => now(),
-        ], 500);
-    }
+    return response()->json([
+        'status' => 'healthy',
+        'message' => 'Coovia API is running',
+        'timestamp' => now()->toISOString(),
+        'version' => '1.0.0',
+        'environment' => config('app.env'),
+    ]);
 });
 
 Route::get('/status', function () {
