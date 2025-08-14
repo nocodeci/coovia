@@ -62,12 +62,14 @@ class SmartPaymentController extends Controller
                     'success' => true,
                     'message' => 'Paiement initialisé avec succès',
                     'data' => [
-                        'payment_id' => $result['payment_id'] ?? $result['deposit_id'] ?? null,
+                        'payment_id' => $result['payment_id'] ?? $result['deposit_id'] ?? $result['token'] ?? null,
                         'status' => 'pending',
                         'provider' => $result['provider'] ?? 'unknown',
                         'amount' => $request->amount,
                         'currency' => $request->currency,
-                        'fallback_used' => $result['fallback_used'] ?? false
+                        'fallback_used' => $result['fallback_used'] ?? false,
+                        'url' => $result['url'] ?? null,
+                        'token' => $result['token'] ?? null
                     ]
                 ]);
             } else {

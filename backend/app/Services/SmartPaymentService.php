@@ -9,13 +9,18 @@ class SmartPaymentService
 {
     protected $paydunyaService;
     protected $pawapayService;
+    protected $mockService;
     protected $config;
+    protected $useMock;
 
     public function __construct()
     {
         $this->paydunyaService = new PaydunyaOfficialService();
         $this->pawapayService = new PawapayService();
+        $this->mockService = new MockPaymentService();
+        $this->waveCIService = new WaveCIService();
         $this->config = config('payment-providers');
+        $this->useMock = false; // Désactiver le mode mock pour utiliser les vraies clés Paydunya
     }
 
     /**
@@ -25,6 +30,15 @@ class SmartPaymentService
     {
         $country = $data['country'];
         $paymentMethod = $data['payment_method'];
+        
+        // Utiliser le mode mock en développement
+        if ($this->useMock) {
+            Log::info('SmartPayment: Utilisation du mode mock', [
+                'country' => $country,
+                'method' => $paymentMethod
+            ]);
+            return $this->mockService->createMockPayment($data);
+        }
         
         // Récupérer la configuration du provider
         $providerConfig = $this->getProviderConfig($country, $paymentMethod);
@@ -49,11 +63,11 @@ class SmartPaymentService
         }
 
         // Si le provider principal a échoué et qu'il y a un fallback
-        if ($providerConfig['fallback'] && $this->shouldTriggerFallback($primaryResult['error'])) {
+        if ($providerConfig['fallback'] && $this->shouldTriggerFallback($primaryResult['error'] ?? null)) {
             Log::info('SmartPayment: Tentative de fallback', [
                 'primary_provider' => $providerConfig['primary'],
                 'fallback_provider' => $providerConfig['fallback'],
-                'primary_error' => $primaryResult['error']
+                'primary_error' => $primaryResult['error'] ?? 'Erreur inconnue'
             ]);
 
             $fallbackResult = $this->tryProvider($providerConfig['fallback'], $data);
@@ -70,16 +84,16 @@ class SmartPaymentService
                 Log::error('SmartPayment: Échec des deux providers', [
                     'primary_provider' => $providerConfig['primary'],
                     'fallback_provider' => $providerConfig['fallback'],
-                    'primary_error' => $primaryResult['error'],
-                    'fallback_error' => $fallbackResult['error']
+                    'primary_error' => $primaryResult['error'] ?? 'Erreur inconnue',
+                    'fallback_error' => $fallbackResult['error'] ?? 'Erreur inconnue'
                 ]);
 
                 return [
                     'success' => false,
                     'error' => 'Tous les providers de paiement sont temporairement indisponibles',
                     'details' => [
-                        'primary_error' => $primaryResult['error'],
-                        'fallback_error' => $fallbackResult['error']
+                        'primary_error' => $primaryResult['error'] ?? 'Erreur inconnue',
+                        'fallback_error' => $fallbackResult['error'] ?? 'Erreur inconnue'
                     ]
                 ];
             }
@@ -94,7 +108,7 @@ class SmartPaymentService
      */
     private function tryProvider($provider, $data)
     {
-        $maxRetries = $this->config['services'][$provider]['max_retries'] ?? 3;
+        $maxRetries = 3; // Retry fixe pour tous les providers
         
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             try {
@@ -139,17 +153,70 @@ class SmartPaymentService
      */
     private function callProvider($provider, $data)
     {
-        switch ($provider) {
-            case 'paydunya':
+        try {
+            // Vérifier si c'est Wave CI pour utiliser le service spécialisé
+            if ($data['payment_method'] === 'wave-ci') {
+                Log::info('SmartPayment: Utilisation du WaveCIService pour Wave CI');
+                $result = $this->waveCIService->createWaveCIPayment($data);
+                return $this->ensureResultStructure($result);
+            }
+
+            // Vérifier si c'est MTN CI pour utiliser la méthode spécialisée
+            if ($data['payment_method'] === 'mtn-ci') {
+                Log::info('SmartPayment: Utilisation de payWithMTNCI pour MTN CI');
                 $mappedData = $this->mapDataForPaydunya($data);
-                return $this->paydunyaService->createInvoice($mappedData);
+                $result = $this->paydunyaService->payWithMTNCI($mappedData);
+                return $this->ensureResultStructure($result);
+            }
+
+            switch ($provider) {
+                case 'paydunya':
+                    $mappedData = $this->mapDataForPaydunya($data);
+                    $result = $this->paydunyaService->createInvoice($mappedData);
+                    return $this->ensureResultStructure($result);
+                
+                case 'pawapay':
+                    $result = $this->pawapayService->createDeposit($data);
+                    return $this->ensureResultStructure($result);
+                
+                default:
+                    throw new \Exception("Provider non supporté: $provider");
+            }
+        } catch (\Exception $e) {
+            Log::error("SmartPayment: Erreur dans callProvider", [
+                'provider' => $provider,
+                'error' => $e->getMessage()
+            ]);
             
-            case 'pawapay':
-                return $this->pawapayService->createDeposit($data);
-            
-            default:
-                throw new \Exception("Provider non supporté: $provider");
+            return [
+                'success' => false,
+                'error' => "Erreur de communication avec $provider: " . $e->getMessage()
+            ];
         }
+    }
+
+    /**
+     * S'assurer que le résultat a une structure cohérente
+     */
+    private function ensureResultStructure($result)
+    {
+        if (!is_array($result)) {
+            return [
+                'success' => false,
+                'error' => 'Réponse invalide du provider'
+            ];
+        }
+
+        // S'assurer que les clés essentielles existent
+        if (!isset($result['success'])) {
+            $result['success'] = false;
+        }
+
+        if (!isset($result['error']) && !$result['success']) {
+            $result['error'] = $result['message'] ?? 'Erreur inconnue du provider';
+        }
+
+        return $result;
     }
 
     /**
@@ -157,17 +224,31 @@ class SmartPaymentService
      */
     private function mapDataForPaydunya($data)
     {
+        // Extraire firstName et lastName du customer_name
+        $customerName = $data['customer_name'] ?? '';
+        $nameParts = explode(' ', trim($customerName), 2);
+        $firstName = $nameParts[0] ?? '';
+        $lastName = $nameParts[1] ?? '';
+
         return [
             'productName' => $data['product_name'] ?? 'Produit par défaut',
+            'productDescription' => $data['product_name'] ?? 'Produit par défaut',
             'email' => $data['customer_email'] ?? '',
             'phone' => $data['phone_number'] ?? '',
             'amount' => $data['amount'] ?? 0,
+            'unit_price' => $data['amount'] ?? 0,
+            'quantity' => 1,
             'currency' => $data['currency'] ?? 'XOF',
-            'country' => $this->getCountryName($data['country'] ?? ''),
+            'paymentCountry' => $this->getCountryName($data['country'] ?? ''),
             'paymentMethod' => $data['payment_method'] ?? '',
+            'firstName' => $firstName,
+            'lastName' => $lastName,
             'customerName' => $data['customer_name'] ?? '',
             'orderId' => $data['order_id'] ?? null,
-            'customerMessage' => $data['customer_message'] ?? null
+            'customerMessage' => $data['customer_message'] ?? null,
+            'storeId' => $data['store_id'] ?? 'default-store',
+            'productId' => $data['product_id'] ?? 'PROD-' . uniqid(),
+            'custom_data' => ['order_id' => $data['order_id'] ?? 'ORDER-' . uniqid()]
         ];
     }
 
@@ -191,6 +272,10 @@ class SmartPaymentService
      */
     private function shouldTriggerFallback($error)
     {
+        if (!$error) {
+            return false;
+        }
+        
         $errorMessage = strtolower($error);
         
         // Erreurs réseau
@@ -283,20 +368,36 @@ class SmartPaymentService
      */
     public function updateProviderStats($provider, $success)
     {
-        $stats = Cache::get('payment_provider_stats', []);
-        
-        if (!isset($stats[$provider])) {
-            $stats[$provider] = ['success_count' => 0, 'total_attempts' => 0];
+        try {
+            // En mode développement, on évite d'utiliser la base de données
+            if (app()->environment('local') || app()->environment('development')) {
+                Log::info('SmartPayment: Statistiques ignorées en mode développement', [
+                    'provider' => $provider,
+                    'success' => $success
+                ]);
+                return;
+            }
+            
+            $stats = Cache::get('payment_provider_stats', []);
+            
+            if (!isset($stats[$provider])) {
+                $stats[$provider] = ['success_count' => 0, 'total_attempts' => 0];
+            }
+
+            $stats[$provider]['total_attempts']++;
+            if ($success) {
+                $stats[$provider]['success_count']++;
+            }
+
+            $stats[$provider]['success_rate'] = 
+                ($stats[$provider]['success_count'] / $stats[$provider]['total_attempts']) * 100;
+
+            Cache::put('payment_provider_stats', $stats, 3600); // Cache 1 heure
+        } catch (\Exception $e) {
+            Log::error('SmartPayment: Erreur lors de la mise à jour des statistiques', [
+                'provider' => $provider,
+                'error' => $e->getMessage()
+            ]);
         }
-
-        $stats[$provider]['total_attempts']++;
-        if ($success) {
-            $stats[$provider]['success_count']++;
-        }
-
-        $stats[$provider]['success_rate'] = 
-            ($stats[$provider]['success_count'] / $stats[$provider]['total_attempts']) * 100;
-
-        Cache::put('payment_provider_stats', $stats, 3600); // Cache 1 heure
     }
 } 

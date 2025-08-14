@@ -281,6 +281,52 @@ return [
                 'fallback' => null,
                 'enabled' => true
             ]
+        ],
+        'BF' => [ // Burkina Faso
+            'ORANGE_MONEY_BF' => [
+                'primary' => 'paydunya',
+                'fallback' => null,
+                'enabled' => true
+            ],
+            'MOOV_MONEY_BF' => [
+                'primary' => 'paydunya',
+                'fallback' => null,
+                'enabled' => true
+            ],
+            // Clés frontend pour Burkina Faso
+            'orange-money-burkina' => [
+                'primary' => 'paydunya',
+                'fallback' => null,
+                'enabled' => true
+            ],
+            'moov-money-burkina' => [
+                'primary' => 'paydunya',
+                'fallback' => null,
+                'enabled' => true
+            ]
+        ],
+        'ML' => [ // Mali
+            'ORANGE_MONEY_ML' => [
+                'primary' => 'paydunya',
+                'fallback' => null,
+                'enabled' => true
+            ],
+            'MOOV_MONEY_ML' => [
+                'primary' => 'paydunya',
+                'fallback' => null,
+                'enabled' => true
+            ],
+            // Clés frontend pour Mali
+            'orange-money-mali' => [
+                'primary' => 'paydunya',
+                'fallback' => null,
+                'enabled' => true
+            ],
+            'moov-money-mali' => [
+                'primary' => 'paydunya',
+                'fallback' => null,
+                'enabled' => true
+            ]
         ]
     ],
 
@@ -298,13 +344,13 @@ return [
             'enabled' => true,
             'max_retries' => 3,
             'timeout' => 30,
-            'countries' => ['CIV', 'SN', 'TG']
+            'countries' => ['CIV', 'SN', 'TG', 'BF', 'ML']
         ],
         'pawapay' => [
             'enabled' => true,
             'max_retries' => 3,
             'timeout' => 30,
-            'countries' => ['CIV', 'ZMB', 'UG', 'TZ', 'KE', 'NG']
+            'countries' => ['CIV', 'ZMB', 'UG', 'TZ', 'KE', 'NG', 'BF', 'ML']
         ]
     ],
 

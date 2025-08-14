@@ -98,3 +98,4 @@ Une fois configuré correctement :
 ---
 
 **⚠️ IMPORTANT :** Ne partagez jamais vos vraies credentials Mailtrap. Gardez-les privées !
+

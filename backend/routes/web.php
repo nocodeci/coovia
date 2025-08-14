@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,3 +32,10 @@ Route::prefix('paydunya')->group(function () {
         return response()->json(['message' => 'Paiement annulé']);
     })->name('paydunya.cancel');
 });
+
+// Routes de paiement Wave CI
+Route::get('/test/wave-payment', function () {
+    return view('wave-payment-test');
+})->name('test.wave_payment');
+
+Route::post('/pay/wave-ci', [PaymentController::class, 'initiateWavePayment'])->name('payment.initiate.wave_ci')->withoutMiddleware(['web']);

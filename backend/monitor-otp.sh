@@ -7,3 +7,4 @@ echo ""
 
 # Surveiller les logs Laravel pour les OTP
 tail -f storage/logs/laravel.log | grep --line-buffered "OTP pour"
+
