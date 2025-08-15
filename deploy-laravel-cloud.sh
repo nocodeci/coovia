@@ -1,142 +1,115 @@
 #!/bin/bash
 
-echo "🚀 Déploiement Laravel Cloud - Coovia API"
-echo "=========================================="
+# ---------------------------------
+# Script de déploiement Laravel Cloud - Monorepo
+# Guide interactif pour déployer sur Laravel Cloud
+# ---------------------------------
 
-# Vérifier si nous sommes dans le bon répertoire
-if [ ! -d "backend" ]; then
-    echo "❌ Erreur: Ce script doit être exécuté depuis le répertoire racine du projet"
+echo "🚀 Déploiement Laravel Cloud - Monorepo"
+echo "========================================"
+echo ""
+
+# Vérifier que nous sommes à la racine du repository
+if [ ! -f "laravel-cloud-build.sh" ]; then
+    echo "❌ Erreur: Ce script doit être exécuté à la racine du repository"
+    echo "   Assurez-vous d'être dans le dossier principal du projet"
     exit 1
 fi
 
-# Vérifier si .laravel-cloud/project.yaml existe
-if [ ! -f "backend/.laravel-cloud/project.yaml" ]; then
-    echo "❌ Erreur: Configuration Laravel Cloud non trouvée (backend/.laravel-cloud/project.yaml)"
-    exit 1
-fi
+echo "✅ Configuration monorepo détectée"
+echo ""
 
-echo "✅ Configuration Laravel Cloud trouvée"
+# Vérifier les fichiers nécessaires
+echo "🔍 Vérification des fichiers nécessaires..."
+required_files=("composer.json" "composer.lock" "laravel-cloud-build.sh" "backend/artisan")
+missing_files=()
 
-# Vérifier le statut Git
-echo "📋 Vérification du statut Git..."
-if [ ! -d ".git" ]; then
-    echo "❌ Erreur: Ce répertoire n'est pas un dépôt Git"
-    exit 1
-fi
-
-# Vérifier s'il y a des changements non commités
-if [ -n "$(git status --porcelain)" ]; then
-    echo "⚠️  Il y a des changements non commités:"
-    git status --short
-    echo ""
-    read -p "Voulez-vous commiter ces changements? (y/n): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        git add .
-        git commit -m "Deploy: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "✅ Changements commités"
-    else
-        echo "❌ Déploiement annulé"
-        exit 1
+for file in "${required_files[@]}"; do
+    if [ ! -f "$file" ]; then
+        missing_files+=("$file")
     fi
+done
+
+if [ ${#missing_files[@]} -gt 0 ]; then
+    echo "❌ Fichiers manquants:"
+    for file in "${missing_files[@]}"; do
+        echo "   - $file"
+    done
+    echo ""
+    echo "🔧 Exécutez d'abord: ./fix-composer-lock.sh"
+    exit 1
 fi
 
-# Vérifier la branche actuelle
-current_branch=$(git branch --show-current)
-echo "🌿 Branche actuelle: $current_branch"
+echo "✅ Tous les fichiers nécessaires sont présents"
+echo ""
 
-# Préparation du déploiement
-echo "🔧 Préparation du déploiement..."
-
-# Aller dans le répertoire backend
+# Générer la clé d'application
+echo "🔑 Génération de la clé d'application Laravel..."
 cd backend
-
-# Nettoyer le cache
-echo "🧹 Nettoyage du cache..."
-php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
-
-# Optimiser pour la production
-echo "⚡ Optimisation pour la production..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Vérifier les permissions
-echo "🔐 Vérification des permissions..."
-chmod -R 755 storage bootstrap/cache
-
-# Créer le lien de stockage
-echo "🔗 Création du lien de stockage..."
-php artisan storage:link
-
-# Retourner au répertoire racine
+APP_KEY=$(php artisan key:generate --show 2>/dev/null)
 cd ..
 
-# Commiter les optimisations
-echo "💾 Commit des optimisations..."
-git add .
-git commit -m "Build: Optimisations de production $(date '+%Y-%m-%d %H:%M:%S')"
-
-# Pousser vers le dépôt distant
-echo "📤 Push vers le dépôt distant..."
-git push origin $current_branch
-
-echo "✅ Déploiement initié!"
-
-echo ""
-echo "📝 Instructions pour Laravel Cloud:"
-echo "==================================="
-echo ""
-echo "1. Connectez-vous à votre dashboard Laravel Cloud:"
-echo "   https://cloud.laravel.com"
-echo ""
-echo "2. Sélectionnez votre projet 'coovia-api'"
-echo ""
-echo "3. Allez dans l'onglet 'Deployments'"
-echo ""
-echo "4. Votre déploiement devrait être en cours ou terminé"
-echo ""
-echo "5. Surveillez les logs de déploiement"
-echo ""
-echo "6. Vérifiez que votre application est accessible"
-echo ""
-echo "🔗 URLs utiles:"
-echo "- Dashboard Laravel Cloud: https://cloud.laravel.com"
-echo "- Documentation: https://cloud.laravel.com/docs"
-echo "- Support: https://cloud.laravel.com/support"
-echo ""
-
-# Vérifier les variables d'environnement critiques
-echo "🔍 Vérification des variables d'environnement critiques..."
-
-if [ -f "backend/.env" ]; then
-    echo "Variables critiques dans backend/.env:"
-    echo "APP_NAME: $(grep '^APP_NAME=' backend/.env | cut -d'=' -f2)"
-    echo "APP_ENV: $(grep '^APP_ENV=' backend/.env | cut -d'=' -f2)"
-    echo "DB_CONNECTION: $(grep '^DB_CONNECTION=' backend/.env | cut -d'=' -f2)"
-    
-    if ! grep -q "^APP_KEY=" backend/.env; then
-        echo "⚠️  APP_KEY manquante - Génération d'une nouvelle clé..."
-        cd backend
-        php artisan key:generate
-        cd ..
-    fi
+if [ -z "$APP_KEY" ]; then
+    echo "⚠️  Impossible de générer la clé automatiquement"
+    echo "   Vous devrez la générer manuellement dans Laravel Cloud"
 else
-    echo "⚠️  Fichier backend/.env non trouvé"
+    echo "✅ Clé d'application générée: $APP_KEY"
+    echo "   Copiez cette clé dans la variable APP_KEY de Laravel Cloud"
 fi
 
 echo ""
-echo "🎯 Configuration Laravel Cloud détectée:"
-echo "Nom du projet: coovia-api"
-echo "Framework: Laravel"
-echo "PHP: 8.2"
-echo "Environnement: production"
-echo "Mémoire: 512MB"
-echo "CPU: 0.5"
-echo "Stockage: 10GB"
-echo "Services: MySQL, Redis"
+
+# Instructions de déploiement
+echo "📋 Instructions de déploiement:"
+echo "================================"
 echo ""
-echo "✅ Déploiement terminé! Vérifiez votre dashboard Laravel Cloud."
+echo "1. 🌐 Connectez-vous à Laravel Cloud:"
+echo "   https://cloud.laravel.com"
+echo ""
+echo "2. 🆕 Créez un nouveau projet:"
+echo "   - Cliquez sur 'New Project'"
+echo "   - Sélectionnez 'Git Repository'"
+echo "   - Choisissez votre repository: coovia"
+echo "   - Sélectionnez la branche: cursor"
+echo ""
+echo "3. ⚙️  Configurez l'environnement:"
+echo "   - Nom du projet: coovia-backend"
+echo "   - PHP Version: 8.3"
+echo "   - Script de construction: ./laravel-cloud-build.sh"
+echo ""
+echo "4. 🔧 Variables d'environnement:"
+echo "   Copiez les variables depuis le fichier:"
+echo "   backend/production.env"
+echo ""
+echo "5. 🔑 Clé d'application:"
+if [ -n "$APP_KEY" ]; then
+    echo "   APP_KEY=$APP_KEY"
+else
+    echo "   Générez une clé avec: cd backend && php artisan key:generate --show"
+fi
+echo ""
+echo "6. 🚀 Déployez:"
+echo "   - Cliquez sur 'Deploy' dans Laravel Cloud"
+echo "   - Surveillez les logs de construction"
+echo ""
+echo "7. ✅ Vérification:"
+echo "   - L'application répond sur l'URL fournie"
+echo "   - Les migrations ont été exécutées"
+echo "   - Les caches sont optimisés"
+echo ""
+
+# Test optionnel
+echo "🧪 Voulez-vous tester la configuration localement ? (y/n)"
+read -r test_response
+
+if [[ $test_response =~ ^[Yy]$ ]]; then
+    echo ""
+    echo "🧪 Exécution du test local..."
+    ./test-laravel-cloud-build.sh
+    echo ""
+    echo "✅ Test terminé !"
+fi
+
+echo ""
+echo "🎯 Prêt pour le déploiement !"
+echo "📖 Consultez le guide complet: LARAVEL_CLOUD_MONOREPO_GUIDE.md"
