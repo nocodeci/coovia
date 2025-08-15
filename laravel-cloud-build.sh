@@ -61,4 +61,12 @@ php artisan view:cache
 echo "📊 Vérification de la base de données..."
 php artisan migrate --force
 
+echo "🔧 Configuration du serveur web..."
+# S'assurer que les permissions sont correctes
+chmod -R 755 storage bootstrap/cache
+chmod 644 public/.htaccess 2>/dev/null || true
+
+# Créer le lien de stockage si nécessaire
+php artisan storage:link 2>/dev/null || true
+
 echo "🎉 Construction terminée avec succès!"
