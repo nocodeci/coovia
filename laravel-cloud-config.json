@@ -1,0 +1,35 @@
+{
+  "name": "coovia-backend",
+  "environment": "production",
+  "php_version": "8.3",
+  "build_script": "./laravel-cloud-build.sh",
+  "deploy_script": "php artisan migrate --force",
+  "environment_variables": {
+    "APP_NAME": "Coovia",
+    "APP_ENV": "production",
+    "APP_DEBUG": "false",
+    "APP_URL": "https://api.coovia.com",
+    "LOG_CHANNEL": "stack",
+    "LOG_LEVEL": "error",
+    "CACHE_DRIVER": "redis",
+    "SESSION_DRIVER": "cookie",
+    "QUEUE_CONNECTION": "sqs",
+    "SESSION_LIFETIME": "120"
+  },
+  "database": {
+    "type": "postgresql",
+    "version": "15"
+  },
+  "cache": {
+    "type": "redis",
+    "version": "7.0"
+  },
+  "storage": {
+    "type": "s3"
+  },
+  "monorepo": {
+    "enabled": true,
+    "laravel_directory": "backend",
+    "build_script": "./laravel-cloud-build.sh"
+  }
+}
