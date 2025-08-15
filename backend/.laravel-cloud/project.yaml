@@ -2,6 +2,7 @@ name: coovia-api
 type: laravel
 framework: laravel
 php: 8.2
+directory: backend
 build:
   - composer install --no-dev --optimize-autoloader
   - php artisan config:cache
