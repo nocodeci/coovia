@@ -1,0 +1,32 @@
+name: coovia-api
+type: laravel
+framework: laravel
+php: 8.2
+build:
+  - composer install --no-dev --optimize-autoloader
+  - php artisan config:cache
+  - php artisan route:cache
+  - php artisan view:cache
+deploy:
+  - php artisan migrate --force
+  - php artisan storage:link
+  - chmod -R 755 storage bootstrap/cache
+  - chown -R www-data:www-data storage bootstrap/cache
+environments:
+  production:
+    variables:
+      APP_ENV: production
+      APP_DEBUG: false
+      LOG_LEVEL: error
+      CACHE_DRIVER: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      FILESYSTEM_DISK: r2
+    databases:
+      - mysql
+    services:
+      - redis
+    resources:
+      memory: 1024
+      cpu: 1.0
+      storage: 20

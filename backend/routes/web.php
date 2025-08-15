@@ -18,6 +18,19 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Route de test pour diagnostiquer le déploiement
+Route::get('/test', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Application Laravel fonctionnelle!',
+        'timestamp' => now(),
+        'app_env' => config('app.env'),
+        'app_debug' => config('app.debug'),
+        'app_url' => config('app.url'),
+        'database_connected' => \DB::connection()->getPdo() ? true : false
+    ]);
+});
+
 // Routes PayDunya Web
 Route::prefix('paydunya')->group(function () {
     Route::post('webhook', function () {
