@@ -1,0 +1,24 @@
+# Redirection vers le dossier public
+# Ce fichier est nécessaire pour Laravel Cloud
+
+# Rediriger toutes les requêtes vers le dossier public
+RewriteEngine On
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Autoriser l'accès aux fichiers statiques
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+    Require all granted
+</FilesMatch>
+
+# Sécurité
+<Files ".env">
+    Require all denied
+</Files>
+
+<Files "composer.json">
+    Require all denied
+</Files>
+
+<Files "composer.lock">
+    Require all denied
+</Files>
