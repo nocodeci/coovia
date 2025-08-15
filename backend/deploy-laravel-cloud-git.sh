@@ -1,17 +1,17 @@
 #!/bin/bash
 
-echo "🚀 Déploiement Laravel Cloud - Coovia API"
-echo "=========================================="
+echo "🚀 Déploiement Laravel Cloud via Git - Coovia API"
+echo "=================================================="
 
 # Vérifier si nous sommes dans le bon répertoire
-if [ ! -d "backend" ]; then
-    echo "❌ Erreur: Ce script doit être exécuté depuis le répertoire racine du projet"
+if [ ! -f "artisan" ]; then
+    echo "❌ Erreur: Ce script doit être exécuté depuis le répertoire racine du projet Laravel"
     exit 1
 fi
 
 # Vérifier si .laravel-cloud/project.yaml existe
-if [ ! -f "backend/.laravel-cloud/project.yaml" ]; then
-    echo "❌ Erreur: Configuration Laravel Cloud non trouvée (backend/.laravel-cloud/project.yaml)"
+if [ ! -f ".laravel-cloud/project.yaml" ]; then
+    echo "❌ Erreur: Configuration Laravel Cloud non trouvée (.laravel-cloud/project.yaml)"
     exit 1
 fi
 
@@ -45,11 +45,19 @@ fi
 current_branch=$(git branch --show-current)
 echo "🌿 Branche actuelle: $current_branch"
 
+# Vérifier si nous sommes sur la branche principale
+if [ "$current_branch" != "main" ] && [ "$current_branch" != "master" ]; then
+    echo "⚠️  Vous n'êtes pas sur la branche principale (main/master)"
+    read -p "Voulez-vous continuer avec la branche $current_branch? (y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Déploiement annulé"
+        exit 1
+    fi
+fi
+
 # Préparation du déploiement
 echo "🔧 Préparation du déploiement..."
-
-# Aller dans le répertoire backend
-cd backend
 
 # Nettoyer le cache
 echo "🧹 Nettoyage du cache..."
@@ -71,9 +79,6 @@ chmod -R 755 storage bootstrap/cache
 # Créer le lien de stockage
 echo "🔗 Création du lien de stockage..."
 php artisan storage:link
-
-# Retourner au répertoire racine
-cd ..
 
 # Commiter les optimisations
 echo "💾 Commit des optimisations..."
@@ -112,20 +117,18 @@ echo ""
 # Vérifier les variables d'environnement critiques
 echo "🔍 Vérification des variables d'environnement critiques..."
 
-if [ -f "backend/.env" ]; then
-    echo "Variables critiques dans backend/.env:"
-    echo "APP_NAME: $(grep '^APP_NAME=' backend/.env | cut -d'=' -f2)"
-    echo "APP_ENV: $(grep '^APP_ENV=' backend/.env | cut -d'=' -f2)"
-    echo "DB_CONNECTION: $(grep '^DB_CONNECTION=' backend/.env | cut -d'=' -f2)"
+if [ -f ".env" ]; then
+    echo "Variables critiques dans .env:"
+    echo "APP_NAME: $(grep '^APP_NAME=' .env | cut -d'=' -f2)"
+    echo "APP_ENV: $(grep '^APP_ENV=' .env | cut -d'=' -f2)"
+    echo "DB_CONNECTION: $(grep '^DB_CONNECTION=' .env | cut -d'=' -f2)"
     
-    if ! grep -q "^APP_KEY=" backend/.env; then
+    if ! grep -q "^APP_KEY=" .env; then
         echo "⚠️  APP_KEY manquante - Génération d'une nouvelle clé..."
-        cd backend
         php artisan key:generate
-        cd ..
     fi
 else
-    echo "⚠️  Fichier backend/.env non trouvé"
+    echo "⚠️  Fichier .env non trouvé"
 fi
 
 echo ""

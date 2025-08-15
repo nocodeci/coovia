@@ -1,0 +1,27 @@
+id: 1
+name: coovia-backend
+environments:
+    production:
+        memory: 1024
+        cli-memory: 512
+        runtime: 'php-8.2'
+        build:
+            - 'composer install --no-dev'
+        deploy:
+            - 'php artisan migrate --force'
+        env:
+            APP_ENV: production
+            APP_DEBUG: false
+            LOG_CHANNEL: stderr
+            SESSION_DRIVER: cookie
+            CACHE_DRIVER: redis
+            QUEUE_CONNECTION: sqs
+            SESSION_LIFETIME: 120
+        databases:
+            - type: mysql
+              version: '8.0'
+        caches:
+            - type: redis
+              version: '7.0'
+        storage:
+            - type: s3
