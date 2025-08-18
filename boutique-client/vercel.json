@@ -5,10 +5,15 @@
   "installCommand": "npm install",
   "devCommand": "npm start",
   "regions": ["cdg1"],
+  "domains": ["wozif.store", "*.wozif.store"],
   "rewrites": [
     {
       "source": "/api/store/:slug",
       "destination": "/api/store/[slug].js"
+    },
+    {
+      "source": "/api/subdomain",
+      "destination": "/api/subdomain.js"
     },
     {
       "source": "/(.*)",

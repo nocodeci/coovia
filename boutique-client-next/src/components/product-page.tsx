@@ -33,7 +33,7 @@ export function ProductPage({ storeId, productId }: ProductPageProps) {
   // Récupérer les détails du produit
   const { data: product, isLoading: productLoading } = useQuery({
     queryKey: ['product', storeId, productId],
-    queryFn: () => storeService.getProductById(productId),
+    queryFn: () => storeService.getProductById(storeId, productId),
     enabled: !!storeId && !!productId,
   });
 

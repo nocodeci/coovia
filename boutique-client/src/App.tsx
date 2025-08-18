@@ -49,7 +49,7 @@ function App() {
   const pathSegments = window.location.pathname.split('/').filter(Boolean);
   
   // Déterminer le storeSlug : priorité au sous-domaine, puis à l'URL
-  const storeSlug = isSubdomain && subdomain ? subdomain : (pathSegments[0] || 'store-123');
+  const storeSlug = isSubdomain && subdomain ? subdomain : (pathSegments[0] || 'test-store');
   
   // Vérifier si c'est une page de détail de produit
   const isProductDetail = pathSegments.length >= 3 && pathSegments[1] === 'products';

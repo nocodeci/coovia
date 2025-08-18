@@ -12,11 +12,9 @@ export const useSubdomain = () => {
     if (hostParts.length > 2 && host !== 'localhost') {
       const potentialSubdomain = hostParts[0];
       
-      // Vérifier si c'est un sous-domaine valide (pas www, wozif, etc.)
+      // Vérifier si c'est un sous-domaine valide (pas www, etc.)
       if (potentialSubdomain && 
-          potentialSubdomain !== 'www' && 
-          potentialSubdomain !== 'wozif' &&
-          potentialSubdomain !== 'wizof') {
+          potentialSubdomain !== 'www') {
         setSubdomain(potentialSubdomain);
         setIsSubdomain(true);
       }

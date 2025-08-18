@@ -43,9 +43,9 @@ if [ $? -ne 0 ]; then
 fi
 
 # Démarrer le serveur
-echo "🔥 Démarrage du serveur sur http://localhost:8001..."
+echo "🔥 Démarrage du serveur sur http://localhost:8000..."
 echo "   Appuyez sur Ctrl+C pour arrêter le serveur"
 echo ""
 
 # Démarrer le serveur avec CORS activé
-php artisan serve --host=0.0.0.0 --port=8001
+php artisan serve --host=0.0.0.0 --port=8000
