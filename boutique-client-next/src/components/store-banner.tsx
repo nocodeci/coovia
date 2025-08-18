@@ -22,7 +22,8 @@ export function StoreBanner({ store }: StoreBannerProps) {
     setIsFollowing(!isFollowing);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'récemment';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'long',

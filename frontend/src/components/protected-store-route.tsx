@@ -1,5 +1,9 @@
-import { useEffect } from 'react'
-import { useStore } from '@/context/store-context'
+"use client"
+
+import type React from "react"
+
+import { useEffect } from "react"
+import { useStore } from "@/context/store-context"
 
 interface ProtectedStoreRouteProps {
   children: React.ReactNode
@@ -13,20 +17,24 @@ export function ProtectedStoreRoute({ children, storeId }: ProtectedStoreRoutePr
     if (!isLoading) {
       // Si aucune boutique n'est sélectionnée, rediriger vers la sélection
       if (!currentStore) {
-        window.location.href = '/store-selection'
+        console.log("🚫 Aucune boutique sélectionnée, redirection vers la sélection")
+        window.location.href = "/store-selection"
         return
       }
 
       // Si un storeId est spécifié, vérifier qu'il correspond à la boutique sélectionnée
       if (storeId && currentStore.id !== storeId) {
         // Vérifier si la boutique existe dans la liste
-        const storeExists = stores.find(store => store.id === storeId)
+        const storeExists = stores.find((store) => store.id === storeId)
         if (storeExists) {
-          // Si la boutique existe mais n'est pas sélectionnée, rediriger vers la sélection
-          window.location.href = '/store-selection'
+          // Si la boutique existe mais n'est pas celle sélectionnée, la sélectionner
+          console.log(`🔄 Changement de boutique: ${currentStore.id} -> ${storeId}`)
+          localStorage.setItem("selectedStoreId", storeId)
+          window.location.href = `/${storeId}/dashboard`
         } else {
           // Si la boutique n'existe pas, rediriger vers la sélection
-          window.location.href = '/store-selection'
+          console.log("🚫 Boutique inexistante, redirection vers la sélection")
+          window.location.href = "/store-selection"
         }
       }
     }
@@ -51,4 +59,4 @@ export function ProtectedStoreRoute({ children, storeId }: ProtectedStoreRoutePr
 
   // Si tout est correct, afficher le contenu
   return <>{children}</>
-} 
+}
