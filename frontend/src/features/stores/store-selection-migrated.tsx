@@ -29,6 +29,7 @@ export function StoreSelectionMigrated() {
 
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
   const [query, setQuery] = useState("")
+  const [showAllStores, setShowAllStores] = useState(false)
 
   // Tous les hooks doivent être appelés en premier
   const filteredStores = useMemo(() => {
@@ -236,9 +237,10 @@ export function StoreSelectionMigrated() {
                   </div>
                 </div>
 
-                {/* Liste des boutiques */}
+                {/* Dropdown des boutiques */}
                 <div className="space-y-3">
-                  {filteredStores.map((store: Store) => (
+                  {/* Boutiques visibles (3 premières ou toutes si showAllStores) */}
+                  {filteredStores.slice(0, showAllStores ? filteredStores.length : 3).map((store: Store) => (
                     <div
                       key={store.id}
                       className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
@@ -267,6 +269,29 @@ export function StoreSelectionMigrated() {
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Bouton pour afficher plus/moins de boutiques */}
+                  {filteredStores.length > 3 && (
+                    <div className="flex justify-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowAllStores(!showAllStores)}
+                        className="flex items-center gap-2"
+                      >
+                        {showAllStores ? (
+                          <>
+                            <ChevronUp className="h-4 w-4" />
+                            Voir moins
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-4 w-4" />
+                            Voir toutes les boutiques ({filteredStores.length - 3} de plus)
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Message si aucune boutique */}

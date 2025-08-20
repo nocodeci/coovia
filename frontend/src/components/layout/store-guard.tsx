@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useEffect, useRef } from "react"
 import { useStore } from "@/context/store-context"
 import { useNavigate, useLocation } from "@tanstack/react-router"
 
@@ -10,6 +10,7 @@ export function StoreGuard({ children }: StoreGuardProps) {
   const { currentStore, isLoading } = useStore()
   const navigate = useNavigate()
   const location = useLocation()
+  const hasRedirected = useRef(false)
 
   useEffect(() => {
     // Éviter les redirections multiples
@@ -22,17 +23,21 @@ export function StoreGuard({ children }: StoreGuardProps) {
 
     // Si aucune boutique n'est sélectionnée, rediriger vers store-selection
     if (!currentStore) {
-      navigate({ to: "/store-selection" })
+      if (!hasRedirected.current) {
+        hasRedirected.current = true
+        navigate({ to: "/store-selection" })
+      }
       return
     }
 
     // Si on est sur une route avec storeId mais que la boutique ne correspond pas
+    // Ne pas rediriger automatiquement, laisser le StoreSelector gérer les changements
     const pathSegments = location.pathname.split('/')
     const urlStoreId = pathSegments[1] // Le storeId est le premier segment après le slash
     
-    if (urlStoreId && currentStore.id !== urlStoreId) {
-      navigate({ to: "/store-selection" })
-      return
+    // Reset le flag de redirection quand l'URL correspond
+    if (urlStoreId && currentStore.id === urlStoreId) {
+      hasRedirected.current = false
     }
   }, [currentStore?.id, isLoading, location.pathname, navigate])
 

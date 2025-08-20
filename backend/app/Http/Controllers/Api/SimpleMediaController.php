@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Storage as StorageFacade;
+use App\Models\StoreMediaFile;
 
 class SimpleMediaController extends Controller
 {
@@ -18,7 +19,13 @@ class SimpleMediaController extends Controller
     public function __construct(CloudflareUploadService $cloudflareService)
     {
         $this->cloudflareService = $cloudflareService;
-        $this->disk = Storage::disk('cloudflare');
+        
+        try {
+            $this->disk = StorageFacade::disk('cloudflare');
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de l'initialisation du disk Cloudflare: " . $e->getMessage());
+            $this->disk = null;
+        }
     }
 
     /**
@@ -146,22 +153,37 @@ class SimpleMediaController extends Controller
             $directory = 'media/' . $storeId;
             $files = [];
             
-            // Récupérer les vrais fichiers depuis Cloudflare
-            if ($this->disk->exists($directory)) {
-                $fileList = $this->disk->files($directory);
-                
-                foreach ($fileList as $filePath) {
-                    // Ignorer les thumbnails et les fichiers système
-                    if (str_contains($filePath, '/thumbnails/') || str_contains($filePath, '.DS_Store')) {
-                        continue;
-                    }
-                    
-                    $fileInfo = $this->getFileInfo($filePath, $storeId);
-                    if ($fileInfo) {
-                        $files[] = $fileInfo;
-                    }
-                }
+            // Vérifier si le disk Cloudflare est configuré correctement
+            if (!$this->disk) {
+                Log::error("Disk Cloudflare non configuré pour le store {$storeId}");
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Configuration Cloudflare manquante',
+                ], 500);
             }
+            
+            // Récupérer les fichiers depuis la base de données locale
+            $mediaFiles = StoreMediaFile::where('store_id', $storeId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            foreach ($mediaFiles as $mediaFile) {
+                $files[] = [
+                    'id' => $mediaFile->file_id,
+                    'store_id' => $mediaFile->store_id,
+                    'name' => $mediaFile->name,
+                    'type' => $mediaFile->type,
+                    'size' => $mediaFile->size,
+                    'url' => $mediaFile->url,
+                    'thumbnail' => $mediaFile->thumbnail_url,
+                    'mime_type' => $mediaFile->mime_type,
+                    'metadata' => $mediaFile->metadata,
+                    'created_at' => $mediaFile->created_at->toISOString(),
+                    'updated_at' => $mediaFile->updated_at->toISOString(),
+                ];
+            }
+            
+            Log::info("Fichiers trouvés pour le store {$storeId}: " . count($files));
             
             // Pagination
             $perPage = $request->get('per_page', 20);
@@ -231,25 +253,65 @@ class SimpleMediaController extends Controller
 
             // Determine file type
             $type = $this->getFileType($file->getMimeType());
+            $fileId = uniqid();
+
+            // Générer les URLs du proxy Laravel pour éviter les problèmes CORS
+            $baseUrl = config('app.url');
+            $proxyUrl = $baseUrl . "/api/media-proxy/{$storeId}/file?path=" . urlencode($result['path']);
+            $thumbnailProxyUrl = null;
+            
+            if (isset($result['urls']['thumbnails']['medium']['url'])) {
+                $thumbnailPath = $result['path'];
+                $thumbnailPath = str_replace('.png', '_medium.png', $thumbnailPath);
+                $thumbnailPath = str_replace('.jpg', '_medium.jpg', $thumbnailPath);
+                $thumbnailPath = str_replace('.jpeg', '_medium.jpeg', $thumbnailPath);
+                $thumbnailPath = str_replace('.gif', '_medium.gif', $thumbnailPath);
+                $thumbnailPath = str_replace('.webp', '_medium.webp', $thumbnailPath);
+                $thumbnailPath = dirname($thumbnailPath) . '/thumbnails/' . basename($thumbnailPath);
+                $thumbnailProxyUrl = $baseUrl . "/api/media-proxy/{$storeId}/file?path=" . urlencode($thumbnailPath);
+            }
+            
+            // Sauvegarder les informations du fichier dans la base de données
+            $mediaFile = StoreMediaFile::create([
+                'store_id' => $storeId,
+                'file_id' => $fileId,
+                'name' => $file->getClientOriginalName(),
+                'type' => $type,
+                'size' => $file->getSize(),
+                'url' => $proxyUrl, // Utiliser l'URL du proxy
+                'thumbnail_url' => $thumbnailProxyUrl, // Utiliser l'URL du proxy pour le thumbnail
+                'mime_type' => $file->getMimeType(),
+                'cloudflare_path' => $result['path'],
+                'metadata' => [
+                    'original_name' => $file->getClientOriginalName(),
+                    'extension' => $file->getClientOriginalExtension(),
+                    'cloudflare_path' => $result['path'],
+                    'cloudflare_urls' => $result['urls'],
+                    'proxy_url' => $proxyUrl,
+                    'thumbnail_proxy_url' => $thumbnailProxyUrl,
+                ],
+            ]);
 
             return [
                 'success' => true,
-                'id' => uniqid(),
+                'id' => $fileId,
                 'store_id' => $storeId,
                 'name' => $file->getClientOriginalName(),
                 'type' => $type,
                 'size' => $file->getSize(),
-                'url' => $result['urls']['original'],
-                'thumbnail' => $result['urls']['thumbnails']['medium']['url'] ?? null,
+                'url' => $proxyUrl, // Utiliser l'URL du proxy
+                'thumbnail' => $thumbnailProxyUrl, // Utiliser l'URL du proxy pour le thumbnail
                 'mime_type' => $file->getMimeType(),
                 'metadata' => [
                     'original_name' => $file->getClientOriginalName(),
                     'extension' => $file->getClientOriginalExtension(),
                     'cloudflare_path' => $result['path'],
                     'cloudflare_urls' => $result['urls'],
+                    'proxy_url' => $proxyUrl,
+                    'thumbnail_proxy_url' => $thumbnailProxyUrl,
                 ],
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $mediaFile->created_at->toISOString(),
+                'updated_at' => $mediaFile->updated_at->toISOString(),
             ];
         } catch (\Exception $e) {
             Log::error("Erreur lors de l'upload du fichier: " . $e->getMessage());
@@ -409,7 +471,7 @@ class SimpleMediaController extends Controller
     {
         // Utiliser l'URL du proxy au lieu de l'URL Cloudflare directe
         $storeId = $this->extractStoreId($filePath);
-        $baseUrl = 'http://localhost:8000';
+        $baseUrl = config('app.url');
         return $baseUrl . "/api/media-proxy/{$storeId}/file?path=" . urlencode($filePath);
     }
 
