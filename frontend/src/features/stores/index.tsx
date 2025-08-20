@@ -32,6 +32,9 @@ import type { Store } from "@/types/store"
 import apiService from "@/lib/api"
 import { openBoutique } from "@/utils/store-links"
 
+// Import du nouveau système de chargement unifié
+import { UnifiedPageWrapper } from '@/components/unified-loading'
+
 export function StoresManagement() {
   const [stores, setStores] = useState<Store[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -172,38 +175,18 @@ export function StoresManagement() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <SearchProvider>
-        <Main>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Chargement des boutiques...</p>
-            </div>
-          </div>
-        </Main>
-      </SearchProvider>
-    )
-  }
-
-  if (error) {
-    return (
-      <SearchProvider>
-        <Main>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Erreur</h1>
-              <p className="text-gray-600 mb-4">{error}</p>
-              <Button onClick={loadStores}>
-                Réessayer
-              </Button>
-            </div>
-          </div>
-        </Main>
-      </SearchProvider>
-    )
-  }
+  return (
+    <SearchProvider>
+      <Main>
+        <UnifiedPageWrapper
+          data={stores}
+          isLoading={isLoading}
+          error={error}
+          cacheKey="stores-management"
+          resourceKey="stores-management"
+          loadingMessage="Chargement des boutiques..."
+          loadingType="skeleton"
+        >
 
   return (
     <SearchProvider>
@@ -392,10 +375,11 @@ export function StoresManagement() {
             </Card>
           </div>
         </div>
-      </Main>
+      </UnifiedPageWrapper>
+    </Main>
 
-      {/* Dialog de création de boutique */}
-      <CreateStoreDialog open={createStoreOpen} onOpenChange={setCreateStoreOpen} onStoreCreated={handleStoreCreated} />
-    </SearchProvider>
-  )
+    {/* Dialog de création de boutique */}
+    <CreateStoreDialog open={createStoreOpen} onOpenChange={setCreateStoreOpen} onStoreCreated={handleStoreCreated} />
+  </SearchProvider>
+)
 }

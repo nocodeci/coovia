@@ -1,45 +1,22 @@
 "use client"
 
-import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { useAuth } from '@/hooks/useAuthQuery'
-import { storeService } from '@/services/storeService'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Progress } from '@/components/ui/progress'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import React, { useState } from "react"
+import { useNavigate } from "@tanstack/react-router"
+import { useAuth } from "@/hooks/useAuthQuery"
+import { storeService } from "@/services/storeService"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
 
-import { 
-  Building2, 
-  Package, 
-  CreditCard, 
-  CheckCircle2, 
-  ArrowLeft, 
-  ArrowRight,
-  Store,
-  Mail,
-  Phone,
-  MapPin,
-  Globe,
-  Zap,
-  X,
-  Info,
-  Key,
-  Settings,
-  AlertTriangle,
-  Plus
-} from 'lucide-react'
-import { toast } from 'sonner'
+import { CheckCircle2, ArrowLeft, ArrowRight, Store, Plus } from "lucide-react"
 
 export function CreateStore() {
   const navigate = useNavigate()
-  const { data: user } = useAuth()
+  const { data: user, isLoading: authLoading } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [slugAvailability, setSlugAvailability] = useState<{
@@ -52,53 +29,70 @@ export function CreateStore() {
     suggestions: []
   })
 
-  const [showMonnerooAlert, setShowMonnerooAlert] = useState(false)
+  // Debounce pour éviter les appels trop fréquents
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null)
   
   // Form data
   const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: '',
+    name: "",
+    slug: "",
+    description: "",
     logo: null as File | null,
-    category: 'digital',
-    productType: '',
+    category: "digital",
+    productType: "",
     productCategories: [] as string[],
     address: {
-      street: '',
-      city: '',
-      country: 'Côte d\'Ivoire'
+      street: "",
+      city: "",
+      country: "Côte d'Ivoire",
     },
     contact: {
-      email: '',
-      phone: ''
+      email: "",
+      phone: "",
     },
     settings: {
       digitalDelivery: true,
       autoDelivery: true,
-      paymentMethods: ['wozif'],
-      currency: 'XOF',
+      paymentMethods: ["wozif"],
+      currency: "XOF",
       monneroo: {
         enabled: false,
-        secretKey: '',
-        environment: 'sandbox' // 'sandbox' ou 'production'
-      }
-    }
+        secretKey: "",
+        environment: "sandbox",
+      },
+    },
   })
 
+  // Rediriger silencieusement si l'utilisateur n'est pas connecté
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      navigate({ to: '/sign-in' })
+    }
+  }, [user, authLoading, navigate])
+
+  // Cleanup du timeout au démontage du composant
+  React.useEffect(() => {
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout)
+      }
+    }
+  }, [debounceTimeout])
+
   const updateFormData = (field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }))
   }
 
   const updateNestedField = (parent: string, field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [parent]: {
         ...(prev[parent as keyof typeof prev] as any),
-        [field]: value
-      }
+        [field]: value,
+      },
     }))
   }
 
@@ -114,53 +108,47 @@ export function CreateStore() {
   // Vérifier la disponibilité du slug
   const checkSlugAvailability = async (slug: string) => {
     if (!slug.trim() || slug.length < 3) {
-      setSlugAvailability({
-        checking: false,
-        available: null,
-        suggestions: []
-      })
-      return
+      return { available: false, message: 'Slug trop court' }
     }
 
-    setSlugAvailability(prev => ({ ...prev, checking: true }))
+    // Si l'utilisateur n'est pas encore authentifié, ne pas vérifier
+    if (!user || authLoading) {
+      return { available: null, message: 'Vérification en cours...' }
+    }
 
     try {
-      // Utiliser l'API backend pour vérifier la disponibilité (route publique)
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/stores/subdomain/${slug}/check`, {
-        headers: {
+      const token = localStorage.getItem('sanctum_token')
+      const headers: Record<string, string> = {
           'Accept': 'application/json'
         }
+      
+      // Ajouter le token d'authentification si disponible
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/stores/subdomain/${slug}/check`, {
+        headers
       })
       
       if (!response.ok) {
-        throw new Error('Erreur de vérification')
+        if (response.status === 401) {
+          return { available: null, message: 'Authentification requise' }
+        }
+        throw new Error(`Erreur de vérification (${response.status})`)
       }
       
       const data = await response.json()
       
-      if (data.success && data.data?.exists) {
-        // Générer des suggestions
-        const suggestions = generateSuggestions(slug)
-        setSlugAvailability({
-          checking: false,
-          available: false,
-          suggestions
-        })
-      } else {
-        setSlugAvailability({
-          checking: false,
-          available: true,
-          suggestions: []
-        })
+      console.log('🔍 Réponse vérification slug:', data)
+      
+      return {
+        available: data.success && !data.data?.exists,
+        message: data.data?.message || 'Vérification terminée'
       }
     } catch (error) {
       console.error('Erreur lors de la vérification du slug:', error)
-      // En cas d'erreur, on considère que c'est disponible
-      setSlugAvailability({
-        checking: false,
-        available: true,
-        suggestions: []
-      })
+      return { available: null, message: 'Erreur de vérification' }
     }
   }
 
@@ -183,71 +171,67 @@ export function CreateStore() {
     return suggestions.slice(0, 8) // Limiter à 8 suggestions
   }
 
-  // Debounce pour la vérification
-  const debouncedCheckSlug = (() => {
-    let timeoutId: NodeJS.Timeout
-    return (slug: string) => {
-      clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => {
-        checkSlugAvailability(slug)
-      }, 500) // Attendre 500ms après la dernière frappe
+  // Vérifier la disponibilité et mettre à jour le state avec debounce
+  const checkSlugAvailabilityAndUpdate = async (slug: string) => {
+    // Annuler le timeout précédent
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout)
     }
-  })()
-
-  // Types de produits et leurs catégories
-  const productTypes = [
-    {
-      id: 'formations',
-      name: 'Formations & Éducation',
-      icon: '🎓',
-      description: 'Cours en ligne, formations professionnelles, tutoriels',
-      categories: [
-        'Cours en ligne',
-        'Formations professionnelles',
-        'Tutoriels vidéo',
-        'Webinaires',
-        'Certifications',
-        'Coaching personnalisé',
-        'E-books éducatifs',
-        'Ressources pédagogiques'
-      ]
-    },
-    {
-      id: 'logiciels',
-      name: 'Logiciels & Applications',
-      icon: '💻',
-      description: 'Applications, logiciels, outils numériques',
-      categories: [
-        'Applications mobiles',
-        'Logiciels desktop',
-        'Extensions navigateur',
-        'Plugins WordPress',
-        'Templates et thèmes',
-        'Outils de productivité',
-        'Jeux vidéo',
-        'Applications web'
-      ]
-    },
-    {
-      id: 'contenus',
-      name: 'Contenus & Médias',
-      icon: '📱',
-      description: 'E-books, musique, vidéos, podcasts',
-      categories: [
-        'E-books',
-        'Livres audio',
-        'Musique',
-        'Podcasts',
-        'Vidéos',
-        'Photos et images',
-        'Templates créatifs',
-        'Contenus exclusifs'
-      ]
-    }
-  ]
+    
+    // Créer un nouveau timeout
+    const timeout = setTimeout(async () => {
+      if (!slug.trim() || slug.length < 3) {
+        setSlugAvailability({
+          checking: false,
+          available: null,
+          suggestions: []
+        })
+        return
+      }
+      
+      setSlugAvailability(prev => ({ ...prev, checking: true }))
+      
+      try {
+        const result = await checkSlugAvailability(slug)
+        console.log('🔍 Résultat vérification:', result)
+        
+        if (result.available === true) {
+          setSlugAvailability({
+            checking: false,
+            available: true,
+            suggestions: []
+          })
+        } else if (result.available === false) {
+          // Générer des suggestions si le slug n'est pas disponible
+          const suggestions = generateSuggestions(slug)
+          setSlugAvailability({
+            checking: false,
+            available: false,
+            suggestions
+          })
+        } else {
+          // Cas où available est null (erreur ou vérification en cours)
+          setSlugAvailability({
+            checking: false,
+            available: null,
+            suggestions: []
+          })
+        }
+      } catch (error) {
+        console.error('❌ Erreur lors de la vérification:', error)
+        setSlugAvailability({
+          checking: false,
+          available: null,
+          suggestions: []
+        })
+      }
+    }, 500) // Attendre 500ms avant de vérifier
+    
+    setDebounceTimeout(timeout)
+  }
 
   const nextStep = () => {
-    // Validation des champs requis selon l'étape
+    // Validation pour l'étape 1
     if (currentStep === 1) {
       if (!formData.name.trim()) {
         toast.error('Nom de boutique requis', {
@@ -261,7 +245,8 @@ export function CreateStore() {
         })
         return
       }
-      if (slugAvailability.available === false) {
+      // Ne pas bloquer si l'utilisateur n'est pas encore authentifié
+      if (user && slugAvailability.available === false) {
         toast.error('Sous-domaine indisponible', {
           description: 'Veuillez choisir un autre sous-domaine.'
         })
@@ -284,152 +269,181 @@ export function CreateStore() {
     setIsLoading(true)
     
     try {
-      // Vérifier que l'utilisateur est authentifié
-      const token = localStorage.getItem('sanctum_token')
-      if (!token) {
-        toast.error('Erreur d\'authentification', {
-          description: 'Vous devez être connecté pour créer une boutique.'
-        })
-        return
-      }
-      
-      // Validation des champs requis
+      // Validation finale avant création
       if (!formData.name.trim()) {
-        toast.error('Nom de boutique requis', {
-          description: 'Veuillez saisir le nom de votre boutique.'
-        })
-        return
+        throw new Error('Le nom de la boutique est requis')
       }
       
       if (!formData.slug.trim()) {
-        toast.error('Sous-domaine requis', {
-          description: 'Veuillez saisir le sous-domaine de votre boutique.'
+        throw new Error('Le sous-domaine de la boutique est requis')
+      }
+      
+      if (slugAvailability.available === false) {
+        throw new Error('Le sous-domaine sélectionné n\'est pas disponible')
+      }
+      
+      // Vérifier l'authentification
+      const token = localStorage.getItem('sanctum_token')
+      if (!token || !user) {
+        toast.error('Authentification requise', {
+          description: 'Veuillez vous connecter pour créer une boutique.'
         })
+        navigate({ to: '/sign-in' })
         return
       }
       
       // Préparer les données pour l'envoi
-      const storeData = {
-        name: formData.name,
-        slug: formData.slug, // Inclure le slug saisi par l'utilisateur
-        description: formData.description,
-        logo: formData.logo,
-        productType: formData.productType,
-        productCategories: formData.productCategories,
-        address: {
-          city: formData.address.city
-        },
-        contact: {
-          email: formData.contact.email,
-          phone: formData.contact.phone
-        },
-        settings: {
-          paymentMethods: formData.settings.paymentMethods,
-          currency: 'XOF',
-          monneroo: formData.settings.monneroo
+      const storeData = { ...formData }
+      
+      // Si un logo a été sélectionné, l'uploader vers Cloudflare d'abord
+      if (formData.logo) {
+        try {
+          console.log("📤 Upload du logo vers Cloudflare...")
+          
+          // Créer un FormData pour l'upload du logo
+          const logoFormData = new FormData()
+          logoFormData.append('image', formData.logo)
+          logoFormData.append('path', 'stores/logos')
+          
+          // Upload vers l'API Cloudflare
+          const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/files/upload-image`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json',
+            },
+            body: logoFormData
+          })
+          
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text()
+            console.error("❌ Erreur upload response:", uploadResponse.status, errorText)
+            
+            if (uploadResponse.status === 401) {
+              throw new Error('Session expirée. Veuillez vous reconnecter.')
+            } else if (uploadResponse.status === 500) {
+              throw new Error('Erreur serveur lors de l\'upload. Veuillez réessayer.')
+      } else {
+              throw new Error(`Erreur lors de l'upload du logo (${uploadResponse.status})`)
+            }
+          }
+          
+          const uploadResult = await uploadResponse.json()
+          
+          if (uploadResult.success) {
+            // Remplacer le File par l'URL Cloudflare
+            storeData.logo = uploadResult.original_url
+            console.log("✅ Logo uploadé avec succès:", uploadResult.original_url)
+        } else {
+            throw new Error(uploadResult.message || 'Erreur lors de l\'upload du logo')
+          }
+        } catch (uploadError) {
+          console.error("❌ Erreur upload logo:", uploadError)
+          
+          // Si l'upload échoue, on peut continuer sans logo
+          console.log("⚠️ Continuation sans logo...")
+          storeData.logo = null
+          
+          // Ne pas bloquer la création si l'upload échoue
+          // throw new Error(`Impossible d'uploader le logo: ${uploadError.message}`)
         }
       }
-
-      console.log('Données envoyées pour création de boutique:', storeData)
+      
+      // Créer la boutique avec les données mises à jour
+      console.log("🏪 Création de la boutique...")
       const response = await storeService.createStore(storeData)
       
       if (response.success) {
-        const finalSlug = response.data?.slug || formData.slug
+        console.log("✅ Boutique créée avec succès!")
         toast.success('Boutique créée avec succès!', {
-          description: `Votre boutique "${formData.name}" est maintenant active sur ${finalSlug}.wozif.store`
+          description: `Votre boutique "${formData.name}" est maintenant active.`
         })
-        
-        // Rediriger vers la sélection de boutique ou le dashboard
         navigate({ to: '/store-selection' })
       } else {
-        toast.error('Erreur lors de la création', {
-          description: response.message || 'Une erreur est survenue lors de la création de la boutique'
-        })
+        console.error("❌ Erreur lors de la création:", response.message)
+        throw new Error(response.message || 'Erreur lors de la création de la boutique')
       }
-    } catch (error: any) {
-      console.error('Erreur création boutique:', error)
-      
-      // Afficher un message d'erreur plus détaillé
-      let errorMessage = 'Impossible de créer la boutique.'
-      let errorDescription = 'Une erreur inattendue s\'est produite.'
-      
-      if (error.message) {
-        if (error.message.includes('Erreur de connexion au serveur')) {
-          errorMessage = 'Erreur de connexion'
-          errorDescription = 'Vérifiez votre connexion internet et réessayez.'
-        } else if (error.message.includes('Ce nom de boutique n\'est pas disponible')) {
-          errorMessage = 'Nom de boutique indisponible'
-          errorDescription = error.message
-        } else if (error.message.includes('Erreur lors de la création de la boutique')) {
-          errorMessage = 'Erreur de création'
-          errorDescription = error.message
-        } else {
-          errorDescription = error.message
-        }
-      }
-      
-      toast.error(errorMessage, {
-        description: errorDescription,
-        duration: 8000 // Afficher plus longtemps pour les erreurs de disponibilité
+    } catch (error) {
+      console.error("❌ Erreur création boutique:", error)
+      toast.error('Erreur lors de la création', {
+        description: error.message || 'Une erreur est survenue lors de la création de la boutique'
       })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const steps = [
-    { id: 1, title: 'Informations de base', icon: Building2, description: 'Nom et description' },
-    { id: 2, title: 'Type de produits', icon: Package, description: 'Spécialisation digitale' },
-    { id: 3, title: 'Configuration', icon: CreditCard, description: 'Contact et paiement' },
-    { id: 4, title: 'Finalisation', icon: CheckCircle2, description: 'Vérification' }
-  ]
+  // Afficher le formulaire même pendant la vérification d'authentification
+  // L'authentification sera vérifiée lors de la soumission
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
+          <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+            {/* Éléments décoratifs animés */}
+            <div className="absolute inset-0">
+              <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute top-3/4 right-1/4 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+              <div className="absolute bottom-1/4 left-1/3 w-56 h-56 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+              <div className="absolute top-1/2 right-1/3 w-40 h-40 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+              <div className="absolute bottom-1/3 right-1/2 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1500"></div>
+            </div>
+
+            <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxIi8+PC9nPjwvZz48L3N2Zz4=')]"></div>
+
+            <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+              {/* Logo en haut à gauche */}
+              <div className="absolute top-4 left-4">
+                <img
+                  src="/assets/images/logo.svg"
+                  alt="Coovia"
+                  className="h-8 w-auto"
+                  onError={(e) => {
+                    console.error('Erreur de chargement du logo')
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    const fallback = document.createElement('div')
+                    fallback.className = 'h-8 flex items-center justify-center text-lg font-bold text-white bg-white/10 px-3 rounded-lg'
+                    fallback.textContent = 'COOVIA'
+                    target.parentNode?.appendChild(fallback)
+                  }}
+                />
+              </div>
+              
+              <div className="w-full max-w-md space-y-6 bg-white rounded-xl p-6 shadow-2xl">
             <div className="text-center space-y-2">
-              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center overflow-hidden">
+                  <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border border-gray-200">
                 {formData.logo ? (
                   <img
-                    src={URL.createObjectURL(formData.logo)}
+                        src={URL.createObjectURL(formData.logo) || "/placeholder.svg"}
                     alt="Logo de la boutique"
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <Store className="w-8 h-8 text-primary" />
+                      <Store className="w-6 h-6 text-gray-600" />
                 )}
               </div>
-              <h2 className="text-2xl font-semibold tracking-tight">Créer votre boutique digitale</h2>
-              <p className="text-muted-foreground">
-                Commençons par les informations de base de votre boutique
-              </p>
+                  <h2 className="text-xl font-semibold tracking-tight text-gray-900">Créer votre boutique</h2>
+                  <p className="text-sm text-gray-600">Informations de base</p>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5" />
-                  Informations de base
-                </CardTitle>
-                <CardDescription>
-                  Définissez le nom et la description de votre boutique
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                <Card className="bg-white border border-gray-200 shadow-sm">
+                  <CardContent className="p-4 space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="logo">Logo de la boutique</Label>
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-primary/20">
+                      <Label htmlFor="logo" className="text-sm text-gray-700">
+                        Logo
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
                       {formData.logo ? (
                         <img
-                          src={URL.createObjectURL(formData.logo)}
+                              src={URL.createObjectURL(formData.logo) || "/placeholder.svg"}
                           alt="Logo de la boutique"
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <Store className="w-8 h-8 text-primary" />
+                            <Store className="w-6 h-6 text-gray-400" />
                       )}
                     </div>
                     <div className="flex-1">
@@ -440,49 +454,76 @@ export function CreateStore() {
                         onChange={(e) => {
                           const file = e.target.files?.[0]
                           if (file) {
-                            updateFormData('logo', file)
+                                updateFormData("logo", file)
                           }
                         }}
-                        className="cursor-pointer"
+                            className="text-xs"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Formats acceptés: JPG, PNG, SVG (max 2MB)
-                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nom de la boutique *</Label>
+                      <Label htmlFor="name" className="text-sm text-gray-700">
+                        Nom de la boutique *
+                      </Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => {
                       const name = e.target.value
-                      updateFormData('name', name)
-                    }}
-                    placeholder="Ma Boutique Digitale"
+                          updateFormData("name", name)
+                          
+                          // Générer automatiquement le slug si le nom est saisi
+                          if (name.trim()) {
+                            const generatedSlug = generateSlug(name)
+                            updateFormData("slug", generatedSlug)
+                            
+                            // Vérifier la disponibilité du slug généré
+                            if (generatedSlug.length >= 3) {
+                              checkSlugAvailabilityAndUpdate(generatedSlug)
+                            }
+                          }
+                        }}
+                        placeholder="Ma Boutique"
+                        className="text-sm"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="slug">Sous-domaine de la boutique <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="slug" className="text-sm text-gray-700">
+                        Sous-domaine *
+                      </Label>
                   <div className="flex items-center">
                     <Input
                       id="slug"
                       value={formData.slug}
                       onChange={(e) => {
-                        const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
-                        updateFormData('slug', slug)
-                        debouncedCheckSlug(slug)
+                            const slug = e.target.value
+                              .toLowerCase()
+                              .replace(/[^a-z0-9-]/g, "-")
+                              .replace(/-+/g, "-")
+                              .replace(/^-|-$/g, "")
+                            updateFormData("slug", slug)
+                            
+                            // Vérifier la disponibilité quand l'utilisateur modifie le slug
+                            if (slug.length >= 3) {
+                              checkSlugAvailabilityAndUpdate(slug)
+                            } else {
+                              setSlugAvailability({
+                                checking: false,
+                                available: null,
+                                suggestions: []
+                              })
+                            }
                       }}
                       placeholder="ma-boutique"
-                      className={`rounded-r-none ${
-                        slugAvailability.available === false ? 'border-destructive' : 
-                        slugAvailability.available === true ? 'border-green-500' : ''
+                          className={`rounded-r-none text-sm ${
+                            slugAvailability.available === false ? 'border-red-400' : 
+                            slugAvailability.available === true ? 'border-green-400' : ''
                       }`}
                     />
-                    <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground">
+                        <div className="px-2 py-2 bg-gray-50 border border-l-0 border-gray-300 rounded-r-md text-xs text-gray-600">
                       .wozif.store
                     </div>
                   </div>
@@ -491,8 +532,8 @@ export function CreateStore() {
                   {formData.slug.length >= 3 && (
                     <div className="flex items-center gap-2">
                       {slugAvailability.checking ? (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                           Vérification en cours...
                         </div>
                       ) : slugAvailability.available === true ? (
@@ -501,8 +542,8 @@ export function CreateStore() {
                           Disponible
                         </div>
                       ) : slugAvailability.available === false ? (
-                        <div className="flex items-center gap-2 text-sm text-destructive">
-                          <X className="w-4 h-4" />
+                            <div className="flex items-center gap-2 text-sm text-red-600">
+                              <div className="w-4 h-4 text-red-600">✕</div>
                           Déjà pris
                         </div>
                       ) : null}
@@ -510,647 +551,440 @@ export function CreateStore() {
                   )}
 
                   {/* Suggestions */}
-                  {slugAvailability.available === false && slugAvailability.suggestions.length > 0 && (
+                      {slugAvailability.suggestions.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">Suggestions disponibles :</p>
+                          <p className="text-xs text-gray-600">Suggestions disponibles :</p>
                       <div className="flex flex-wrap gap-2">
                         {slugAvailability.suggestions.map((suggestion, index) => (
                           <button
                             key={index}
                             type="button"
                             onClick={() => {
-                              updateFormData('slug', suggestion)
-                              debouncedCheckSlug(suggestion)
+                                  updateFormData("slug", suggestion)
+                                  checkSlugAvailabilityAndUpdate(suggestion)
                             }}
-                            className="px-3 py-1 text-xs bg-primary/10 text-primary border border-primary/20 rounded-md hover:bg-primary/20 transition-colors"
+                                className="px-2 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 transition-colors"
                           >
-                            {suggestion}.wozif.store
+                                {suggestion}
                           </button>
                         ))}
                       </div>
                     </div>
                   )}
-
-                  <p className="text-xs text-muted-foreground">
-                    Votre boutique sera accessible à l'adresse : <span className="font-mono text-primary">{formData.slug || 'ma-boutique'}.wozif.store</span>
-                  </p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                      <Label htmlFor="description" className="text-sm text-gray-700">
+                        Description
+                      </Label>
                   <Textarea
                     id="description"
                       value={formData.description}
-                      onChange={(e) => updateFormData('description', e.target.value)}
-                      placeholder="Décrivez votre boutique et vos produits digitaux..."
-                      rows={3}
+                        onChange={(e) => updateFormData("description", e.target.value)}
+                        placeholder="Décrivez votre boutique..."
+                        rows={2}
+                        className="text-sm resize-none"
                     />
                 </div>
               </CardContent>
             </Card>
+
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={prevStep} disabled={currentStep === 1}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Précédent
+                  </Button>
+                  <Button onClick={nextStep}>
+                    Suivant
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         )
 
       case 2:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold tracking-tight">Spécialisation digitale</h2>
-              <p className="text-muted-foreground">
-                Choisissez le type de produits que vous souhaitez vendre
-              </p>
+          <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+            {/* Éléments décoratifs animés */}
+            <div className="absolute inset-0">
+              <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute top-3/4 right-1/4 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+              <div className="absolute bottom-1/4 left-1/3 w-56 h-56 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+              <div className="absolute top-1/2 right-1/3 w-40 h-40 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+              <div className="absolute bottom-1/3 right-1/2 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1500"></div>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="w-5 h-5" />
-                  Type de produits
-                </CardTitle>
-                <CardDescription>
-                  Sélectionnez le type principal de votre boutique
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Types de produits */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {productTypes.map((type) => (
-                    <div
-                      key={type.id}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                        formData.productType === type.id
-                          ? 'border-blue-500 bg-blue-50 shadow-md'
-                          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                      }`}
-                      onClick={() => {
-                        updateFormData('productType', type.id)
-                        updateFormData('productCategories', [])
-                      }}
-                    >
-                      <div className="text-center space-y-3">
-                        <div className="text-3xl">{type.icon}</div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{type.name}</h4>
-                          <p className="text-sm text-gray-600 mt-1">{type.description}</p>
+            <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxIi8+PC9nPjwvZz48L3N2Zz4=')]"></div>
+
+            <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+              {/* Logo en haut à gauche */}
+              <div className="absolute top-4 left-4">
+                <img
+                  src="/assets/images/logo.svg"
+                  alt="Coovia"
+                  className="h-8 w-auto"
+                  onError={(e) => {
+                    console.error('Erreur de chargement du logo')
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    const fallback = document.createElement('div')
+                    fallback.className = 'h-8 flex items-center justify-center text-lg font-bold text-white bg-white/10 px-3 rounded-lg'
+                    fallback.textContent = 'COOVIA'
+                    target.parentNode?.appendChild(fallback)
+                  }}
+                />
                         </div>
-                        {formData.productType === type.id && (
-                          <Badge variant="default" className="bg-blue-500">
-                            Sélectionné
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+              
+              <div className="w-full max-w-md space-y-6 bg-white rounded-xl p-6 shadow-2xl">
+                <div className="text-center space-y-2">
+                  <h2 className="text-xl font-semibold tracking-tight text-gray-900">Type de produits</h2>
+                  <p className="text-sm text-gray-600">Choisissez votre spécialisation</p>
                 </div>
 
-                {/* Catégories de produits */}
-                {formData.productType && (
-                  <div className="space-y-4">
-                    <Separator />
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-3">
-                        Catégories de produits
-                      </h4>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Sélectionnez les catégories qui correspondent à vos produits
-                      </p>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {productTypes
-                          .find(type => type.id === formData.productType)
-                          ?.categories.map((category) => (
-                            <div key={category} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={category}
-                                checked={formData.productCategories.includes(category)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    updateFormData('productCategories', [...formData.productCategories, category])
-                                  } else {
-                                    updateFormData('productCategories', formData.productCategories.filter(c => c !== category))
-                                  }
-                                }}
-                              />
-                              <Label
-                                htmlFor={category}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                              >
-                                {category}
-                              </Label>
+                                <Card className="bg-white border border-gray-200 shadow-sm">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="mv-personal-demo__create-demo--radio-group space-y-3">
+                      <div className="mv-personal-demo__create-demo--radio-group__btn">
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all">
+                          <input 
+                            type="radio" 
+                            value="formations" 
+                            checked={formData.productType === "formations"}
+                            onChange={(e) => updateFormData("productType", e.target.value)}
+                            name="productType"
+                            className="mr-3"
+                          />
+                          <div className="flex items-center space-x-3">
+                            <div className="text-lg">🎓</div>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-900">Formations et éducation</h4>
+                              <p className="text-xs text-gray-600">Cours en ligne, tutoriels, certifications</p>
                             </div>
-                          ))}
                       </div>
+                        </label>
                     </div>
-                  </div>
-                )}
 
-                {/* Avantages */}
-                <Separator />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 border rounded-lg bg-green-50 border-green-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Zap className="w-4 h-4 text-green-600" />
-                      <span className="font-medium text-sm text-green-800">Livraison automatique</span>
+                      <div className="mv-personal-demo__create-demo--radio-group__btn">
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all">
+                          <input 
+                            type="radio" 
+                            value="logiciels" 
+                            checked={formData.productType === "logiciels"}
+                            onChange={(e) => updateFormData("productType", e.target.value)}
+                            name="productType"
+                            className="mr-3"
+                          />
+                          <div className="flex items-center space-x-3">
+                            <div className="text-lg">💻</div>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-900">Logiciels et applications</h4>
+                              <p className="text-xs text-gray-600">Apps mobiles, logiciels desktop, extensions</p>
                     </div>
-                    <p className="text-xs text-green-700">
-                      Les produits sont livrés instantanément après paiement
-                    </p>
+                          </div>
+                        </label>
                   </div>
                   
-                  <div className="p-4 border rounded-lg bg-blue-50 border-blue-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Globe className="w-4 h-4 text-blue-600" />
-                      <span className="font-medium text-sm text-blue-800">Vente mondiale</span>
+                      <div className="mv-personal-demo__create-demo--radio-group__btn">
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all">
+                          <input 
+                            type="radio" 
+                            value="contenus" 
+                            checked={formData.productType === "contenus"}
+                            onChange={(e) => updateFormData("productType", e.target.value)}
+                            name="productType"
+                            className="mr-3"
+                          />
+                          <div className="flex items-center space-x-3">
+                            <div className="text-lg">📚</div>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-900">Contenus et médias</h4>
+                              <p className="text-xs text-gray-600">E-books, musique, vidéos, podcasts</p>
                     </div>
-                    <p className="text-xs text-blue-700">
-                      Vendez partout dans le monde sans contraintes logistiques
-                    </p>
+                  </div>
+                        </label>
+                </div>
+
+                      <div className="mv-personal-demo__create-demo--radio-group__btn">
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all">
+                          <input 
+                            type="radio" 
+                            value="design" 
+                            checked={formData.productType === "design"}
+                            onChange={(e) => updateFormData("productType", e.target.value)}
+                            name="productType"
+                            className="mr-3"
+                          />
+                          <div className="flex items-center space-x-3">
+                            <div className="text-lg">🎨</div>
+                  <div>
+                              <h4 className="text-sm font-medium text-gray-900">Design et créativité</h4>
+                              <p className="text-xs text-gray-600">Templates, thèmes, ressources graphiques</p>
+                      </div>
+                        </div>
+                        </label>
+                      </div>
+                      
+                      <div className="mv-personal-demo__create-demo--radio-group__btn">
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all">
+                          <input 
+                            type="radio" 
+                            value="jeux" 
+                            checked={formData.productType === "jeux"}
+                            onChange={(e) => updateFormData("productType", e.target.value)}
+                            name="productType"
+                            className="mr-3"
+                          />
+                          <div className="flex items-center space-x-3">
+                            <div className="text-lg">🎮</div>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-900">Jeux et divertissement</h4>
+                              <p className="text-xs text-gray-600">Jeux vidéo, applications de divertissement</p>
+                        </div>
+                          </div>
+                        </label>
+                      </div>
+                      
+                      <div className="mv-personal-demo__create-demo--radio-group__btn">
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all">
+                          <input 
+                            type="radio" 
+                            value="outils" 
+                            checked={formData.productType === "outils"}
+                            onChange={(e) => updateFormData("productType", e.target.value)}
+                            name="productType"
+                            className="mr-3"
+                          />
+                          <div className="flex items-center space-x-3">
+                            <div className="text-lg">🛠️</div>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-900">Outils et productivité</h4>
+                              <p className="text-xs text-gray-600">Outils de travail, applications business</p>
+                        </div>
+                    </div>
+                        </label>
+                      </div>
+                      
+                      <div className="mv-personal-demo__create-demo--radio-group__btn">
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all">
+                          <input 
+                            type="radio" 
+                            value="mixte" 
+                            checked={formData.productType === "mixte"}
+                            onChange={(e) => updateFormData("productType", e.target.value)}
+                            name="productType"
+                            className="mr-3"
+                          />
+                          <div className="flex items-center space-x-3">
+                            <div className="text-lg">🛍️</div>
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-900">Mixte - Tous produits digitaux</h4>
+                              <p className="text-xs text-gray-600">Combinaison de plusieurs catégories</p>
+                        </div>
+                      </div>
+                        </label>
+                        </div>
+                  </div>
+                  </CardContent>
+                </Card>
+
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={prevStep}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Précédent
+                  </Button>
+                  <Button onClick={nextStep}>
+                    Suivant
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
           </div>
         )
 
       case 3:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold tracking-tight">Configuration</h2>
-              <p className="text-muted-foreground">
-                Paramètres de contact et de paiement
-              </p>
+          <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+            {/* Éléments décoratifs animés */}
+            <div className="absolute inset-0">
+              <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute top-3/4 right-1/4 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+              <div className="absolute bottom-1/4 left-1/3 w-56 h-56 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+              <div className="absolute top-1/2 right-1/3 w-40 h-40 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+              <div className="absolute bottom-1/3 right-1/2 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1500"></div>
             </div>
 
+            <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxIi8+PC9nPjwvZz48L3N2Zz4=')]"></div>
 
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Méthodes de paiement
-                </CardTitle>
-                <CardDescription>
-                  Configurez les moyens de paiement acceptés par votre boutique
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Méthodes de paiement */}
+            <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+              {/* Logo en haut à gauche */}
+              <div className="absolute top-4 left-4">
+                <img
+                  src="/assets/images/logo.svg"
+                  alt="Coovia"
+                  className="h-8 w-auto"
+                  onError={(e) => {
+                    console.error('Erreur de chargement du logo')
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    const fallback = document.createElement('div')
+                    fallback.className = 'h-8 flex items-center justify-center text-lg font-bold text-white bg-white/10 px-3 rounded-lg'
+                    fallback.textContent = 'COOVIA'
+                    target.parentNode?.appendChild(fallback)
+                  }}
+                />
+                    </div>
+                    
+              <div className="w-full max-w-md space-y-6 bg-white rounded-xl p-6 shadow-2xl">
+                <div className="text-center space-y-2">
+                  <h2 className="text-xl font-semibold tracking-tight text-gray-900">Configuration</h2>
+                  <p className="text-sm text-gray-600">Paramètres de paiement</p>
+                  </div>
+                  
+                <Card className="bg-white border border-gray-200 shadow-sm">
+                  <CardContent className="p-4 space-y-4">
                   <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Méthodes de paiement</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Wozif - Méthode par défaut */}
-                    <div className="border border-neutral-200 flex flex-col justify-between relative overflow-hidden p-6 rounded-lg bg-white shadow-sm">
-                      <div className="absolute top-3 right-3">
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200 font-medium">
+                      <h4 className="text-sm font-medium text-gray-900 mb-3">Méthodes de paiement</h4>
+                  <div className="space-y-3">
+                        <div className="border border-gray-200 p-3 rounded-lg bg-gray-50">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">W</span>
+                    </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900">Wozif</div>
+                              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
                           Par défaut
                         </Badge>
                       </div>
-                      
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-xl">W</span>
-                        </div>
-                        <div className="font-semibold text-lg text-gray-900">Wozif</div>
-                      </div>
-                      
-                      <div className="text-gray-600 text-sm mb-6">
-                        <div className="line-clamp-3 mb-2">
-                          Acceptez les paiements en Côte d'Ivoire avec Mobile Money, cartes bancaires et virements via notre plateforme sécurisée
-                        </div>
-                        <span className="text-blue-600 cursor-pointer hover:underline">En savoir plus</span>
-                      </div>
-                      
-                      <Button
-                        type="button"
-                        variant={formData.settings.paymentMethods.includes('wozif') ? "default" : "outline"}
-                        className={`w-full ${formData.settings.paymentMethods.includes('wozif') ? 'bg-green-600 hover:bg-green-700' : 'border-green-200 text-green-700 hover:bg-green-50'}`}
-                        onClick={() => {
-                          if (!formData.settings.paymentMethods.includes('wozif')) {
-                            // Désactiver Monneroo et activer Wozif
-                            updateNestedField('settings', 'monneroo', {
-                              ...formData.settings.monneroo,
-                              enabled: false
-                            })
-                            updateNestedField('settings', 'paymentMethods', ['wozif'])
-                          }
-                        }}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="font-medium">
-                            {formData.settings.paymentMethods.includes('wozif') ? 'Connecté' : 'Connecter Wozif'}
-                          </span>
-                          {formData.settings.paymentMethods.includes('wozif') ? (
-                            <CheckCircle2 className="w-5 h-5" />
-                          ) : (
-                            <Plus className="w-5 h-5" />
-                          )}
-                        </div>
-                      </Button>
                     </div>
+                      
+                          <p className="text-xs text-gray-600 mb-3">Paiements Mobile Money et cartes bancaires</p>
 
-                    {/* Monneroo - Option alternative */}
-                    <div className="border border-neutral-200 flex flex-col justify-between relative overflow-hidden p-6 rounded-lg bg-white shadow-sm">
-                      <div className="absolute top-3 right-3">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200 font-medium">
-                          Beta
-                        </Badge>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-xl">M</span>
-                        </div>
-                        <div className="font-semibold text-lg text-gray-900">Monneroo</div>
-                      </div>
-                      
-                      <div className="text-gray-600 text-sm mb-6">
-                        <div className="line-clamp-3 mb-2">
-                          Acceptez les paiements directement sur votre compte Monneroo avec vos propres moyens de paiement
-                        </div>
-                        <span className="text-blue-600 cursor-pointer hover:underline">En savoir plus</span>
-                  </div>
-                  
-                      <Button
-                        type="button"
-                        variant={formData.settings.monneroo.enabled ? "default" : "outline"}
-                        className={`w-full ${formData.settings.monneroo.enabled ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200 text-blue-700 hover:bg-blue-50'}`}
-                        onClick={() => {
-                          if (!formData.settings.monneroo.enabled) {
-                            setShowMonnerooAlert(true)
-                          }
-                        }}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="font-medium">
-                            {formData.settings.monneroo.enabled ? 'Connecté' : 'Connecter Monneroo'}
-                          </span>
-                          {formData.settings.monneroo.enabled ? (
-                            <CheckCircle2 className="w-5 h-5" />
-                          ) : (
-                            <Plus className="w-5 h-5" />
-                          )}
-                        </div>
-                      </Button>
-                    </div>
-                  </div>
+                          <Button type="button" size="sm" className="w-full bg-green-600 hover:bg-green-700 text-xs">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Connecté
+                          </Button>
                 </div>
 
+                        <div className="border border-gray-200 p-3 rounded-lg bg-gray-50">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">M</span>
+                        </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900">Monneroo</div>
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                          Beta
+                        </Badge>
+                        </div>
+                      </div>
 
+                          <p className="text-xs text-gray-600 mb-3">Votre propre compte Monneroo</p>
+
+                          <Button type="button" variant="outline" size="sm" className="w-full text-xs bg-transparent">
+                            <Plus className="w-3 h-3 mr-1" />
+                            Connecter
+                          </Button>
+                        </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
+
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={prevStep}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Précédent
+                  </Button>
+                  <Button onClick={nextStep}>
+                    Suivant
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                  </div>
+                  </div>
+                </div>
           </div>
         )
 
       case 4:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-semibold tracking-tight">Finalisation</h2>
-              <p className="text-muted-foreground">
-                Vérifiez les informations et créez votre boutique
-              </p>
+          <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+            {/* Éléments décoratifs animés */}
+            <div className="absolute inset-0">
+              <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute top-3/4 right-1/4 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+              <div className="absolute bottom-1/4 left-1/3 w-56 h-56 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+              <div className="absolute top-1/2 right-1/3 w-40 h-40 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+              <div className="absolute bottom-1/3 right-1/2 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1500"></div>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Récapitulatif</CardTitle>
-                <CardDescription>
-                  Vérifiez que toutes les informations sont correctes
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                    <span className="font-medium">Nom de la boutique</span>
-                      <span className="text-muted-foreground">{formData.name || 'Non renseigné'}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                      <span className="font-medium">Type de produits</span>
-                      <Badge variant="secondary">Produits digitaux</Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                      <span className="font-medium">Email de contact</span>
-                      <span className="text-muted-foreground">{formData.contact.email || 'Non renseigné'}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                      <span className="font-medium">Méthodes de paiement</span>
-                      <div className="flex items-center gap-2">
-                        {formData.settings.paymentMethods.includes('wozif') && (
-                          <Badge variant="default" className="bg-green-600">Wozif</Badge>
-                        )}
-                        {formData.settings.monneroo.enabled && (
-                          <Badge variant="outline" className="border-blue-300 text-blue-700">Monneroo</Badge>
-                        )}
-                        {!formData.settings.paymentMethods.includes('wozif') && !formData.settings.monneroo.enabled && (
-                          <span className="text-muted-foreground">Aucune sélectionnée</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxIi8+PC9nPjwvZz48L3N2Zz4=')]"></div>
 
-                {formData.settings.monneroo.enabled && (
-                  <div className="space-y-3">
-                    <Separator />
-                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-blue-900 mb-2">Configuration Monneroo</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Environnement:</span>
-                          <span className="text-blue-900 font-medium">
-                            {formData.settings.monneroo.environment === 'sandbox' ? '🟡 Sandbox' : '🟢 Production'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Clé API:</span>
-                          <span className="text-blue-900 font-medium">
-                            {formData.settings.monneroo.secretKey ? '✅ Configurée' : '❌ Manquante'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <Separator />
-
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-blue-600" />
-                    <p className="text-sm text-blue-700">
-                      Votre boutique sera optimisée pour la vente de produits digitaux avec livraison automatique
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  Coordonnées
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="city">Ville</Label>
-                    <Input
-                      id="city"
-                      value={formData.address.city}
-                      onChange={(e) => updateNestedField('address', 'city', e.target.value)}
-                      placeholder="Abidjan"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Téléphone</Label>
-                    <Input
-                      id="phone"
-                      value={formData.contact.phone}
-                      onChange={(e) => updateNestedField('contact', 'phone', e.target.value)}
-                      placeholder="+2250123456789"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={formData.contact.email}
-                    onChange={(e) => updateNestedField('contact', 'email', e.target.value)}
-                    placeholder="contact@maboutique.com"
-                    type="email"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )
-
-      default:
-        return null
-    }
-  }
-
-  const progress = (currentStep / steps.length) * 100
-
-  return (
-    <div className="min-h-screen bg-background py-4 sm:py-8 px-2 sm:px-4">
-      <div className="w-full max-w-2xl mx-auto">
-        {/* Logo */}
-        <div className="flex justify-center mb-8 sm:mb-12">
+            <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+              {/* Logo en haut à gauche */}
+              <div className="absolute top-4 left-4">
           <img
             src="/assets/images/logo.svg"
             alt="Coovia"
-            className="h-8 sm:h-10 w-auto"
+                  className="h-8 w-auto"
             onError={(e) => {
               console.error('Erreur de chargement du logo')
               const target = e.target as HTMLImageElement
               target.style.display = 'none'
               const fallback = document.createElement('div')
-              fallback.className = 'h-8 sm:h-10 flex items-center justify-center text-lg sm:text-xl font-bold text-primary bg-primary/10 px-3 sm:px-4 rounded-lg'
+                    fallback.className = 'h-8 flex items-center justify-center text-lg font-bold text-white bg-white/10 px-3 rounded-lg'
               fallback.textContent = 'COOVIA'
               target.parentNode?.appendChild(fallback)
             }}
           />
         </div>
 
-        {/* Content */}
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-4 sm:p-6 lg:p-8">
-            {/* Progress Steps */}
-            <div className="mb-6 sm:mb-8">
-              <div className="relative flex flex-col sm:flex-row items-center justify-center sm:justify-between mb-4 gap-4 sm:gap-0">
-                {steps.map((step, index) => (
-                  <div key={step.id} className="flex flex-col items-center relative">
-                    <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg border-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      currentStep >= step.id 
-                        ? 'bg-primary border-primary text-primary-foreground shadow-sm' 
-                        : 'bg-muted/50 border-muted text-muted-foreground'
-                    }`}>
-                      {currentStep > step.id ? (
-                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                      ) : (
-                        step.id
-                      )}
+              <div className="w-full max-w-md space-y-6 bg-white rounded-xl p-6 shadow-2xl">
+                <div className="text-center space-y-2">
+                  <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
+                    <CheckCircle2 className="w-6 h-6 text-green-600" />
                     </div>
-                    <div className="mt-2 text-center max-w-[80px] sm:max-w-none">
-                      <p className={`text-xs font-medium ${
-                        currentStep >= step.id ? 'text-foreground' : 'text-muted-foreground'
-                      }`}>
-                        {step.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground hidden sm:block">
-                        {step.description}
-                      </p>
+                  <h2 className="text-xl font-semibold tracking-tight text-gray-900">Finalisation</h2>
+                  <p className="text-sm text-gray-600">Créez votre boutique</p>
                     </div>
-                    {index < steps.length - 1 && (
-                      <div className={`absolute top-4 sm:top-5 left-full w-8 sm:w-16 h-0.5 ${
-                        currentStep > step.id ? 'bg-primary' : 'bg-muted'
-                      }`} style={{ transform: 'translateX(50%)' }} />
-                    )}
-                  </div>
-                ))}
-              </div>
-              <Progress value={progress} className="h-1" />
+
+                <Card className="bg-white border border-gray-200 shadow-sm">
+                  <CardContent className="p-4 space-y-4">
+                  <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium text-gray-900">Nom</span>
+                        <span className="text-sm text-gray-600">{formData.name || "Non renseigné"}</span>
             </div>
 
-            {renderStepContent()}
-
-            {/* Navigation */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t">
-              <Button
-                variant="outline"
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                className="gap-2 w-full sm:w-auto"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Précédent
-              </Button>
-
-              {currentStep < 4 ? (
-                <Button
-                  onClick={nextStep}
-                  disabled={
-                    !formData.name.trim() || 
-                    !formData.slug.trim() || 
-                    slugAvailability.available === false ||
-                    (currentStep === 2 && (!formData.productType || formData.productCategories.length === 0))
-                  }
-                  className="gap-2 w-full sm:w-auto"
-                >
-                  Continuer
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={
-                    isLoading || 
-                    !formData.name.trim() || 
-                    !formData.slug.trim() || 
-                    slugAvailability.available === false ||
-                    !formData.productType ||
-                    formData.productCategories.length === 0
-                  }
-                  className="gap-2 w-full sm:w-auto"
-                >
-                  {isLoading ? 'Création...' : 'Créer ma boutique'}
-                </Button>
-              )}
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium text-gray-900">Sous-domaine</span>
+                        <span className="text-sm text-gray-600">{formData.slug || "Non renseigné"}</span>
+                  </div>
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Alerte Monneroo */}
-      {showMonnerooAlert && (
-        <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">M</span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg text-gray-900">Configuration Monneroo</h3>
-                <p className="text-sm text-gray-600">Intégrez votre clé API</p>
-              </div>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="space-y-2">
-                <Label htmlFor="monneroo_secret_key">Clé API Monneroo</Label>
-                <Input
-                  id="monneroo_secret_key"
-                  type="password"
-                  value={formData.settings.monneroo.secretKey}
-                  onChange={(e) => {
-                    updateNestedField('settings', 'monneroo', {
-                      ...formData.settings.monneroo,
-                      secretKey: e.target.value
-                    })
-                  }}
-                  placeholder="sk_test_..."
-                />
-                <p className="text-xs text-gray-500">
-                  Trouvez votre clé API dans votre tableau de bord Monneroo
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="monneroo_environment">Environnement</Label>
-                <select
-                  id="monneroo_environment"
-                  value={formData.settings.monneroo.environment}
-                  onChange={(e) => {
-                    updateNestedField('settings', 'monneroo', {
-                      ...formData.settings.monneroo,
-                      environment: e.target.value
-                    })
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="sandbox">🟡 Sandbox (Test)</option>
-                  <option value="production">🟢 Production (Live)</option>
-                </select>
-                <p className="text-xs text-gray-500">
-                  Utilisez Sandbox pour les tests, Production pour les vrais paiements
-                </p>
-              </div>
-
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Important :</strong> Vos clés secrètes ne seront jamais affichées en clair et sont stockées de manière sécurisée.
-                  Utilisez l'environnement Sandbox pour tester avant de passer en production.
-                </AlertDescription>
-              </Alert>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowMonnerooAlert(false)}
-                className="flex-1"
-              >
-                Annuler
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={prevStep}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Précédent
               </Button>
-              <Button
-                onClick={() => {
-                  if (formData.settings.monneroo.secretKey.trim()) {
-                    // Désactiver Wozif et activer Monneroo
-                    updateNestedField('settings', 'paymentMethods', [])
-                    updateNestedField('settings', 'monneroo', {
-                      ...formData.settings.monneroo,
-                      enabled: true
-                    })
-                    setShowMonnerooAlert(false)
-                    toast.success('Monneroo configuré avec succès !')
-                  } else {
-                    toast.error('Veuillez saisir votre clé API Monneroo')
-                  }
-                }}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                Connecter Monneroo
+                  <Button onClick={handleSubmit} disabled={isLoading}>
+                    {isLoading ? "Création..." : "Créer la boutique"}
               </Button>
             </div>
           </div>
         </div>
-      )}
     </div>
   )
+
+      default:
+        return null
+    }
+  }
+
+  return <div>{renderStepContent()}</div>
 }

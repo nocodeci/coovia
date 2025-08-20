@@ -56,9 +56,9 @@ function AuthenticatedLayout() {
       hasRedirected.current = true
       navigate({ to: "/dashboard" })
     } else {
-      // Si l'utilisateur n'a aucune boutique, rediriger vers la création
+      // Si l'utilisateur n'a aucune boutique, rediriger vers la sélection de boutique
       hasRedirected.current = true
-      window.location.href = "/create-store"
+      navigate({ to: "/store-selection" })
     }
   }, [authLoading, isAuthenticated, user, hasLoaded, storesLoading, currentStore, stores.length, navigate])
 

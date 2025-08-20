@@ -1,17 +1,23 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import { ProductPage } from '@/components/product-page';
 import { Navigation } from '@/components/navigation';
 import { Footer } from '@/components/footer';
 import { HydrationSafe } from '@/components/hydration-safe';
 import { useQuery } from '@tanstack/react-query';
 import { storeService } from '@/services/api';
+import { use } from 'react';
 
-export default function ProductPageRoute() {
-  const params = useParams();
-  const storeId = params.storeId as string;
-  const productId = params.productId as string;
+interface ProductPageRouteProps {
+  params: Promise<{
+    storeId: string;
+    productId: string;
+  }>;
+}
+
+export default function ProductPageRoute({ params }: ProductPageRouteProps) {
+  // Utiliser React.use() pour déballer les params (Next.js 15)
+  const { storeId, productId } = use(params);
 
   // Récupérer les données de la boutique pour la navigation
   const { data: store } = useQuery({

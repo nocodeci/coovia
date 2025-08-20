@@ -2,7 +2,6 @@ import type React from "react"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar"
 import { NavGroup } from "@/components/layout/nav-group"
 import { NavUser } from "@/components/layout/nav-user"
-import { TeamSwitcher } from "@/components/layout/team-switcher"
 import { SidebarLoading } from "@/components/layout/sidebar-loading"
 import { getSidebarData } from "./data/sidebar-data"
 import { useStore } from "@/context/store-context"
@@ -20,7 +19,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {isLoading ? (
           <SidebarLoading />
         ) : (
-          <TeamSwitcher teams={sidebarData.teams} />
+          <div className="p-4">
+            <div className="flex items-center gap-2">
+              <img 
+                src="/assets/images/logo.svg" 
+                alt="Coovia" 
+                className="h-8 w-auto"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  const fallback = document.createElement('div')
+                  fallback.className = 'h-8 flex items-center justify-center text-lg font-bold text-primary bg-primary/10 px-3 rounded-lg'
+                  fallback.textContent = 'COOVIA'
+                  target.parentNode?.appendChild(fallback)
+                }}
+              />
+            </div>
+          </div>
         )}
       </SidebarHeader>
       <SidebarContent>

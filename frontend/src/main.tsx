@@ -12,6 +12,7 @@ import { routeTree } from "./routeTree.gen"
 import { SanctumProvider } from "@/providers/sanctum-provider"
 import { ThemeProvider } from "@/context/theme-context"
 import { StoreProvider } from "@/context/store-context"
+import { DataLoadingProvider } from "@/context/data-loading-context"
 
 // Import our configured QueryClient
 import { queryClient } from "@/lib/react-query-client"
@@ -43,11 +44,13 @@ if (!rootElement.innerHTML) {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <SanctumProvider>
-            <StoreProvider>
-              <RouterProvider router={router} />
-            </StoreProvider>
-          </SanctumProvider>
+          <DataLoadingProvider>
+            <SanctumProvider>
+              <StoreProvider>
+                <RouterProvider router={router} />
+              </StoreProvider>
+            </SanctumProvider>
+          </DataLoadingProvider>
         </ThemeProvider>
         
         {/* React Query DevTools - seulement en développement */}

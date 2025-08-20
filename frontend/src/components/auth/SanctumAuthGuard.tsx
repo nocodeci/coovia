@@ -4,6 +4,9 @@ import React from 'react'
 import { useSanctumAuth } from '@/hooks/useSanctumAuth'
 import { useNavigate } from '@tanstack/react-router'
 import { Loader2, Shield, AlertCircle } from 'lucide-react'
+
+// Import du nouveau système de chargement unifié
+import { LoadingIndicator } from '@/components/unified-loading'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -38,7 +41,10 @@ export function SanctumAuthGuard({
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
+            <div className="flex items-center justify-center gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <LoadingIndicator size="lg" />
+            </div>
           </CardContent>
         </Card>
       </div>

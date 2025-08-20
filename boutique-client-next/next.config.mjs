@@ -20,21 +20,7 @@ const nextConfig = {
       },
     ],
   },
-  // Configuration pour les sous-domaines
-  async rewrites() {
-    return [
-      {
-        source: '/:path*',
-        destination: '/[storeId]/:path*',
-        has: [
-          {
-            type: 'host',
-            value: '(?<storeId>[^.]+)\.wozif\.store',
-          },
-        ],
-      },
-    ]
-  },
+
   // Optimisations pour le développement
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
