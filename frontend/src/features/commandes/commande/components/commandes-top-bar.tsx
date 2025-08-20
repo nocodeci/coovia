@@ -3,7 +3,7 @@
 import type React from "react"
 import { Bell, Menu } from "lucide-react"
 import { CommandesDynamicSearchBar } from "./commandes-dynamic-search-bar"
-import { useStore } from "@/context/store-context"
+import { StoreSelector } from "@/components/ui/store-selector"
 
 interface CommandesTopBarProps {
   onBack: () => void
@@ -33,7 +33,6 @@ export function CommandesTopBar({
   onAnalyticsTrigger,
   onNotificationsTrigger,
 }: CommandesTopBarProps) {
-  const { currentStore } = useStore()
   
   return (
     <header
@@ -92,29 +91,7 @@ export function CommandesTopBar({
           <Bell className="h-4 w-4" style={{ color: "var(--p-color-icon)" }} />
         </button>
 
-        <div className="flex items-center gap-2">
-          <div
-            className="polaris-avatar"
-            style={{
-              width: "2rem",
-              height: "2rem",
-              backgroundColor: "#7126FF",
-              fontSize: "var(--p-font-size-275)",
-            }}
-          >
-            <span style={{ color: "white" }}>MS</span>
-          </div>
-          <span
-            style={{
-              fontSize: "var(--p-font-size-300)",
-              fontWeight: "var(--p-font-weight-medium)",
-              color: "var(--p-color-text)",
-            }}
-            className="hidden md:block"
-          >
-            {currentStore?.name || "Ma Boutique"}
-          </span>
-        </div>
+        <StoreSelector />
       </div>
     </header>
   )

@@ -2,6 +2,7 @@
 
 import { Bell, Menu } from "lucide-react"
 import { AddProductSearchBar } from "./add-product-search-bar"
+import { StoreSelector } from "@/components/ui/store-selector"
 
 interface TopBarProps {
   productName?: string
@@ -80,29 +81,7 @@ export function TopBar({
           <Bell className="h-4 w-4" style={{ color: "var(--p-color-icon)" }} />
         </button>
 
-        <div className="flex items-center gap-2">
-          <div
-            className="polaris-avatar"
-            style={{
-              width: "2rem",
-              height: "2rem",
-              backgroundColor: "#7126FF",
-              fontSize: "var(--p-font-size-275)",
-            }}
-          >
-            <span style={{ color: "white" }}>MS</span>
-          </div>
-          <span
-            style={{
-              fontSize: "var(--p-font-size-300)",
-              fontWeight: "var(--p-font-weight-medium)",
-              color: "var(--p-color-text)",
-            }}
-            className="hidden md:block"
-          >
-            My Store
-          </span>
-        </div>
+        <StoreSelector />
       </div>
     </header>
   )
