@@ -8,6 +8,7 @@ interface Store {
   id: string
   name: string
   description?: string
+  slug?: string
   logo?: string
   owner_id: string
   created_at: string
@@ -85,6 +86,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
           id: store.id,
           name: store.name,
           description: store.description,
+          slug: store.slug,
           logo: store.logo,
           owner_id: store.owner_id,
           created_at: store.created_at,

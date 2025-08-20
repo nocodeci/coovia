@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { StoreSelection } from "@/features/auth/store-selection"
+import { StoreSelectionMigrated } from "@/features/stores/store-selection-migrated"
 
 export const Route = createFileRoute('/_authenticated/store-selection')({
-  component: StoreSelection,
+  component: StoreSelectionMigrated,
 })

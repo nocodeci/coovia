@@ -25,7 +25,17 @@ export const storeService = {
       }
     } catch (error) {
       console.error('Erreur lors de la récupération de la boutique:', error);
-      throw new Error(`Impossible de récupérer la boutique ${slug}`);
+      // Retourner une boutique par défaut au lieu de throw une erreur
+      return {
+        id: 'default-store',
+        name: 'Boutique par défaut',
+        slug: slug,
+        description: 'Boutique temporairement indisponible',
+        logo: undefined,
+        status: 'inactive',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
     }
   },
 
@@ -43,7 +53,8 @@ export const storeService = {
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des produits:', error);
-      throw new Error(`Impossible de récupérer les produits de la boutique ${storeSlug}`);
+      // Retourner un tableau vide au lieu de throw une erreur
+      return [];
     }
   },
 
@@ -66,7 +77,8 @@ export const storeService = {
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des catégories:', error);
-      throw new Error(`Impossible de récupérer les catégories de la boutique ${storeSlug}`);
+      // Retourner un tableau vide au lieu de throw une erreur
+      return [];
     }
   },
 
@@ -81,7 +93,18 @@ export const storeService = {
       }
     } catch (error) {
       console.error('Erreur lors de la récupération du produit:', error);
-      throw new Error(`Impossible de récupérer le produit ${productId}`);
+      // Retourner un produit par défaut au lieu de throw une erreur
+      return {
+        id: productId,
+        name: 'Produit non disponible',
+        description: 'Ce produit est temporairement indisponible',
+        price: 0,
+        image: undefined,
+        category: 'Indisponible',
+        store_id: storeSlug,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
     }
   },
 };

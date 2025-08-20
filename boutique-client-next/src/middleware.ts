@@ -21,6 +21,9 @@ export function middleware(request: NextRequest) {
       console.log('🔍 Middleware - Redirection test → test-store')
     }
     
+    // Pour tous les autres sous-domaines, utiliser le slug directement
+    // Le slug du sous-domaine correspond au slug de la boutique dans l'API
+    
     console.log('🔍 Middleware - StoreId final:', storeId)
     console.log('🔍 Middleware - Pathname:', request.nextUrl.pathname)
     

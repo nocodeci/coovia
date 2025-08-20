@@ -88,6 +88,7 @@ class StoreController extends Controller
                         'id' => $store->id,
                         'name' => $store->name,
                         'description' => $store->description,
+                        'slug' => $store->slug,
                         'address' => $store->address,
                         'phone' => $store->phone,
                         'website' => $store->website,

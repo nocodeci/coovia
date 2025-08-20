@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Shield, Key, ArrowRight } from 'lucide-react'
 
+// Import du nouveau système de chargement unifié
+import { LoadingIndicator } from '@/components/unified-loading'
+
 interface SanctumRouteGuardProps {
   children: React.ReactNode
   requireAuth?: boolean
@@ -33,7 +36,10 @@ export function SanctumRouteGuard({
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <Card className="w-full max-w-md mx-auto border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
           <CardContent className="p-8 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <LoadingIndicator size="lg" />
+            </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Vérification de l'authentification
             </h2>
