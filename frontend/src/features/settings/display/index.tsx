@@ -1,11 +1,14 @@
 import ContentSection from '../components/content-section'
-import { DisplayForm } from './display-form'
+import DisplayForm from './display-form'
+import { IconLayout } from '@tabler/icons-react'
 
 export default function SettingsDisplay() {
   return (
     <ContentSection
-      title='Display'
-      desc="Turn items on or off to control what's displayed in the app."
+      title="Affichage"
+      desc="Personnalisez l'affichage et la mise en page de votre interface pour optimiser votre expérience utilisateur."
+      icon={IconLayout}
+      badge="Interface"
     >
       <DisplayForm />
     </ContentSection>

@@ -5,6 +5,7 @@ import {
   IconPalette,
   IconTool,
   IconUser,
+  IconSettings,
 } from '@tabler/icons-react'
 import { Separator } from '@/components/ui/separator'
 import { Header } from '@/components/layout/header'
@@ -27,21 +28,30 @@ export default function Settings() {
       </Header>
 
       <Main fixed>
-        <div className='space-y-0.5'>
-          <h1 className='text-2xl font-bold tracking-tight md:text-3xl'>
-            Settings
-          </h1>
-          <p className='text-muted-foreground'>
-            Manage your account settings and set e-mail preferences.
-          </p>
-        </div>
-        <Separator className='my-4 lg:my-6' />
-        <div className='flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12'>
-          <aside className='top-0 lg:sticky lg:w-1/5'>
-            <SidebarNav items={sidebarNavItems} />
-          </aside>
-          <div className='flex w-full overflow-y-hidden p-1'>
-            <Outlet />
+        <div className='flex h-full flex-col'>
+          {/* Header Section */}
+          <div className='flex-shrink-0 space-y-0.5'>
+            <h1 className='text-2xl font-bold tracking-tight md:text-3xl'>
+              Paramètres
+            </h1>
+            <p className='text-muted-foreground'>
+              Gérez vos paramètres de compte, préférences et configuration de l'application.
+            </p>
+          </div>
+          
+          <Separator className='my-4 lg:my-6' />
+          
+          {/* Content Section */}
+          <div className='flex flex-1 min-h-0'>
+            <aside className='w-64 flex-shrink-0 pr-6'>
+              <SidebarNav items={sidebarNavItems} />
+            </aside>
+            
+            <div className='flex-1 min-w-0'>
+              <div className='h-full overflow-y-auto pr-6'>
+                <Outlet />
+              </div>
+            </div>
           </div>
         </div>
       </Main>
@@ -51,17 +61,22 @@ export default function Settings() {
 
 const sidebarNavItems = [
   {
-    title: 'Profile',
-    icon: <IconUser size={18} />,
+    title: 'Paramètres',
+    icon: <IconSettings size={18} />,
     href: '/settings',
   },
   {
-    title: 'Account',
+    title: 'Profil',
+    icon: <IconUser size={18} />,
+    href: '/settings/profile',
+  },
+  {
+    title: 'Compte',
     icon: <IconTool size={18} />,
     href: '/settings/account',
   },
   {
-    title: 'Appearance',
+    title: 'Apparence',
     icon: <IconPalette size={18} />,
     href: '/settings/appearance',
   },
@@ -71,7 +86,7 @@ const sidebarNavItems = [
     href: '/settings/notifications',
   },
   {
-    title: 'Display',
+    title: 'Affichage',
     icon: <IconBrowserCheck size={18} />,
     href: '/settings/display',
   },

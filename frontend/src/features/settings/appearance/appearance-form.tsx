@@ -1,13 +1,8 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
-import { ChevronDownIcon } from '@radix-ui/react-icons'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { fonts } from '@/config/fonts'
-import { cn } from '@/lib/utils'
-import { showSubmittedData } from '@/utils/show-submitted-data'
-import { useFont } from '@/context/font-context'
-import { useTheme } from '@/context/theme-context'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -17,150 +12,366 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
+import { useUserProfile } from '@/hooks/useSettings'
+import { toast } from 'sonner'
 
 const appearanceFormSchema = z.object({
-  theme: z.enum(['light', 'dark'], {
-    required_error: 'Please select a theme.',
+  theme: z.enum(['light', 'dark', 'auto'], {
+    required_error: 'Veuillez sélectionner un thème.',
   }),
-  font: z.enum(fonts, {
-    invalid_type_error: 'Select a font',
-    required_error: 'Please select a font.',
+  compact_mode: z.boolean(),
+  show_animations: z.boolean(),
+  high_contrast: z.boolean(),
+  reduced_motion: z.boolean(),
+  font_size: z.enum(['small', 'medium', 'large'], {
+    required_error: 'Veuillez sélectionner une taille de police.',
   }),
+  sidebar_collapsed: z.boolean(),
+  show_breadcrumbs: z.boolean(),
+  show_tooltips: z.boolean(),
 })
 
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>
 
-export function AppearanceForm() {
-  const { font, setFont } = useFont()
-  const { theme, setTheme } = useTheme()
-
-  // This can come from your database or API.
-  const defaultValues: Partial<AppearanceFormValues> = {
-    theme: theme as 'light' | 'dark',
-    font,
-  }
+export default function AppearanceForm() {
+  const { profile, loading, updateProfile } = useUserProfile()
 
   const form = useForm<AppearanceFormValues>({
     resolver: zodResolver(appearanceFormSchema),
-    defaultValues,
+    defaultValues: {
+      theme: profile?.preferences?.theme || 'light',
+      compact_mode: false,
+      show_animations: true,
+      high_contrast: false,
+      reduced_motion: false,
+      font_size: 'medium',
+      sidebar_collapsed: false,
+      show_breadcrumbs: true,
+      show_tooltips: true,
+    },
+    mode: 'onChange',
   })
 
-  function onSubmit(data: AppearanceFormValues) {
-    if (data.font != font) setFont(data.font)
-    if (data.theme != theme) setTheme(data.theme)
+  const onSubmit = async (data: AppearanceFormValues) => {
+    try {
+      const newPreferences = {
+        ...profile?.preferences,
+        theme: data.theme,
+        appearance: {
+          compact_mode: data.compact_mode,
+          show_animations: data.show_animations,
+          high_contrast: data.high_contrast,
+          reduced_motion: data.reduced_motion,
+          font_size: data.font_size,
+          sidebar_collapsed: data.sidebar_collapsed,
+          show_breadcrumbs: data.show_breadcrumbs,
+          show_tooltips: data.show_tooltips,
+        },
+      }
 
-    showSubmittedData(data)
+      const result = await updateProfile({ preferences: newPreferences })
+      if (result.success) {
+        toast.success('Préférences d\'apparence mises à jour')
+      } else {
+        toast.error(result.error || 'Erreur lors de la mise à jour')
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour des préférences')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Chargement des préférences...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        <FormField
-          control={form.control}
-          name='font'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Font</FormLabel>
-              <div className='relative w-max'>
-                <FormControl>
-                  <select
-                    className={cn(
-                      buttonVariants({ variant: 'outline' }),
-                      'w-[200px] appearance-none font-normal capitalize',
-                      'dark:bg-background dark:hover:bg-background'
-                    )}
-                    {...field}
-                  >
-                    {fonts.map((font) => (
-                      <option key={font} value={font}>
-                        {font}
-                      </option>
-                    ))}
-                  </select>
-                </FormControl>
-                <ChevronDownIcon className='absolute top-2.5 right-3 h-4 w-4 opacity-50' />
-              </div>
-              <FormDescription className='font-manrope'>
-                Set the font you want to use in the dashboard.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='theme'
-          render={({ field }) => (
-            <FormItem className='space-y-1'>
-              <FormLabel>Theme</FormLabel>
-              <FormDescription>
-                Select the theme for the dashboard.
-              </FormDescription>
-              <FormMessage />
-              <RadioGroup
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                className='grid max-w-md grid-cols-2 gap-8 pt-2'
-              >
-                <FormItem>
-                  <FormLabel className='[&:has([data-state=checked])>div]:border-primary'>
-                    <FormControl>
-                      <RadioGroupItem value='light' className='sr-only' />
-                    </FormControl>
-                    <div className='border-muted hover:border-accent items-center rounded-md border-2 p-1'>
-                      <div className='space-y-2 rounded-sm bg-[#ecedef] p-2'>
-                        <div className='space-y-2 rounded-md bg-white p-2 shadow-xs'>
-                          <div className='h-2 w-[80px] rounded-lg bg-[#ecedef]' />
-                          <div className='h-2 w-[100px] rounded-lg bg-[#ecedef]' />
-                        </div>
-                        <div className='flex items-center space-x-2 rounded-md bg-white p-2 shadow-xs'>
-                          <div className='h-4 w-4 rounded-full bg-[#ecedef]' />
-                          <div className='h-2 w-[100px] rounded-lg bg-[#ecedef]' />
-                        </div>
-                        <div className='flex items-center space-x-2 rounded-md bg-white p-2 shadow-xs'>
-                          <div className='h-4 w-4 rounded-full bg-[#ecedef]' />
-                          <div className='h-2 w-[100px] rounded-lg bg-[#ecedef]' />
-                        </div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Thème */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Thème</CardTitle>
+            <CardDescription>
+              Choisissez le thème de votre interface
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="theme"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Mode d'affichage</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="light" id="light" />
+                        <Label htmlFor="light" className="flex flex-col">
+                          <span className="font-medium">Clair</span>
+                          <span className="text-sm text-muted-foreground">
+                            Interface claire et lumineuse
+                          </span>
+                        </Label>
                       </div>
-                    </div>
-                    <span className='block w-full p-2 text-center font-normal'>
-                      Light
-                    </span>
-                  </FormLabel>
-                </FormItem>
-                <FormItem>
-                  <FormLabel className='[&:has([data-state=checked])>div]:border-primary'>
-                    <FormControl>
-                      <RadioGroupItem value='dark' className='sr-only' />
-                    </FormControl>
-                    <div className='border-muted bg-popover hover:bg-accent hover:text-accent-foreground items-center rounded-md border-2 p-1'>
-                      <div className='space-y-2 rounded-sm bg-slate-950 p-2'>
-                        <div className='space-y-2 rounded-md bg-slate-800 p-2 shadow-xs'>
-                          <div className='h-2 w-[80px] rounded-lg bg-slate-400' />
-                          <div className='h-2 w-[100px] rounded-lg bg-slate-400' />
-                        </div>
-                        <div className='flex items-center space-x-2 rounded-md bg-slate-800 p-2 shadow-xs'>
-                          <div className='h-4 w-4 rounded-full bg-slate-400' />
-                          <div className='h-2 w-[100px] rounded-lg bg-slate-400' />
-                        </div>
-                        <div className='flex items-center space-x-2 rounded-md bg-slate-800 p-2 shadow-xs'>
-                          <div className='h-4 w-4 rounded-full bg-slate-400' />
-                          <div className='h-2 w-[100px] rounded-lg bg-slate-400' />
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="dark" id="dark" />
+                        <Label htmlFor="dark" className="flex flex-col">
+                          <span className="font-medium">Sombre</span>
+                          <span className="text-sm text-muted-foreground">
+                            Interface sombre et élégante
+                          </span>
+                        </Label>
                       </div>
-                    </div>
-                    <span className='block w-full p-2 text-center font-normal'>
-                      Dark
-                    </span>
-                  </FormLabel>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="auto" id="auto" />
+                        <Label htmlFor="auto" className="flex flex-col">
+                          <span className="font-medium">Automatique</span>
+                          <span className="text-sm text-muted-foreground">
+                            Suit les préférences système
+                          </span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
-              </RadioGroup>
-            </FormItem>
-          )}
-        />
+              )}
+            />
+          </CardContent>
+        </Card>
 
-        <Button type='submit'>Update preferences</Button>
+        {/* Accessibilité */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Accessibilité</CardTitle>
+            <CardDescription>
+              Options pour améliorer l'accessibilité de l'interface
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="high_contrast"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Contraste élevé</FormLabel>
+                    <FormDescription>
+                      Améliore la lisibilité avec un contraste plus élevé
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="reduced_motion"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Mouvement réduit</FormLabel>
+                    <FormDescription>
+                      Réduit les animations pour les utilisateurs sensibles
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="show_animations"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Animations</FormLabel>
+                    <FormDescription>
+                      Afficher les animations et transitions
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Interface */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Interface</CardTitle>
+            <CardDescription>
+              Personnalisez l'apparence de l'interface
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="font_size"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Taille de police</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="small" id="small" />
+                        <Label htmlFor="small" className="flex flex-col">
+                          <span className="font-medium text-sm">Petite</span>
+                          <span className="text-xs text-muted-foreground">
+                            Plus d'informations à l'écran
+                          </span>
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="medium" id="medium" />
+                        <Label htmlFor="medium" className="flex flex-col">
+                          <span className="font-medium">Moyenne</span>
+                          <span className="text-sm text-muted-foreground">
+                            Taille standard
+                          </span>
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="large" id="large" />
+                        <Label htmlFor="large" className="flex flex-col">
+                          <span className="font-medium text-lg">Grande</span>
+                          <span className="text-sm text-muted-foreground">
+                            Plus facile à lire
+                          </span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Separator />
+
+            <FormField
+              control={form.control}
+              name="compact_mode"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Mode compact</FormLabel>
+                    <FormDescription>
+                      Réduire l'espacement pour afficher plus de contenu
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="sidebar_collapsed"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Barre latérale réduite</FormLabel>
+                    <FormDescription>
+                      Réduire automatiquement la barre latérale
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="show_breadcrumbs"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Fil d'Ariane</FormLabel>
+                    <FormDescription>
+                      Afficher le fil d'Ariane pour la navigation
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="show_tooltips"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Infobulles</FormLabel>
+                    <FormDescription>
+                      Afficher les infobulles d'aide au survol
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end">
+          <Button type="submit" size="lg">
+            Sauvegarder les préférences
+          </Button>
+        </div>
       </form>
     </Form>
   )

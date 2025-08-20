@@ -76,6 +76,14 @@ class User extends Authenticatable
         return $this->hasMany(LoginAttempt::class);
     }
 
+    /**
+     * Get the user's profile.
+     */
+    public function profile()
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
     // Méthodes MFA
     public function enableMfa()
     {
