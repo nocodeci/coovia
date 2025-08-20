@@ -486,3 +486,46 @@ Route::prefix('media-proxy')->group(function () {
 });
 
 Route::post('/payment/status', [App\Http\Controllers\PaymentController::class, 'checkPaymentStatus']);
+
+// Routes pour les paramètres globaux
+Route::prefix('settings')->group(function () {
+    Route::get('/public', [App\Http\Controllers\Api\SettingsController::class, 'getPublic']);
+    Route::get('/groups', [App\Http\Controllers\Api\SettingsController::class, 'getGroups']);
+    Route::get('/by-group', [App\Http\Controllers\Api\SettingsController::class, 'getByGroup']);
+    Route::get('/get', [App\Http\Controllers\Api\SettingsController::class, 'get']);
+    Route::post('/clear-cache', [App\Http\Controllers\Api\SettingsController::class, 'clearCache']);
+    
+    // Routes protégées (Admin seulement)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/set', [App\Http\Controllers\Api\SettingsController::class, 'set']);
+    });
+});
+
+// Routes pour les profils utilisateurs
+Route::prefix('profile')->group(function () {
+    Route::get('/public/{userId}', [App\Http\Controllers\Api\ProfileController::class, 'showPublic']);
+    
+    // Routes protégées
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\ProfileController::class, 'show']);
+        Route::put('/', [App\Http\Controllers\Api\ProfileController::class, 'update']);
+        Route::post('/avatar', [App\Http\Controllers\Api\ProfileController::class, 'uploadAvatar']);
+        Route::post('/cover-image', [App\Http\Controllers\Api\ProfileController::class, 'uploadCoverImage']);
+        Route::put('/preferences', [App\Http\Controllers\Api\ProfileController::class, 'updatePreferences']);
+    });
+});
+
+// Routes pour les paramètres des boutiques
+Route::prefix('store-settings')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/{storeId}', [App\Http\Controllers\Api\StoreSettingsController::class, 'index']);
+        Route::get('/{storeId}/groups', [App\Http\Controllers\Api\StoreSettingsController::class, 'getGroups']);
+        Route::get('/{storeId}/by-group', [App\Http\Controllers\Api\StoreSettingsController::class, 'getByGroup']);
+        Route::get('/{storeId}/get', [App\Http\Controllers\Api\StoreSettingsController::class, 'get']);
+        Route::post('/{storeId}/set', [App\Http\Controllers\Api\StoreSettingsController::class, 'set']);
+        Route::post('/{storeId}/update-multiple', [App\Http\Controllers\Api\StoreSettingsController::class, 'updateMultiple']);
+        Route::delete('/{storeId}/delete', [App\Http\Controllers\Api\StoreSettingsController::class, 'delete']);
+        Route::post('/{storeId}/initialize-defaults', [App\Http\Controllers\Api\StoreSettingsController::class, 'initializeDefaults']);
+        Route::post('/{storeId}/clear-cache', [App\Http\Controllers\Api\StoreSettingsController::class, 'clearCache']);
+    });
+});

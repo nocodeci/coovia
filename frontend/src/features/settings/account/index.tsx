@@ -1,12 +1,14 @@
 import ContentSection from '../components/content-section'
-import { AccountForm } from './account-form'
+import AccountForm from './account-form'
+import { IconShield } from '@tabler/icons-react'
 
 export default function SettingsAccount() {
   return (
     <ContentSection
-      title='Account'
-      desc='Update your account settings. Set your preferred language and
-          timezone.'
+      title="Compte"
+      desc="Gérez vos paramètres de compte, de sécurité et vos préférences de confidentialité pour protéger vos données."
+      icon={IconShield}
+      badge="Sécurité"
     >
       <AccountForm />
     </ContentSection>

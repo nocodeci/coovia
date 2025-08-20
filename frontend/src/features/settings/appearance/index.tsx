@@ -1,12 +1,14 @@
 import ContentSection from '../components/content-section'
-import { AppearanceForm } from './appearance-form'
+import AppearanceForm from './appearance-form'
+import { IconPalette } from '@tabler/icons-react'
 
 export default function SettingsAppearance() {
   return (
     <ContentSection
-      title='Appearance'
-      desc='Customize the appearance of the app. Automatically switch between day
-          and night themes.'
+      title="Apparence"
+      desc="Personnalisez l'apparence de votre interface utilisateur avec des thèmes, des couleurs et des options d'accessibilité."
+      icon={IconPalette}
+      badge="Personnalisation"
     >
       <AppearanceForm />
     </ContentSection>

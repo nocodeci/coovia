@@ -1,10 +1,8 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from '@tanstack/react-router'
-import { showSubmittedData } from '@/utils/show-submitted-data'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
   FormControl,
@@ -14,96 +12,112 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
+import { useUserProfile } from '@/hooks/useSettings'
+import { toast } from 'sonner'
 
 const notificationsFormSchema = z.object({
-  type: z.enum(['all', 'mentions', 'none'], {
-    required_error: 'You need to select a notification type.',
-  }),
-  mobile: z.boolean().default(false).optional(),
-  communication_emails: z.boolean().default(false).optional(),
-  social_emails: z.boolean().default(false).optional(),
-  marketing_emails: z.boolean().default(false).optional(),
-  security_emails: z.boolean(),
+  email_notifications: z.boolean(),
+  sms_notifications: z.boolean(),
+  push_notifications: z.boolean(),
+  new_orders: z.boolean(),
+  payment_received: z.boolean(),
+  product_updates: z.boolean(),
+  marketing_emails: z.boolean(),
+  security_alerts: z.boolean(),
+  system_maintenance: z.boolean(),
+  weekly_reports: z.boolean(),
+  monthly_reports: z.boolean(),
 })
 
 type NotificationsFormValues = z.infer<typeof notificationsFormSchema>
 
-// This can come from your database or API.
-const defaultValues: Partial<NotificationsFormValues> = {
-  communication_emails: false,
-  marketing_emails: false,
-  social_emails: true,
-  security_emails: true,
-}
+export default function NotificationsForm() {
+  const { profile, loading, updateProfile } = useUserProfile()
 
-export function NotificationsForm() {
   const form = useForm<NotificationsFormValues>({
     resolver: zodResolver(notificationsFormSchema),
-    defaultValues,
+    defaultValues: {
+      email_notifications: profile?.preferences?.notifications?.email ?? true,
+      sms_notifications: profile?.preferences?.notifications?.sms ?? false,
+      push_notifications: profile?.preferences?.notifications?.push ?? true,
+      new_orders: true,
+      payment_received: true,
+      product_updates: true,
+      marketing_emails: false,
+      security_alerts: true,
+      system_maintenance: true,
+      weekly_reports: false,
+      monthly_reports: true,
+    },
+    mode: 'onChange',
   })
+
+  const onSubmit = async (data: NotificationsFormValues) => {
+    try {
+      const newPreferences = {
+        ...profile?.preferences,
+        notifications: {
+          email: data.email_notifications,
+          sms: data.sms_notifications,
+          push: data.push_notifications,
+        },
+        notification_types: {
+          new_orders: data.new_orders,
+          payment_received: data.payment_received,
+          product_updates: data.product_updates,
+          marketing_emails: data.marketing_emails,
+          security_alerts: data.security_alerts,
+          system_maintenance: data.system_maintenance,
+          weekly_reports: data.weekly_reports,
+          monthly_reports: data.monthly_reports,
+        },
+      }
+
+      const result = await updateProfile({ preferences: newPreferences })
+      if (result.success) {
+        toast.success('Préférences de notification mises à jour')
+      } else {
+        toast.error(result.error || 'Erreur lors de la mise à jour')
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour des préférences')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Chargement des préférences...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => showSubmittedData(data))}
-        className='space-y-8'
-      >
-        <FormField
-          control={form.control}
-          name='type'
-          render={({ field }) => (
-            <FormItem className='relative space-y-3'>
-              <FormLabel>Notify me about...</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className='flex flex-col space-y-1'
-                >
-                  <FormItem className='flex items-center space-y-0 space-x-3'>
-                    <FormControl>
-                      <RadioGroupItem value='all' />
-                    </FormControl>
-                    <FormLabel className='font-normal'>
-                      All new messages
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className='flex items-center space-y-0 space-x-3'>
-                    <FormControl>
-                      <RadioGroupItem value='mentions' />
-                    </FormControl>
-                    <FormLabel className='font-normal'>
-                      Direct messages and mentions
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className='flex items-center space-y-0 space-x-3'>
-                    <FormControl>
-                      <RadioGroupItem value='none' />
-                    </FormControl>
-                    <FormLabel className='font-normal'>Nothing</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className='relative'>
-          <h3 className='mb-4 text-lg font-medium'>Email Notifications</h3>
-          <div className='space-y-4'>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Canaux de notification */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Canaux de Notification</CardTitle>
+            <CardDescription>
+              Choisissez comment vous souhaitez recevoir vos notifications
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <FormField
               control={form.control}
-              name='communication_emails'
+              name="email_notifications"
               render={({ field }) => (
-                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-                  <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>
-                      Communication emails
-                    </FormLabel>
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Notifications par email</FormLabel>
                     <FormDescription>
-                      Receive emails about your account activity.
+                      Recevoir les notifications par email
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -117,15 +131,13 @@ export function NotificationsForm() {
             />
             <FormField
               control={form.control}
-              name='marketing_emails'
+              name="sms_notifications"
               render={({ field }) => (
-                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-                  <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>
-                      Marketing emails
-                    </FormLabel>
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Notifications par SMS</FormLabel>
                     <FormDescription>
-                      Receive emails about new products, features, and more.
+                      Recevoir les notifications par SMS
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -139,13 +151,45 @@ export function NotificationsForm() {
             />
             <FormField
               control={form.control}
-              name='social_emails'
+              name="push_notifications"
               render={({ field }) => (
-                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-                  <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>Social emails</FormLabel>
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Notifications push</FormLabel>
                     <FormDescription>
-                      Receive emails for friend requests, follows, and more.
+                      Recevoir les notifications push dans l'application
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Types de notification */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Types de Notification</CardTitle>
+            <CardDescription>
+              Choisissez quels types de notifications vous souhaitez recevoir
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="new_orders"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Nouvelles commandes</FormLabel>
+                    <FormDescription>
+                      Être notifié quand vous recevez une nouvelle commande
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -159,58 +203,176 @@ export function NotificationsForm() {
             />
             <FormField
               control={form.control}
-              name='security_emails'
+              name="payment_received"
               render={({ field }) => (
-                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-                  <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>Security emails</FormLabel>
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Paiements reçus</FormLabel>
                     <FormDescription>
-                      Receive emails about your account activity and security.
+                      Être notifié quand un paiement est reçu
                     </FormDescription>
                   </div>
                   <FormControl>
                     <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      disabled
-                      aria-readonly
                     />
                   </FormControl>
                 </FormItem>
               )}
             />
-          </div>
+            <FormField
+              control={form.control}
+              name="product_updates"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Mises à jour de produits</FormLabel>
+                    <FormDescription>
+                      Être notifié des nouvelles fonctionnalités et améliorations
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="security_alerts"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Alertes de sécurité</FormLabel>
+                    <FormDescription>
+                      Être notifié des activités suspectes sur votre compte
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="system_maintenance"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Maintenance système</FormLabel>
+                    <FormDescription>
+                      Être notifié des maintenances planifiées
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Rapports et analyses */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Rapports et Analyses</CardTitle>
+            <CardDescription>
+              Configurez la fréquence des rapports automatiques
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="weekly_reports"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Rapports hebdomadaires</FormLabel>
+                    <FormDescription>
+                      Recevoir un résumé hebdomadaire de vos activités
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="monthly_reports"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Rapports mensuels</FormLabel>
+                    <FormDescription>
+                      Recevoir un rapport mensuel détaillé de vos performances
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Marketing */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Marketing et Promotions</CardTitle>
+            <CardDescription>
+              Gérer les communications marketing
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="marketing_emails"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Emails marketing</FormLabel>
+                    <FormDescription>
+                      Recevoir des offres spéciales et des promotions
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end">
+          <Button type="submit" size="lg">
+            Sauvegarder les préférences
+          </Button>
         </div>
-        <FormField
-          control={form.control}
-          name='mobile'
-          render={({ field }) => (
-            <FormItem className='relative flex flex-row items-start space-y-0 space-x-3'>
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className='space-y-1 leading-none'>
-                <FormLabel>
-                  Use different settings for my mobile devices
-                </FormLabel>
-                <FormDescription>
-                  You can manage your mobile notifications in the{' '}
-                  <Link
-                    to='/settings'
-                    className='underline decoration-dashed underline-offset-4 hover:decoration-solid'
-                  >
-                    mobile settings
-                  </Link>{' '}
-                  page.
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
-        <Button type='submit'>Update notifications</Button>
       </form>
     </Form>
   )
