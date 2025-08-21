@@ -1,0 +1,84 @@
+{
+    "name": "moneroo/moneroo-laravel",
+    "description": "This official Laravel Package for Laravel to interact with Moneroo API.",
+    "keywords": [
+        "AxaZara",
+        "laravel",
+        "moneroo",
+        "moneroo.io",
+        "moneroo-laravel",
+        "mobile-money",
+        "payment"
+    ],
+    "homepage": "https://docs.moneroo.io/",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Axa Zara Core Dev",
+            "role": "Developer"
+        }
+    ],
+    "contributors": [
+        {
+            "name": "Elias Elimah"
+        }
+        ],
+    "require": {
+        "php": "^8.1",
+        "guzzlehttp/guzzle": "^7.7",
+        "illuminate/contracts": "^9.0 || ^10.0 || ^11.0"
+    },
+    "require-dev": {
+        "axazara/php-cs": "^0.3",
+        "insolita/unused-scanner": "^2.4",
+        "nunomaduro/collision": "^6.0",
+        "larastan/larastan": "^2.9",
+        "orchestra/testbench": "^7.40",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan-deprecation-rules": "^1.2",
+        "phpstan/phpstan-phpunit": "^1.4",
+        "phpunit/phpunit": "^9.6",
+        "spatie/laravel-ray": "^1.32"
+    },
+    "autoload": {
+        "psr-4": {
+            "Moneroo\\Laravel\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Moneroo\\Laravel\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
+        "analyse": "vendor/bin/phpstan analyse",
+        "sniff": "vendor/bin/php-cs-fixer fix -vvv --dry-run --show-progress=dots",
+        "format": "vendor/bin/php-cs-fixer fix -vv",
+        "unused": "vendor/bin/unused_scanner unused-scanner.php",
+        "test": [
+            "Composer\\Config::disableProcessTimeout",
+            "vendor/bin/phpunit --testdox"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Moneroo\\Laravel\\Providers\\MonerooServiceProvider"
+            ],
+            "aliases": {
+                "MonerooPayment": "Moneroo\\Laravel\\Facades\\PaymentFacade",
+                "MonerooPayout": "Moneroo\\Laravel\\Facades\\PayoutFacade"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

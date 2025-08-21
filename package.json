@@ -1,0 +1,12 @@
+{
+  "name": "coovia-backend",
+  "version": "1.0.0",
+  "description": "Coovia Laravel Backend",
+  "engines": {
+    "node": "22.16.0"
+  },
+  "scripts": {
+    "build": "echo 'PHP application - no build required'",
+    "start": "vendor/bin/heroku-php-apache2 public/"
+  }
+}
