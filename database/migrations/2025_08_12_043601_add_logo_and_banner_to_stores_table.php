@@ -12,8 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stores', function (Blueprint $table) {
-            $table->string('logo')->nullable()->after('description');
-            $table->string('banner')->nullable()->after('logo');
+            // Vérifier si la colonne logo existe déjà
+            if (!Schema::hasColumn('stores', 'logo')) {
+                $table->string('logo')->nullable()->after('description');
+            }
+            
+            // Vérifier si la colonne banner existe déjà
+            if (!Schema::hasColumn('stores', 'banner')) {
+                $table->string('banner')->nullable()->after('logo');
+            }
         });
     }
 
