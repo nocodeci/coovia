@@ -1,133 +1,142 @@
-# 📧 Guide de Configuration Mailtrap
+# Guide de configuration Mailtrap pour Wozif
 
-## 🚨 Problème Actuel
-Les emails de confirmation de création de boutique ne sont pas envoyés à cause d'une mauvaise configuration Mailtrap.
+## 📧 Configuration Mailtrap SMTP
 
-## ✅ Solutions
+### 1. Créer un compte Mailtrap
+1. Allez sur [mailtrap.io](https://mailtrap.io)
+2. Créez un compte gratuit
+3. Accédez à votre Inbox
 
-### **Option 1 : Mailtrap Inbox (Recommandé pour le développement)**
+### 2. Obtenir les informations SMTP
+1. Dans votre Inbox, cliquez sur **"Show Credentials"**
+2. Sélectionnez **"SMTP Settings"**
+3. Copiez les informations suivantes :
+   - **Host**: `sandbox.smtp.mailtrap.io`
+   - **Port**: `2525`
+   - **Username**: Votre nom d'utilisateur Mailtrap (ex: `abc123def456`)
+   - **Password**: Votre mot de passe Mailtrap (ex: `xyz789uvw012`)
 
-1. **Allez sur [Mailtrap Inbox](https://mailtrap.io/inboxes)**
-2. **Créez une nouvelle Inbox** ou utilisez une existante
-3. **Cliquez sur "Show Credentials"**
-4. **Copiez les informations SMTP**
+### 3. Configurer le fichier .env
+Remplacez les valeurs dans votre fichier `.env` :
 
-Mettez à jour votre fichier `.env` :
-
-```bash
-# Mailtrap Inbox (Développement)
+```env
 MAIL_MAILER=smtp
-MAIL_HOST=smtp.mailtrap.io
+MAIL_HOST=sandbox.smtp.mailtrap.io
 MAIL_PORT=2525
-MAIL_USERNAME=votre_username_mailtrap
-MAIL_PASSWORD=votre_password_mailtrap
+MAIL_USERNAME=votre_vrai_username_mailtrap
+MAIL_PASSWORD=votre_vrai_password_mailtrap
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@example.com"
-MAIL_FROM_NAME="Coovia"
+MAIL_FROM_ADDRESS="noreply@coovia.com"
+MAIL_FROM_NAME="Wozif"
 ```
 
-### **Option 2 : Mailtrap Live (Production)**
+**⚠️ IMPORTANT :** Ne pas utiliser le token API comme password. Utilisez les vraies informations SMTP.
 
-Si vous voulez utiliser Mailtrap Live pour la production :
-
-1. **Allez sur [Mailtrap Live](https://mailtrap.io/live)**
-2. **Créez un nouveau domaine** ou utilisez un existant
-3. **Configurez les DNS records**
-4. **Utilisez les credentials Live**
-
-```bash
-# Mailtrap Live (Production)
-MAIL_MAILER=smtp
-MAIL_HOST=live.smtp.mailtrap.io
-MAIL_PORT=587
-MAIL_USERNAME=votre_username_live
-MAIL_PASSWORD=votre_password_live
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@votre-domaine.com"
-MAIL_FROM_NAME="Coovia"
-```
-
-### **Option 3 : Gmail SMTP (Alternative)**
-
-```bash
-# Gmail SMTP
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=votre_email@gmail.com
-MAIL_PASSWORD=votre_app_password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="votre_email@gmail.com"
-MAIL_FROM_NAME="Coovia"
-```
-
-## 🔧 Test de Configuration
-
-### **1. Mettre à jour les variables**
-```bash
-cd backend
-# Éditez .env avec vos vraies valeurs Mailtrap
-nano .env
-```
-
-### **2. Nettoyer le cache**
+### 4. Vérifier la configuration
 ```bash
 php artisan config:clear
+php test-mailtrap-smtp.php
 ```
 
-### **3. Tester l'envoi**
+## 🧪 Test de l'envoi d'emails
+
+### Test manuel
 ```bash
-php test-email.php
+php artisan tinker
 ```
 
-### **4. Vérifier dans Mailtrap**
-- Allez sur [Mailtrap Inbox](https://mailtrap.io/inboxes)
-- Vous devriez voir l'email de test
+```php
+use App\Mail\OtpMail;
+use Illuminate\Support\Facades\Mail;
 
-## 📋 Configuration Actuelle
+Mail::to('test@example.com')->send(new OtpMail('123456', 'test@example.com'));
+```
 
-Votre configuration actuelle :
+### Test via l'API
+1. Démarrez le serveur Laravel :
 ```bash
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USERNAME=your_mailtrap_username
-MAIL_PASSWORD=your_mailtrap_password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@example.com"
-MAIL_FROM_NAME="Coovia"
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-## 🚨 Problèmes Courants
+2. Testez l'authentification à 3 étapes :
+```bash
+# Étape 1: Validation email
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}' \
+  http://localhost:8000/api/auth/validate-email
 
-### **1. Erreur 550 - Domaine non autorisé**
+# Étape 2: Validation mot de passe (OTP envoyé)
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123","temp_token":"TOKEN_FROM_ETAPE_1"}' \
+  http://localhost:8000/api/auth/validate-password
+
+# Étape 3: Connexion avec OTP
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","otp":"123456","otp_token":"TOKEN_FROM_ETAPE_2"}' \
+  http://localhost:8000/api/auth/login
 ```
-550 5.7.1 Sending from domain example.com is not allowed
+
+## 📬 Vérification des emails
+
+1. Allez sur votre Inbox Mailtrap
+2. Vous devriez voir l'email avec le code OTP
+3. L'email aura un design professionnel avec :
+   - Logo Wozif
+   - Code OTP en grand format
+   - Messages de sécurité
+   - Informations sur l'expiration
+
+## 🔧 Dépannage
+
+### Erreur "Invalid credentials"
+- Vérifiez que vous utilisez les vraies informations SMTP (pas le token API)
+- Assurez-vous que username et password sont corrects
+
+### Erreur de connexion SMTP
+```bash
+# Vérifiez les logs Laravel
+tail -f storage/logs/laravel.log
 ```
-**Solution** : Utilisez Mailtrap Inbox au lieu de Mailtrap Live
 
-### **2. Erreur d'authentification**
+### Email non reçu
+1. Vérifiez les credentials SMTP Mailtrap
+2. Vérifiez que le port 2525 n'est pas bloqué
+3. Testez avec `php test-mailtrap-smtp.php`
+
+### Erreur de template
+```bash
+# Vérifiez que le template existe
+ls resources/views/emails/otp.blade.php
 ```
-535 5.7.8 Username and Password not accepted
-```
-**Solution** : Vérifiez vos credentials Mailtrap
 
-### **3. Erreur de port**
-```
-Connection refused
-```
-**Solution** : Utilisez le port 2525 pour Mailtrap Inbox
+## 🚀 Production
 
-## 🎯 Résultat Attendu
+Pour la production, remplacez Mailtrap par un vrai service SMTP :
+- Gmail SMTP
+- SendGrid
+- Amazon SES
+- Mailgun
 
-Une fois configuré correctement :
-- ✅ **Emails envoyés** lors de la création de boutique
-- ✅ **Emails visibles** dans Mailtrap Inbox
-- ✅ **Template HTML** correctement affiché
-- ✅ **Informations de boutique** incluses
+## 📋 Fonctionnalités implémentées
 
-## 📞 Support
+✅ **Configuration Mailtrap SMTP**  
+✅ **Template d'email professionnel**  
+✅ **Envoi automatique d'OTP**  
+✅ **Gestion des erreurs**  
+✅ **Logs pour le développement**  
+✅ **Design responsive**  
+✅ **Messages de sécurité**  
 
-- **Mailtrap Documentation** : [Mailtrap Docs](https://mailtrap.io/docs/)
-- **Mailtrap Inbox** : [Mailtrap Inbox](https://mailtrap.io/inboxes)
-- **Mailtrap Live** : [Mailtrap Live](https://mailtrap.io/live)
+## 🎯 Utilisation
+
+L'OTP est automatiquement envoyé lors de l'étape 2 de l'authentification (validation du mot de passe). L'utilisateur recevra un email avec :
+
+- Code OTP à 6 chiffres
+- Instructions de sécurité
+- Expiration de 5 minutes
+- Design professionnel Wozif
+
+## ⚠️ Configuration actuelle
+
+**Problème détecté :** Vous utilisez un token API comme password SMTP.
+**Solution :** Remplacez par les vraies informations SMTP de votre Inbox Mailtrap.
