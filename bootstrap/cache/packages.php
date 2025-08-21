@@ -1,11 +1,4 @@
 <?php return array (
-  'laravel/pail' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Laravel\\Pail\\PailServiceProvider',
-    ),
-  ),
   'laravel/sail' => 
   array (
     'providers' => 
@@ -25,25 +18,6 @@
     'providers' => 
     array (
       0 => 'Laravel\\Tinker\\TinkerServiceProvider',
-    ),
-  ),
-  'laravel/ui' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Laravel\\Ui\\UiServiceProvider',
-    ),
-  ),
-  'moneroo/moneroo-laravel' => 
-  array (
-    'aliases' => 
-    array (
-      'MonerooPayout' => 'Moneroo\\Laravel\\Facades\\PayoutFacade',
-      'MonerooPayment' => 'Moneroo\\Laravel\\Facades\\PaymentFacade',
-    ),
-    'providers' => 
-    array (
-      0 => 'Moneroo\\Laravel\\Providers\\MonerooServiceProvider',
     ),
   ),
   'nesbot/carbon' => 
@@ -67,11 +41,15 @@
       0 => 'Termwind\\Laravel\\TermwindServiceProvider',
     ),
   ),
-  'pestphp/pest-plugin-laravel' => 
+  'spatie/laravel-ignition' => 
   array (
+    'aliases' => 
+    array (
+      'Flare' => 'Spatie\\LaravelIgnition\\Facades\\Flare',
+    ),
     'providers' => 
     array (
-      0 => 'Pest\\Laravel\\PestServiceProvider',
+      0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     ),
   ),
 );
