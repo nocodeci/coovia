@@ -12,9 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stores', function (Blueprint $table) {
-            $table->json('address')->nullable()->after('category');
-            $table->json('contact')->nullable()->after('address');
-            $table->json('settings')->nullable()->after('contact');
+            // Vérifier si la colonne address existe déjà
+            if (!Schema::hasColumn('stores', 'address')) {
+                $table->json('address')->nullable()->after('category');
+            }
+            
+            // Vérifier si la colonne contact existe déjà
+            if (!Schema::hasColumn('stores', 'contact')) {
+                $table->json('contact')->nullable()->after('address');
+            }
+            
+            // Vérifier si la colonne settings existe déjà
+            if (!Schema::hasColumn('stores', 'settings')) {
+                $table->json('settings')->nullable()->after('contact');
+            }
         });
     }
 

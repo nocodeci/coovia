@@ -1,84 +1,86 @@
 #!/bin/bash
 
-# Script de déploiement Forge pour Coovia
-# Ce script sera exécuté automatiquement par Forge
-
-echo "🚀 Déploiement Coovia en cours..."
+echo "🚀 Déploiement Forge Coovia Backend - Version Finale"
+echo "=================================================="
 
 # Variables
-SITE_DIR="/home/forge/api.coovia.com"
-PHP_VERSION="8.2"
+SITE_PATH="/home/forge/default"
+BRANCH="backend-laravel-clean"
 
-# Couleurs pour l'affichage
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+echo "📋 Étapes du déploiement :"
+echo "1. Pull du code depuis GitHub"
+echo "2. Installation des dépendances"
+echo "3. Configuration de l'environnement"
+echo "4. Exécution des migrations"
+echo "5. Optimisation de l'application"
+echo "6. Redémarrage des services"
+echo ""
 
-# Fonction pour afficher les messages
-print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
+# 1. Pull du code
+echo "🔄 Pull du code depuis GitHub..."
+cd $SITE_PATH
+git fetch origin
+git reset --hard origin/$BRANCH
 
-print_warning() {
-    echo -e "${YELLOW}⚠️ $1${NC}"
-}
+# 2. Installation des dépendances Composer
+echo "📦 Installation des dépendances Composer..."
+composer install --no-dev --optimize-autoloader
 
-print_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
+# 3. Installation des dépendances npm (si nécessaire)
+echo "📦 Installation des dépendances npm..."
+if [ -f "package.json" ]; then
+    npm install --production
+else
+    echo "⚠️  Aucun package.json trouvé, skip npm install"
+fi
 
-# Aller dans le répertoire du site
-cd "$SITE_DIR"
-
-# 1. Installer les dépendances Composer
-print_success "Installation des dépendances..."
-composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-
-# 2. Copier le fichier .env si nécessaire
+# 4. Configuration de l'environnement
+echo "⚙️ Configuration de l'environnement..."
 if [ ! -f ".env" ]; then
-    if [ -f ".env.example" ]; then
-        cp .env.example .env
-        print_success "Fichier .env créé"
-    fi
+    cp .env.example .env
+    php artisan key:generate
 fi
 
-# 3. Générer la clé d'application si nécessaire
-if ! grep -q "APP_KEY=base64:" .env; then
-    php artisan key:generate --force
-    print_success "Clé d'application générée"
-fi
-
-# 4. Configurer les permissions
-chmod -R 755 storage bootstrap/cache
+# 5. Création des dossiers de cache
+echo "📁 Création des dossiers de cache..."
+mkdir -p storage/framework/cache
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p bootstrap/cache
+chmod -R 775 storage bootstrap/cache
 chown -R forge:forge storage bootstrap/cache
-print_success "Permissions configurées"
 
-# 5. Exécuter les migrations
-print_success "Exécution des migrations..."
+# 6. Exécution des migrations avec gestion d'erreurs
+echo "🗄️ Exécution des migrations..."
 php artisan migrate --force
 
-# 6. Nettoyer et recréer les caches
-print_success "Optimisation de l'application..."
-php artisan config:clear
+# 7. Optimisation de l'application
+echo "⚡ Optimisation de l'application..."
 php artisan config:cache
-php artisan route:clear
 php artisan route:cache
-php artisan view:clear
 php artisan view:cache
 
-# 7. Créer le lien symbolique pour le stockage
-php artisan storage:link
+# 8. Redémarrage des services
+echo "🔄 Redémarrage des services..."
+sudo systemctl reload php8.2-fpm
+sudo systemctl reload nginx
 
-# 8. Optimiser l'application
-php artisan optimize
+echo ""
+echo "✅ Déploiement terminé avec succès !"
+echo "🌐 Votre application est accessible sur votre domaine"
+echo ""
+echo "📊 Vérification des services :"
+echo "=============================="
 
-# 9. Vérifier la santé de l'application
-print_success "Vérification de la santé..."
-if php artisan migrate:status > /dev/null 2>&1; then
-    print_success "Base de données connectée"
-else
-    print_warning "Problème de connexion à la base de données"
-fi
+# Vérification des services
+echo "🔍 Statut PHP-FPM :"
+sudo systemctl is-active php8.2-fpm
 
-print_success "🎉 Déploiement terminé avec succès!"
+echo "🔍 Statut Nginx :"
+sudo systemctl is-active nginx
+
+echo "🔍 Test de l'application :"
+curl -I http://localhost 2>/dev/null | head -1
+
+echo ""
+echo "🎉 Déploiement réussi !"
