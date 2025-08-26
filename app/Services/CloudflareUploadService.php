@@ -16,7 +16,12 @@ class CloudflareUploadService
     public function __construct()
     {
         $this->config = config('cloudflare');
-        $this->disk = Storage::disk('r2');
+        try {
+            $this->disk = Storage::disk('r2');
+        } catch (\Exception $e) {
+            // En mode local, utiliser le disque local
+            $this->disk = Storage::disk('local');
+        }
     }
 
     /**
