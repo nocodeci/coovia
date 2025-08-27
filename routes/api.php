@@ -33,6 +33,17 @@ use App\Http\Controllers\LunarProductController;
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| CORS Preflight Route - Gestion des requêtes OPTIONS
+|--------------------------------------------------------------------------
+| Cette route gère toutes les requêtes préflight CORS (OPTIONS)
+| pour éviter les erreurs 405 Method Not Allowed
+*/
+Route::options('/{any}', function () {
+    return response()->json([], 200);
+})->where('any', '.*');
+
 // Routes publiques (sans authentification)
 Route::get('/test', function () {
     return response()->json([
