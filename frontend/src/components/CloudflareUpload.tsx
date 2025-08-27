@@ -29,7 +29,7 @@ interface CloudflareUploadProps {
   maxSize?: number; // en bytes
   directory?: string;
   type?: 'image' | 'video' | 'document' | 'avatar' | 'product';
-  storeId?: number;
+  storeId?: string;
 }
 
 export const CloudflareUpload: React.FC<CloudflareUploadProps> = ({
@@ -106,7 +106,7 @@ export const CloudflareUpload: React.FC<CloudflareUploadProps> = ({
         formData.append('directory', directory);
         formData.append('type', type);
         if (storeId) {
-          formData.append('store_id', storeId.toString());
+          formData.append('store_id', storeId);
         }
 
         const response = await fetch('https://api.wozif.com/api/cloudflare/upload', {
