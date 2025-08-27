@@ -543,7 +543,7 @@ class ApiService {
     }
 
     const queryString = queryParams.toString()
-    const endpoint = `/stores/${storeId}/media${queryString ? `?${queryString}` : ''}`
+    const endpoint = `/public/stores/${storeId}/media${queryString ? `?${queryString}` : ''}`
     
     return this.request(endpoint)
   }
@@ -558,7 +558,7 @@ class ApiService {
     console.log('🔍 uploadMedia - FormData created:', formData instanceof FormData)
     console.log('🔍 uploadMedia - Files count:', files.length)
 
-    return this.request(`/stores/${storeId}/media`, {
+    return this.request(`/public/stores/${storeId}/media`, {
       method: 'POST',
       headers: {
         // Ne pas définir Content-Type pour FormData
@@ -568,14 +568,14 @@ class ApiService {
   }
 
   async updateMedia(storeId: string, mediaId: string, data: { name: string }) {
-    return this.request(`/stores/${storeId}/media/${mediaId}`, {
+    return this.request(`/public/stores/${storeId}/media/${mediaId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
   }
 
   async deleteMedia(storeId: string, mediaId: string) {
-    return this.request(`/stores/${storeId}/media/${mediaId}`, {
+    return this.request(`/public/stores/${storeId}/media/${mediaId}`, {
       method: 'DELETE',
     })
   }

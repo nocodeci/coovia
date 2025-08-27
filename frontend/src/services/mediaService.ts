@@ -77,7 +77,7 @@ class MediaService {
       console.log('🔍 Récupération des médias pour le store:', storeId)
       console.log('🔍 Paramètres:', params)
       
-      const response = await axios.get(`${API_BASE_URL}/stores/${storeId}/media`, {
+      const response = await axios.get(`${API_BASE_URL}/public/stores/${storeId}/media`, {
         headers: this.getAuthHeaders(),
         params
       })
