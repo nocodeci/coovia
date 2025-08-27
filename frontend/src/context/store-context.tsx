@@ -165,52 +165,28 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
         
         // Ne charger que si on a un token valide
         if (token) {
-          // Vérifier d'abord que l'authentification est valide
-          try {
-            const authResponse = await apiService.request('/auth/check')
-            if (!authResponse.success) {
-              // Token invalide, vider le cache et rediriger
-              localStorage.removeItem("sanctum_token")
-              cache.delete(CACHE_KEYS.STORES)
-              setStores([])
-              setCurrentStoreState(null)
-              setHasLoaded(true)
-              setIsLoading(false)
-              return
-            }
-            
-            // Authentification valide, vérifier le cache
-            const cachedStores = cache.get<Store[]>(CACHE_KEYS.STORES)
-            if (cachedStores && cachedStores.length > 0) {
-              setStores(cachedStores)
-              setHasLoaded(true)
-              setIsLoading(false)
-              
-              // Restaurer la boutique sélectionnée depuis le localStorage
-              const savedStoreId = localStorage.getItem("selectedStoreId")
-              if (savedStoreId) {
-                const savedStore = cachedStores.find(store => store.id === savedStoreId)
-                if (savedStore) {
-                  setCurrentStoreState(savedStore)
-                } else {
-                  localStorage.removeItem("selectedStoreId")
-                }
-              }
-              return
-            }
-            
-            // Si pas de cache, charger immédiatement
-            loadStores()
-          } catch (error) {
-            console.error("🚨 Erreur d'authentification:", error)
-            // Erreur d'authentification, vider le cache et rediriger
-            localStorage.removeItem("sanctum_token")
-            cache.delete(CACHE_KEYS.STORES)
-            setStores([])
-            setCurrentStoreState(null)
+          // Vérifier d'abord le cache des stores
+          const cachedStores = cache.get<Store[]>(CACHE_KEYS.STORES)
+          if (cachedStores && cachedStores.length > 0) {
+            setStores(cachedStores)
             setHasLoaded(true)
             setIsLoading(false)
+            
+            // Restaurer la boutique sélectionnée depuis le localStorage
+            const savedStoreId = localStorage.getItem("selectedStoreId")
+            if (savedStoreId) {
+              const savedStore = cachedStores.find(store => store.id === savedStoreId)
+              if (savedStore) {
+                setCurrentStoreState(savedStore)
+              } else {
+                localStorage.removeItem("selectedStoreId")
+              }
+            }
+            return
           }
+          
+          // Si pas de cache, charger immédiatement (l'authentification sera vérifiée dans loadStores)
+          loadStores()
         } else {
           // Pas de token, ne pas charger les boutiques
           setStores([])

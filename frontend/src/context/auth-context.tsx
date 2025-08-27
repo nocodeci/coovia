@@ -75,6 +75,10 @@ function useAuthCustom() {
             setUser(null)
             setAuthStep('email')
           }
+        } else {
+          // Pas d'utilisateur en cache, pas besoin de vérifier l'authentification
+          setUser(null)
+          setAuthStep('email')
         }
       } catch (error) {
         console.error('Erreur lors de la vérification du cache:', error)
