@@ -256,17 +256,9 @@ export function useSanctumAuth() {
           useAuthStore.getState().logout();
         }
       } else if (!storedToken && !user) {
-        // Pas de token, vérifier si on a une session côté serveur
-        try {
-          console.log('Vérification de la session côté serveur...');
-          const response = await sanctumAuthService.checkAuth();
-          if (response.success && response.user) {
-            console.log('Session serveur trouvée:', response.user);
-            useAuthStore.getState().login(response.user, response.token || '');
-          }
-        } catch (error) {
-          console.log('Aucune session valide trouvée');
-        }
+        // Pas de token, ne pas vérifier la session côté serveur
+        // Cela évite les appels API inutiles et les erreurs 401
+        console.log('Pas de token stocké, pas de vérification serveur');
       }
     };
 
