@@ -12,6 +12,24 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Appliquer le middleware CORS de manière globale et forcée
+        $middleware->prepend(\App\Http\Middleware\Cors::class);
+        $middleware->append(\App\Http\Middleware\Cors::class);
+        
+        // Appliquer le middleware CORS spécifiquement aux routes API
+        $middleware->api(prepend: [
+            \App\Http\Middleware\Cors::class,
+        ]);
+        
+        $middleware->alias([
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'auth.api' => \App\Http\Middleware\ApiAuthenticate::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
+
         // Configuration pour éviter la redirection vers 'login'
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('api/*')) {

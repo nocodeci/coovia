@@ -40,7 +40,7 @@ class Cors
                 $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
                 $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, X-CSRF-TOKEN, X-API-Key');
                 $response->headers->set('Access-Control-Max-Age', '86400');
-                $response->headers->set('Access-Control-Allow-Credentials', 'false');
+                $response->headers->set('Access-Control-Allow-Credentials', 'true');
             }
             
             return $response;
@@ -53,7 +53,7 @@ class Cors
             $response->headers->set('Access-Control-Allow-Origin', $allowedOrigin);
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
             $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, X-CSRF-TOKEN, X-API-Key');
-            $response->headers->set('Access-Control-Allow-Credentials', 'false');
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
             
             // S'assurer que les en-têtes sont bien envoyés
             $response->headers->set('Vary', 'Origin');
