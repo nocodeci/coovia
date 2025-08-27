@@ -159,39 +159,75 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
 
   // Charger les boutiques au montage du composant - OPTIMISÉ
   useEffect(() => {
-    const token = localStorage.getItem("sanctum_token")
-    
-    // Ne charger que si on a un token valide
-    if (token) {
-      // Vérifier immédiatement le cache
-      const cachedStores = cache.get<Store[]>(CACHE_KEYS.STORES)
-      if (cachedStores && cachedStores.length > 0) {
-        setStores(cachedStores)
+    const loadStoresIfAuthenticated = async () => {
+      try {
+        const token = localStorage.getItem("sanctum_token")
+        
+        // Ne charger que si on a un token valide
+        if (token) {
+          // Vérifier d'abord que l'authentification est valide
+          try {
+            const authResponse = await apiService.request('/auth/check')
+            if (!authResponse.success) {
+              // Token invalide, vider le cache et rediriger
+              localStorage.removeItem("sanctum_token")
+              cache.delete(CACHE_KEYS.STORES)
+              setStores([])
+              setCurrentStoreState(null)
+              setHasLoaded(true)
+              setIsLoading(false)
+              return
+            }
+            
+            // Authentification valide, vérifier le cache
+            const cachedStores = cache.get<Store[]>(CACHE_KEYS.STORES)
+            if (cachedStores && cachedStores.length > 0) {
+              setStores(cachedStores)
+              setHasLoaded(true)
+              setIsLoading(false)
+              
+              // Restaurer la boutique sélectionnée depuis le localStorage
+              const savedStoreId = localStorage.getItem("selectedStoreId")
+              if (savedStoreId) {
+                const savedStore = cachedStores.find(store => store.id === savedStoreId)
+                if (savedStore) {
+                  setCurrentStoreState(savedStore)
+                } else {
+                  localStorage.removeItem("selectedStoreId")
+                }
+              }
+              return
+            }
+            
+            // Si pas de cache, charger immédiatement
+            loadStores()
+          } catch (error) {
+            console.error("🚨 Erreur d'authentification:", error)
+            // Erreur d'authentification, vider le cache et rediriger
+            localStorage.removeItem("sanctum_token")
+            cache.delete(CACHE_KEYS.STORES)
+            setStores([])
+            setCurrentStoreState(null)
+            setHasLoaded(true)
+            setIsLoading(false)
+          }
+        } else {
+          // Pas de token, ne pas charger les boutiques
+          setStores([])
+          setCurrentStoreState(null)
+          setHasLoaded(true)
+          setIsLoading(false)
+        }
+      } catch (error) {
+        console.error("🚨 Erreur lors du chargement des stores:", error)
+        setStores([])
+        setCurrentStoreState(null)
         setHasLoaded(true)
         setIsLoading(false)
-        
-        // Restaurer la boutique sélectionnée depuis le localStorage
-        const savedStoreId = localStorage.getItem("selectedStoreId")
-        if (savedStoreId) {
-          const savedStore = cachedStores.find(store => store.id === savedStoreId)
-          if (savedStore) {
-            setCurrentStoreState(savedStore)
-          } else {
-            localStorage.removeItem("selectedStoreId")
-          }
-        }
-        return
       }
-      
-      // Si pas de cache, charger immédiatement
-      loadStores()
-    } else {
-      // Pas de token, ne pas charger les boutiques
-      setStores([])
-      setCurrentStoreState(null)
-      setHasLoaded(true)
-      setIsLoading(false)
     }
+
+    loadStoresIfAuthenticated()
   }, [])
 
   const value: StoreContextType = {

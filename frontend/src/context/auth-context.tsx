@@ -49,14 +49,39 @@ function useAuthCustom() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        setIsLoading(true)
+        
+        // Vérifier d'abord le cache
         const cachedUser = cache.get(CACHE_KEYS.USER)
         if (cachedUser) {
-          setUser(cachedUser as User)
-          setAuthStep('complete')
+          // Vérifier que l'utilisateur est toujours valide côté serveur
+          try {
+            const response = await apiService.request('/auth/check')
+            if (response.success && response.user) {
+              setUser(response.user as User)
+              setAuthStep('complete')
+              // Mettre à jour le cache avec les données fraîches
+              cache.set(CACHE_KEYS.USER, response.user, 60 * 60 * 1000)
+            } else {
+              // L'utilisateur n'est plus valide, vider le cache
+              cache.delete(CACHE_KEYS.USER)
+              setUser(null)
+              setAuthStep('email')
+            }
+          } catch (error) {
+            console.error('Erreur lors de la vérification serveur:', error)
+            // En cas d'erreur, vider le cache et rediriger vers la connexion
+            cache.delete(CACHE_KEYS.USER)
+            setUser(null)
+            setAuthStep('email')
+          }
         }
       } catch (error) {
         console.error('Erreur lors de la vérification du cache:', error)
+        setUser(null)
+        setAuthStep('email')
       } finally {
+        setIsLoading(false)
         setHasCheckedAuth(true)
       }
     }
@@ -156,6 +181,32 @@ function useAuthCustom() {
     setOtpState('')
   }
 
+  const refreshAuth = async () => {
+    try {
+      setIsLoading(true)
+      const response = await apiService.request('/auth/check')
+      if (response.success && response.user) {
+        setUser(response.user as User)
+        setAuthStep('complete')
+        cache.set(CACHE_KEYS.USER, response.user, 60 * 60 * 1000)
+        return true
+      } else {
+        setUser(null)
+        setAuthStep('email')
+        cache.delete(CACHE_KEYS.USER)
+        return false
+      }
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement de l\'authentification:', error)
+      setUser(null)
+      setAuthStep('email')
+      cache.delete(CACHE_KEYS.USER)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return {
     user,
     isLoading,
@@ -172,7 +223,8 @@ function useAuthCustom() {
     submitPassword,
     submitOtp,
     logout,
-    resetAuth
+    resetAuth,
+    refreshAuth
   }
 }
 
