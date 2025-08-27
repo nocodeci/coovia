@@ -156,7 +156,7 @@ class CloudflareUploadService
      */
     protected function isImage(UploadedFile $file): bool
     {
-        $imageTypes = $this->config['upload']['allowed_types']['image'];
+        $imageTypes = $this->config['upload']['allowed_types']['images'] ?? [];
         $extension = strtolower($file->getClientOriginalExtension());
         
         return in_array($extension, $imageTypes);
@@ -168,7 +168,7 @@ class CloudflareUploadService
     protected function generateThumbnails(UploadedFile $file, string $directory, string $filename): array
     {
         $thumbnails = [];
-        $sizes = $this->config['upload']['thumbnail_sizes'];
+        $sizes = $this->config['upload']['thumbnails'] ?? [];
 
         try {
             // Utiliser la nouvelle syntaxe d'Intervention Image v3
@@ -183,7 +183,7 @@ class CloudflareUploadService
                 $thumbnail = $image->cover($dimensions[0], $dimensions[1]);
 
                 // Sauvegarder le thumbnail
-                $thumbnailData = $thumbnail->toJpeg($this->config['upload']['image_quality']);
+                $thumbnailData = $thumbnail->toJpeg(80); // Qualité par défaut
                 $this->disk->put($thumbnailPath, $thumbnailData);
 
                 $thumbnails[$size] = [
@@ -217,7 +217,7 @@ class CloudflareUploadService
      */
     protected function getPublicUrl(string $path): string
     {
-        $publicUrl = $this->config['r2']['public_url'];
+        $publicUrl = $this->config['r2']['url'] ?? $this->config['r2']['public_url'] ?? null;
         
         if ($publicUrl) {
             return rtrim($publicUrl, '/') . '/' . $path;
