@@ -19,7 +19,18 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5177', 'http://localhost:5178', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:5177', 'http://127.0.0.1:5178'],
+    'allowed_origins' => [
+        'http://localhost:3000', 
+        'http://localhost:5173', 
+        'http://localhost:5177', 
+        'http://localhost:5178', 
+        'http://127.0.0.1:3000', 
+        'http://127.0.0.1:5173', 
+        'http://127.0.0.1:5177', 
+        'http://127.0.0.1:5178',
+        'https://app.wozif.store',
+        'https://www.app.wozif.store'
+    ],
 
     'allowed_origins_patterns' => [],
 
