@@ -187,11 +187,7 @@ export function StoresManagement() {
           loadingMessage="Chargement des boutiques..."
           loadingType="skeleton"
         >
-
-  return (
-    <SearchProvider>
-      <Main>
-        <div className="space-y-6" style={{ paddingTop: "2rem" }}>
+          <div className="space-y-6" style={{ paddingTop: "2rem" }}>
           {/* En-tête */}
           <div className="flex items-center justify-between">
             <div>
