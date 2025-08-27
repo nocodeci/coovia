@@ -74,18 +74,25 @@ class MediaService {
     per_page?: number
   }): Promise<MediaResponse> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/public/stores/${storeId}/media`, {
+      console.log('🔍 Récupération des médias pour le store:', storeId)
+      console.log('🔍 Paramètres:', params)
+      
+      const response = await axios.get(`${API_BASE_URL}/stores/${storeId}/media`, {
+        headers: this.getAuthHeaders(),
         params
       })
+      
+      console.log('✅ Médias récupérés:', response.data)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des médias:', error)
+    } catch (error: any) {
+      console.error('❌ Erreur lors de la récupération des médias:', error)
+      console.error('❌ Détails de l\'erreur:', error.response?.data)
       throw error
     }
   }
 
   /**
-   * Upload de fichiers
+   * Upload de fichiers vers Cloudflare
    */
   async uploadMedia(storeId: string, files: File[], onProgress?: (progress: number) => void): Promise<UploadResponse> {
     try {
@@ -94,7 +101,15 @@ class MediaService {
         formData.append('files[]', file)
       })
 
-      const response = await axios.post(`${API_BASE_URL}/public/stores/${storeId}/media`, formData, {
+      // Utiliser l'endpoint Cloudflare pour l'upload
+      const response = await axios.post(`${API_BASE_URL}/cloudflare/upload`, formData, {
+        headers: {
+          ...this.getAuthHeaders(),
+          'Content-Type': 'multipart/form-data',
+        },
+        params: {
+          store_id: storeId
+        },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1))
           if (onProgress) {
@@ -103,9 +118,12 @@ class MediaService {
           console.log('Upload progress:', percentCompleted)
         }
       })
+      
+      console.log('✅ Upload réussi:', response.data)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de l\'upload:', error)
+    } catch (error: any) {
+      console.error('❌ Erreur lors de l\'upload:', error)
+      console.error('❌ Détails de l\'erreur:', error.response?.data)
       throw error
     }
   }
