@@ -524,7 +524,7 @@ export function NouvelleCommandePage() {
                         </SelectTrigger>
                         <SelectContent>
                           {availableProducts.length === 0 ? (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="no-products" disabled>
                               {productsLoading ? "Chargement..." : "Aucun produit disponible"}
                             </SelectItem>
                           ) : (

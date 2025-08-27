@@ -18,7 +18,7 @@ import {
 } from '../types/lunar';
 
 // Configuration de l'API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://api.wozif.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.wozif.com/api';
 const LUNAR_API_URL = `${API_BASE_URL}/lunar`;
 
 // Instance axios avec configuration par défaut

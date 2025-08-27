@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://api.wozif.com/api'
+const API_BASE_URL = 'https://api.wozif.com/api'
 
 export interface MediaItem {
   id: string
