@@ -498,7 +498,7 @@ export default function CheckoutComplete({
     setIsLoadingStore(true)
     
     try {
-      const response = await fetch(`http://localhost:8000/api/store-info/${storeId}`)
+      const response = await fetch(`http://api.wozif.com/api/store-info/${storeId}`)
       console.log('🏪 Réponse API:', response.status, response.statusText)
       
       if (response.ok) {
@@ -979,7 +979,7 @@ export default function CheckoutComplete({
       }
 
       // Utiliser le système intelligent avec fallback
-      const response = await fetch('http://localhost:8000/api/smart-payment/initialize', {
+      const response = await fetch('http://api.wozif.com/api/smart-payment/initialize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1064,7 +1064,7 @@ export default function CheckoutComplete({
     setOtpMessage('')
 
     try {
-      const response = await fetch('http://localhost:8000/api/process-orange-money-ci-payment', {
+      const response = await fetch('http://api.wozif.com/api/process-orange-money-ci-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

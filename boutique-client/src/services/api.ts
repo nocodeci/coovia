@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configuration de base pour l'API
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://api.wozif.com/api';
 
 // Créer l'instance axios
 const api = axios.create({
