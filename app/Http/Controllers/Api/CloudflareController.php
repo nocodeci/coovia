@@ -125,7 +125,7 @@ class CloudflareController extends Controller
             $validator = Validator::make($request->all(), [
                 'file' => 'required|file|max:10240',
                 'type' => 'string|in:image,video,document,avatar,product',
-                'store_id' => 'integer|exists:stores,id',
+                'store_id' => 'required|string|exists:stores,id',
             ]);
 
             if ($validator->fails()) {
