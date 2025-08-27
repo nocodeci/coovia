@@ -17,16 +17,8 @@ class Cors
     {
         // Origines autorisées
         $allowedOrigins = [
-            'http://localhost:3000',
-            'http://localhost:5173', 
-            'http://localhost:5177',
-            'http://localhost:5178',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:5173',
-            'http://127.0.0.1:5177',
-            'http://127.0.0.1:5178',
-            'https://app.wozif.store',  // Votre domaine de production
-            'https://www.app.wozif.store'
+            'https://app.wozif.store',  // Production frontend
+            'http://localhost:3000'     // Développement local
         ];
 
         $origin = $request->header('Origin');
@@ -48,7 +40,7 @@ class Cors
                 $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
                 $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, X-CSRF-TOKEN, X-API-Key');
                 $response->headers->set('Access-Control-Max-Age', '86400');
-                $response->headers->set('Access-Control-Allow-Credentials', 'true');
+                $response->headers->set('Access-Control-Allow-Credentials', 'false');
             }
             
             return $response;
@@ -61,7 +53,7 @@ class Cors
             $response->headers->set('Access-Control-Allow-Origin', $allowedOrigin);
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
             $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, X-CSRF-TOKEN, X-API-Key');
-            $response->headers->set('Access-Control-Allow-Credentials', 'true');
+            $response->headers->set('Access-Control-Allow-Credentials', 'false');
             
             // S'assurer que les en-têtes sont bien envoyés
             $response->headers->set('Vary', 'Origin');

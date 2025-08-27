@@ -288,6 +288,9 @@ Route::prefix('public/stores/{storeId}/media')->group(function () {
         Route::delete('/{fileId}', [SimpleMediaController::class, 'destroy']);
 });
 
+// Route publique pour récupérer les médias d'un store (production)
+Route::get('/stores/{storeId}/media-public', [SimpleMediaController::class, 'index']);
+
 // Routes publiques pour les produits (développement seulement)
 Route::prefix('public')->group(function () {
     Route::get('/products/{product}', [ProductController::class, 'show']);
