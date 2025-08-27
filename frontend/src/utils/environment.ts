@@ -8,7 +8,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 
 // URLs de base selon l'environnement
 export const API_BASE_URL = isDevelopment 
-  ? 'http://api.wozif.com' 
+  ? 'https://api.wozif.com' 
   : 'https://api.wozif.com'
 
 export const BOUTIQUE_CLIENT_BASE_URL = isDevelopment 

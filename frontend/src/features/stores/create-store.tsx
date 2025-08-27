@@ -127,7 +127,7 @@ export function CreateStore() {
         headers['Authorization'] = `Bearer ${token}`
       }
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://api.wozif.com/api'}/stores/subdomain/${slug}/check`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://api.wozif.com/api'}/stores/subdomain/${slug}/check`, {
         headers
       })
       
@@ -306,7 +306,7 @@ export function CreateStore() {
           logoFormData.append('path', 'stores/logos')
           
           // Upload vers l'API Cloudflare
-          const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://api.wozif.com/api'}/files/upload-image`, {
+          const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://api.wozif.com/api'}/files/upload-image`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

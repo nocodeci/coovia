@@ -34,7 +34,7 @@ class SanctumService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || 'http://api.wozif.com/api',
+      baseURL: import.meta.env.VITE_API_URL || 'https://api.wozif.com/api',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

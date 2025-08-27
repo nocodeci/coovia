@@ -180,7 +180,7 @@ describe('SanctumService', () => {
 // Tests pour la configuration API
 describe('Configuration API', () => {
   it('devrait avoir une URL de base configurée', () => {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://api.wozif.com/api';
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://api.wozif.com/api';
     expect(baseUrl).toBeDefined();
     expect(baseUrl).toContain('api.wozif.com');
   });
