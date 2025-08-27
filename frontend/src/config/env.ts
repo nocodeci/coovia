@@ -1,6 +1,6 @@
 export const env = {
   // Configuration de l'API
-  API_URL: import.meta.env.VITE_API_URL || 'http://api.wozif.com',
+  API_URL: import.meta.env.VITE_API_URL || 'https://api.wozif.com',
   
   // Configuration Auth.js
   AUTH_SECRET: import.meta.env.VITE_AUTH_SECRET || 'your-super-secret-key-here-change-in-production',
