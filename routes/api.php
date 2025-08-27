@@ -313,6 +313,9 @@ Route::prefix('boutique')->group(function () {
     Route::get('/{storeId}/categories', [BoutiqueController::class, 'getStoreCategories']);
 });
 
+// Route publique pour lister toutes les boutiques (sans authentification)
+Route::get('/stores', [App\Http\Controllers\Api\StoreController::class, 'listPublicStores']);
+
 // Routes PayDunya
 Route::prefix('paydunya')->group(function () {
     Route::post('create-invoice', [App\Http\Controllers\Api\PayDunyaController::class, 'createInvoice']);

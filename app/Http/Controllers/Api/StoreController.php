@@ -627,4 +627,31 @@ class StoreController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Lister toutes les boutiques publiques (sans authentification)
+     */
+    public function listPublicStores()
+    {
+        try {
+            $stores = Store::where('status', 'active')
+                ->select(['id', 'name', 'description', 'slug', 'logo', 'banner', 'theme', 'created_at'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Boutiques récupérées avec succès',
+                'data' => $stores
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de la récupération des boutiques publiques: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des boutiques'
+            ], 500);
+        }
+    }
 } 
