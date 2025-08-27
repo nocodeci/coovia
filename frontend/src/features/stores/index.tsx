@@ -377,4 +377,5 @@ export function StoresManagement() {
     {/* Dialog de création de boutique */}
     <CreateStoreDialog open={createStoreOpen} onOpenChange={setCreateStoreOpen} onStoreCreated={handleStoreCreated} />
   </SearchProvider>
-)
+  )
+}
