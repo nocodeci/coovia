@@ -1,6 +1,6 @@
 export const env = {
   // Configuration de l'API
-  API_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  API_URL: import.meta.env.VITE_API_URL || 'http://api.wozif.com',
   
   // Configuration Auth.js
   AUTH_SECRET: import.meta.env.VITE_AUTH_SECRET || 'your-super-secret-key-here-change-in-production',

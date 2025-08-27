@@ -25,7 +25,7 @@ class ApiService {
   private requestCache = new Map<string, { data: any; timestamp: number; ttl: number }>()
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+    this.baseUrl = import.meta.env.VITE_API_URL || 'http://api.wozif.com/api'
     this.token = localStorage.getItem('sanctum_token')
   }
 

@@ -14,7 +14,7 @@ export const env = {
   APP_ENV: import.meta.env.VITE_APP_ENV || 'development',
 
   // Configuration API
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://api.wozif.com/api',
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
 
   // Configuration des fonctionnalités

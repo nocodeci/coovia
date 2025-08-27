@@ -37,7 +37,7 @@ class SanctumAuthService {
   private token: string | null = null;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+    this.baseUrl = import.meta.env.VITE_API_URL || 'http://api.wozif.com/api';
     this.token = localStorage.getItem('sanctum_token');
   }
 

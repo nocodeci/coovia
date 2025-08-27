@@ -109,7 +109,7 @@ export const CloudflareUpload: React.FC<CloudflareUploadProps> = ({
           formData.append('store_id', storeId.toString());
         }
 
-        const response = await fetch('http://localhost:8000/api/cloudflare/upload-frontend', {
+        const response = await fetch('http://api.wozif.com/api/cloudflare/upload-frontend', {
           method: 'POST',
           body: formData,
           credentials: 'include',
