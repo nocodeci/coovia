@@ -382,4 +382,3 @@ export function StoresManagement() {
     <CreateStoreDialog open={createStoreOpen} onOpenChange={setCreateStoreOpen} onStoreCreated={handleStoreCreated} />
   </SearchProvider>
 )
-}
