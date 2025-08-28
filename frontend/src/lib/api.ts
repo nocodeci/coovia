@@ -238,8 +238,9 @@ class ApiService {
       return { success: true, data: cachedStores }
     }
     
-    console.log('🌐 Making API request to /stores')
-    const response = await this.request('/stores') as any
+    // Utiliser la route authentifiée pour récupérer les boutiques de l'utilisateur
+    console.log('🌐 Making API request to /user/stores (authenticated)')
+    const response = await this.request('/user/stores') as any
     console.log('📡 API response:', response)
     
     // Transformer la réponse pour correspondre à l'interface attendue
@@ -261,6 +262,17 @@ class ApiService {
 
   async getStore(storeId: string) {
     return this.request(`/stores/${storeId}`)
+  }
+
+  // Méthode pour récupérer toutes les boutiques publiques (sans authentification)
+  async getPublicStores() {
+    console.log('🔍 getPublicStores called')
+    
+    console.log('🌐 Making API request to /stores (public)')
+    const response = await this.request('/stores') as any
+    console.log('📡 API response:', response)
+    
+    return response
   }
 
   async createStore(storeData: any) {

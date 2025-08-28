@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react"
 import { cache, CACHE_KEYS } from "@/lib/cache"
 import apiService from "@/lib/api"
+import { isAuthenticated } from "@/utils/clear-cache"
 
 interface Store {
   id: string
@@ -56,6 +57,16 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     
     try {
       setError(null)
+      
+      // Vérifier l'authentification d'abord
+      if (!isAuthenticated()) {
+        console.log('🚫 Utilisateur non authentifié, impossible de charger les boutiques')
+        setError('Vous devez être connecté pour voir vos boutiques')
+        setStores([])
+        setHasLoaded(true)
+        setIsLoading(false)
+        return
+      }
       
       // Vérifier le cache d'abord (sauf si forceRefresh)
       if (!forceRefresh) {
