@@ -3,8 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react"
 import { cache, CACHE_KEYS } from "@/lib/cache"
 import apiService from "@/lib/api"
-import { isAuthenticated, forceLogout } from "@/utils/clear-cache"
-import { debugAuth, forceRedirectToLogin } from "@/utils/debug-auth"
+import { isAuthenticated } from "@/utils/clear-cache"
 
 interface Store {
   id: string
@@ -61,20 +60,11 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
       
       // Vérifier l'authentification d'abord
       if (!isAuthenticated()) {
-        console.log('🚫 Utilisateur non authentifié, redirection vers la connexion...')
-        
-        // Debug de l'authentification
-        debugAuth()
-        
+        console.log('🚫 Utilisateur non authentifié')
         setError('Vous devez être connecté pour voir vos boutiques')
         setStores([])
         setHasLoaded(true)
         setIsLoading(false)
-        
-        // Rediriger immédiatement vers la page de connexion
-        console.log('🔄 Redirection immédiate...')
-        forceRedirectToLogin()
-        
         return
       }
       
@@ -100,6 +90,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
         }
       }
 
+      console.log('🔄 Chargement des boutiques depuis l\'API...')
       const response = await apiService.getStores()
 
       if (response.success && response.data) {
@@ -114,6 +105,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
           updated_at: store.updated_at,
         }))
 
+        console.log(`✅ ${transformedStores.length} boutiques chargées avec succès`)
         setStores(transformedStores)
         setHasLoaded(true)
 
@@ -131,11 +123,24 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
           }
         }
       } else {
-        setError('Erreur lors du chargement des boutiques')
+        console.log('⚠️ Réponse API:', response)
+        if (response.message && response.message.includes('Non authentifié')) {
+          setError('Votre session a expiré. Veuillez vous reconnecter.')
+        } else {
+          setError(response.message || 'Erreur lors du chargement des boutiques')
+        }
+        setStores([])
       }
     } catch (err: any) {
       console.error("🚨 Erreur lors du chargement des boutiques:", err)
-      setError(err.message || "Erreur lors du chargement des boutiques")
+      
+      // Gérer les erreurs d'authentification
+      if (err.message && err.message.includes('401')) {
+        setError('Votre session a expiré. Veuillez vous reconnecter.')
+      } else {
+        setError(err.message || "Erreur lors du chargement des boutiques")
+      }
+      setStores([])
     } finally {
       setIsLoading(false)
       loadStoresInProgress.current = false
