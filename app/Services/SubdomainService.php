@@ -140,7 +140,7 @@ class SubdomainService
         $reservedWords = [
             'www', 'api', 'admin', 'mail', 'ftp', 'blog', 'shop', 'store', 
             'app', 'dev', 'test', 'staging', 'prod', 'cdn', 'static',
-            'wozif', 'wizof', 'coovia', 'nocodeci', 'my'
+            'wozif', 'wizof', 'nocodeci', 'my'
         ];
 
         if (in_array(strtolower($slug), $reservedWords)) {

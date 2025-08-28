@@ -16,8 +16,8 @@ class FileUploadHelper
         $filename = self::generateUniqueFilename($file);
         $fullPath = $path . '/' . $filename;
         
-        // Upload vers R2
-        Storage::disk('r2')->put($fullPath, file_get_contents($file));
+        // Upload vers Cloudflare R2
+        Storage::disk('cloudflare')->put($fullPath, file_get_contents($file));
         
         return $fullPath;
     }
@@ -31,10 +31,10 @@ class FileUploadHelper
         $originalPath = $path . '/original/' . $filename;
         
         // Upload original
-        Storage::disk('r2')->put($originalPath, file_get_contents($file));
+        Storage::disk('cloudflare')->put($originalPath, file_get_contents($file));
         
         $urls = [
-            'original' => Storage::disk('r2')->url($originalPath)
+            'original' => Storage::disk('cloudflare')->url($originalPath)
         ];
 
         // Créer des versions redimensionnées si demandé
@@ -46,9 +46,9 @@ class FileUploadHelper
                 $resizedImage->fit($dimensions[0], $dimensions[1]);
                 
                 $resizedPath = $path . '/' . $size . '/' . $filename;
-                Storage::disk('r2')->put($resizedPath, $resizedImage->encode());
+                Storage::disk('cloudflare')->put($resizedPath, $resizedImage->encode());
                 
-                $urls[$size] = Storage::disk('r2')->url($resizedPath);
+                $urls[$size] = Storage::disk('cloudflare')->url($resizedPath);
             }
         }
 
@@ -60,7 +60,7 @@ class FileUploadHelper
      */
     public static function deleteFromR2(string $path): bool
     {
-        return Storage::disk('r2')->delete($path);
+        return Storage::disk('cloudflare')->delete($path);
     }
 
     /**
@@ -68,7 +68,7 @@ class FileUploadHelper
      */
     public static function getUrl(string $path): string
     {
-        return Storage::disk('r2')->url($path);
+        return Storage::disk('cloudflare')->url($path);
     }
 
     /**
@@ -87,7 +87,7 @@ class FileUploadHelper
      */
     public static function exists(string $path): bool
     {
-        return Storage::disk('r2')->exists($path);
+        return Storage::disk('cloudflare')->exists($path);
     }
 
     /**
@@ -95,6 +95,6 @@ class FileUploadHelper
      */
     public static function listFiles(string $path = ''): array
     {
-        return Storage::disk('r2')->files($path);
+        return Storage::disk('cloudflare')->files($path);
     }
 }

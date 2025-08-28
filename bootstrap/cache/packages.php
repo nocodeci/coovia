@@ -1,4 +1,11 @@
 <?php return array (
+  'laravel/forge-sdk' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Laravel\\Forge\\ForgeServiceProvider',
+    ),
+  ),
   'laravel/sail' => 
   array (
     'providers' => 
