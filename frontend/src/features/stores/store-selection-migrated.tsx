@@ -6,6 +6,7 @@ import { LogOut, Plus, RefreshCw, ArrowRight, Building2, Search, X, ChevronDown,
 
 import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 import { useStore } from "@/context/store-context"
+import { AuthTestComponent } from "@/components/AuthTestComponent"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -30,6 +31,7 @@ export function StoreSelectionMigrated() {
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
   const [query, setQuery] = useState("")
   const [showAllStores, setShowAllStores] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
 
   // Tous les hooks doivent être appelés en premier
   const filteredStores = useMemo(() => {
@@ -50,24 +52,41 @@ export function StoreSelectionMigrated() {
       .toUpperCase()
       .slice(0, 2)
 
-  // Auth check + petit refresh si aucune boutique après 1s
+  // Vérification d'authentification améliorée
   useEffect(() => {
-    const token = localStorage.getItem('sanctum_token')
-    if (!token || !user) {
-      window.location.href = '/sign-in'
-      return
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('sanctum_token')
+        console.log('🔍 Vérification authentification...')
+        console.log('  - Token présent:', !!token)
+        console.log('  - User présent:', !!user)
+        
+        if (!token || !user) {
+          console.log('🚫 Utilisateur non authentifié, redirection...')
+          navigate({ to: '/sign-in' })
+          return
+        }
+        
+        console.log('✅ Utilisateur authentifié')
+        setAuthChecked(true)
+        
+        // Si on a un utilisateur, continuer normalement
+        const t = setTimeout(() => {
+          if (stores.length === 0 && !isLoading && !error) {
+            console.log('🔄 Rafraîchissement des boutiques...')
+            refreshStores()
+          }
+        }, 1000)
+        
+        return () => clearTimeout(t)
+      } catch (error) {
+        console.error('❌ Erreur lors de la vérification d\'authentification:', error)
+        navigate({ to: '/sign-in' })
+      }
     }
     
-    // Si on a un utilisateur, continuer normalement
-    if (user) {
-      const t = setTimeout(() => {
-        if (stores.length === 0 && !isLoading && !error) {
-          refreshStores()
-        }
-      }, 1000)
-      return () => clearTimeout(t)
-    }
-  }, [user, stores.length, isLoading, error, refreshStores])
+    checkAuth()
+  }, [user, stores.length, isLoading, error, refreshStores, navigate])
 
   const handleStoreSelect = async (storeId: string) => {
     try {
@@ -92,7 +111,7 @@ export function StoreSelectionMigrated() {
 
   const handleLogout = () => {
     logout()
-    window.location.href = "/sign-in"
+    navigate({ to: "/sign-in" })
   }
 
   const handleRefresh = async () => {
@@ -106,7 +125,19 @@ export function StoreSelectionMigrated() {
     }
   }
 
-  // Si pas de token, rediriger vers la connexion
+  // Si pas encore vérifié l'authentification, afficher un loader
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Vérification de l'authentification...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Si pas d'utilisateur après vérification, ne rien afficher (redirection en cours)
   if (!user) {
     return null
   }
@@ -316,6 +347,9 @@ export function StoreSelectionMigrated() {
             </main>
           </Card>
         </div>
+        
+        {/* Composant de test d'authentification */}
+        <AuthTestComponent />
       </div>
     </UnifiedPageWrapper>
   )
