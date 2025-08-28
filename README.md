@@ -128,3 +128,4 @@ vapor deploy production
 ## 📄 Licence
 
 Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+# Reset Git effectué sur Forge - Prêt pour le déploiement
