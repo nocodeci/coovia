@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useRef } fro
 import { cache, CACHE_KEYS } from "@/lib/cache"
 import apiService from "@/lib/api"
 import { isAuthenticated, forceLogout } from "@/utils/clear-cache"
+import { debugAuth, forceRedirectToLogin } from "@/utils/debug-auth"
 
 interface Store {
   id: string
@@ -61,15 +62,18 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
       // Vérifier l'authentification d'abord
       if (!isAuthenticated()) {
         console.log('🚫 Utilisateur non authentifié, redirection vers la connexion...')
+        
+        // Debug de l'authentification
+        debugAuth()
+        
         setError('Vous devez être connecté pour voir vos boutiques')
         setStores([])
         setHasLoaded(true)
         setIsLoading(false)
         
-        // Rediriger automatiquement vers la page de connexion après 2 secondes
-        setTimeout(() => {
-          forceLogout()
-        }, 2000)
+        // Rediriger immédiatement vers la page de connexion
+        console.log('🔄 Redirection immédiate...')
+        forceRedirectToLogin()
         
         return
       }

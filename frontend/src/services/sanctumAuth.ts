@@ -38,7 +38,8 @@ class SanctumAuthService {
 
   constructor() {
     this.baseUrl = import.meta.env.VITE_API_URL || 'https://api.wozif.com/api';
-    this.token = localStorage.getItem('sanctum_token');
+    // Utiliser le store Zustand au lieu de localStorage directement
+    this.token = useAuthStore.getState().token;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}, skipRefresh = false): Promise<T> {
@@ -331,7 +332,11 @@ class SanctumAuthService {
 
   setToken(token: string): void {
     this.token = token;
-    localStorage.setItem('sanctum_token', token);
+    // Mettre à jour le store Zustand
+    useAuthStore.getState().login(
+      useAuthStore.getState().user || {} as any, 
+      token
+    );
   }
 }
 
