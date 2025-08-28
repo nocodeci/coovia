@@ -893,3 +893,22 @@
     height: 0;
   }
 }
+
+/* Styles pour les placeholders des inputs */
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted-foreground) !important;
+  opacity: 0.7 !important;
+}
+
+input:focus::placeholder,
+textarea:focus::placeholder {
+  opacity: 0.5 !important;
+}
+
+/* Fallback pour les navigateurs qui ne supportent pas les variables CSS */
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 0.7 !important;
+}

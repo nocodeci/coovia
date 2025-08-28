@@ -50,6 +50,7 @@ class ApiService {
     const config: RequestInit = {
       method: options.method,
       headers: headers,
+      credentials: 'include', // ✅ Important pour les cookies/sessions
     }
 
     // ✅ CORRECTION CLÉ : Gestion conditionnelle du body et Content-Type
