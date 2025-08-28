@@ -16,6 +16,9 @@ return [
     
     // Version PHP (83 = PHP 8.3)
     'php_version' => '83',
+    
+    // ID du site (trouvez-le dans l'URL de votre site sur Forge)
+    'site_id' => '2824709', // ⚠️ À MODIFIER
 ];
 
 // =========================================
