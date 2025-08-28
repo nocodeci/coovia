@@ -65,20 +65,27 @@ class StoreController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Utilisateur non authentifié'
-            ], 401);
-        }
-
         try {
+            // Vérifier l'authentification avec plus de détails
+            $user = $request->user();
+            
+            if (!$user) {
+                Log::warning("Tentative d'accès à /user/stores sans authentification");
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Utilisateur non authentifié',
+                    'error' => 'authentication_required'
+                ], 401);
+            }
+
+            Log::info("Récupération des boutiques pour l'utilisateur: " . $user->id);
+
             $stores = Store::where('owner_id', $user->id)
                 ->where('status', 'active')
                 ->orderBy('created_at', 'desc')
                 ->get();
+
+            Log::info("Nombre de boutiques trouvées: " . $stores->count());
 
             return response()->json([
                 'success' => true,
@@ -101,10 +108,14 @@ class StoreController extends Controller
 
         } catch (\Exception $e) {
             Log::error("Erreur lors de la récupération des boutiques: " . $e->getMessage());
+            Log::error("Fichier: " . $e->getFile() . " Ligne: " . $e->getLine());
+            Log::error("Trace: " . $e->getTraceAsString());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des boutiques'
+                'message' => 'Erreur lors de la récupération des boutiques',
+                'error' => 'server_error',
+                'debug' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
         }
     }
