@@ -330,6 +330,11 @@ Route::prefix('boutique')->group(function () {
 // Route publique pour lister toutes les boutiques (sans authentification)
 Route::get('/stores', [App\Http\Controllers\Api\StoreController::class, 'listPublicStores']);
 
+// Route authentifiée pour récupérer les boutiques de l'utilisateur connecté
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user/stores', [App\Http\Controllers\Api\StoreController::class, 'index']);
+});
+
 // Routes PayDunya
 Route::prefix('paydunya')->group(function () {
     Route::post('create-invoice', [App\Http\Controllers\Api\PayDunyaController::class, 'createInvoice']);
