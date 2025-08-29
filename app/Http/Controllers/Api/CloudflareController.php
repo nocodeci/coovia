@@ -287,24 +287,28 @@ class CloudflareController extends Controller
     /**
      * Sauvegarder l'enregistrement média dans la base de données
      */
-    protected function saveMediaRecord(array $uploadResult, string $type, int $storeId): void
+    protected function saveMediaRecord(array $uploadResult, string $type, string $storeId): void
     {
         try {
-            // Ici vous pouvez créer un modèle Media et sauvegarder les informations
-            // Exemple avec un modèle StoreMedia
-            /*
-            StoreMedia::create([
+            // Utiliser le modèle StoreMediaFile pour sauvegarder les informations
+            \App\Models\StoreMediaFile::create([
                 'store_id' => $storeId,
-                'filename' => $uploadResult['filename'],
-                'path' => $uploadResult['path'],
-                'url' => $uploadResult['urls']['original'],
-                'cdn_url' => $uploadResult['urls']['cdn'],
+                'file_id' => uniqid(),
+                'name' => $uploadResult['filename'],
                 'type' => $type,
                 'size' => $uploadResult['size'],
+                'url' => $uploadResult['urls']['original'],
+                'thumbnail_url' => $uploadResult['urls']['thumbnails']['medium']['url'] ?? null,
                 'mime_type' => $uploadResult['mime_type'],
-                'thumbnails' => json_encode($uploadResult['urls']['thumbnails'] ?? []),
+                'cloudflare_path' => $uploadResult['path'],
+                'metadata' => [
+                    'original_name' => $uploadResult['filename'],
+                    'cloudflare_urls' => $uploadResult['urls'],
+                    'upload_type' => $type,
+                ],
             ]);
-            */
+            
+            Log::info("Enregistrement média sauvegardé pour le store {$storeId}: {$uploadResult['filename']}");
         } catch (\Exception $e) {
             Log::error("Erreur lors de la sauvegarde de l'enregistrement média: " . $e->getMessage());
         }
