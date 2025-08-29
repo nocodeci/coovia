@@ -248,6 +248,8 @@ export function useSanctumAuth() {
           const response = await getUser();
           if (response.success && response.user) {
             console.log('Utilisateur authentifié trouvé:', response.user);
+            // Synchroniser avec le store Zustand
+            storeLogin(response.user, storedToken);
           }
         } catch (error) {
           // Token invalide, nettoyer silencieusement
@@ -263,7 +265,7 @@ export function useSanctumAuth() {
     };
 
     checkAuth();
-  }, []); // Seulement au montage du composant
+  }, [user, storeLogin]); // Ajouter storeLogin aux dépendances
 
   return {
     // État

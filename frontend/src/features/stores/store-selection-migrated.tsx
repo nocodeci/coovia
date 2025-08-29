@@ -7,6 +7,7 @@ import { LogOut, Plus, RefreshCw, ArrowRight, Building2, Search, X, ChevronDown,
 import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 import { useStore } from "@/context/store-context"
 import { AuthTestComponent } from "@/components/AuthTestComponent"
+import { ProtectedRoute } from "@/components/ProtectedRoute"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -24,6 +25,14 @@ type Store = {
 }
 
 export function StoreSelectionMigrated() {
+  return (
+    <ProtectedRoute>
+      <StoreSelectionContent />
+    </ProtectedRoute>
+  )
+}
+
+function StoreSelectionContent() {
   const navigate = useNavigate()
   const { user, logout } = useSanctumAuth()
   const { stores, setCurrentStore, isLoading, error, refreshStores } = useStore()
