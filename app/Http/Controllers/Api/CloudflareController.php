@@ -290,27 +290,44 @@ class CloudflareController extends Controller
     protected function saveMediaRecord(array $uploadResult, string $type, string $storeId): void
     {
         try {
-            // Utiliser le modèle StoreMediaFile pour sauvegarder les informations
-            \App\Models\StoreMediaFile::create([
+            Log::info("🔥 DEBUT saveMediaRecord - Store: {$storeId}, Type: {$type}, Filename: " . ($uploadResult['filename'] ?? 'unknown'));
+            Log::info("🔥 uploadResult complet: " . json_encode($uploadResult));
+            
+            // Vérifier la structure des données
+            if (!isset($uploadResult['filename']) || !isset($uploadResult['size']) || !isset($uploadResult['urls']['original'])) {
+                Log::error("🔥 Structure de uploadResult invalide - Champs manquants");
+                Log::error("🔥 uploadResult keys: " . json_encode(array_keys($uploadResult)));
+                return;
+            }
+            
+            // Créer l'enregistrement média
+            $mediaFile = \App\Models\StoreMediaFile::create([
                 'store_id' => $storeId,
-                'file_id' => uniqid(),
+                'file_id' => uniqid('media_'),
                 'name' => $uploadResult['filename'],
                 'type' => $type,
                 'size' => $uploadResult['size'],
                 'url' => $uploadResult['urls']['original'],
                 'thumbnail_url' => $uploadResult['urls']['thumbnails']['medium']['url'] ?? null,
-                'mime_type' => $uploadResult['mime_type'],
+                'mime_type' => $uploadResult['mime_type'] ?? 'application/octet-stream',
                 'cloudflare_path' => $uploadResult['path'],
-                'metadata' => [
+                'metadata' => json_encode([
                     'original_name' => $uploadResult['filename'],
                     'cloudflare_urls' => $uploadResult['urls'],
                     'upload_type' => $type,
-                ],
+                    'saved_at' => now()->toISOString(),
+                ]),
             ]);
             
-            Log::info("Enregistrement média sauvegardé pour le store {$storeId}: {$uploadResult['filename']}");
+            Log::info("🔥 SUCCES - Enregistrement média sauvegardé avec ID: {$mediaFile->id} pour le store {$storeId}: {$uploadResult['filename']}");
+            
+            // Vérifier que l'enregistrement existe bien
+            $count = \App\Models\StoreMediaFile::where('store_id', $storeId)->count();
+            Log::info("🔥 Nombre total de médias pour ce store après sauvegarde: {$count}");
+            
         } catch (\Exception $e) {
-            Log::error("Erreur lors de la sauvegarde de l'enregistrement média: " . $e->getMessage());
+            Log::error("🔥 ERREUR saveMediaRecord: " . $e->getMessage());
+            Log::error("🔥 Stack trace: " . $e->getTraceAsString());
         }
     }
 }
