@@ -114,13 +114,22 @@ class CloudflareUploadService
     protected function validateFile(UploadedFile $file): void
     {
         $maxSize = $this->config['upload']['max_file_size'];
-        $allowedTypes = array_merge(...array_values($this->config['upload']['allowed_types']));
+        
+        // Extraire tous les types autorisés de manière correcte
+        $allowedTypes = [];
+        foreach ($this->config['upload']['allowed_types'] as $category => $types) {
+            $allowedTypes = array_merge($allowedTypes, $types);
+        }
 
         if ($file->getSize() > $maxSize) {
             throw new \Exception("Le fichier est trop volumineux. Taille maximale: " . ($maxSize / 1024 / 1024) . "MB");
         }
 
         $extension = strtolower($file->getClientOriginalExtension());
+        
+        // Log pour déboguer
+        Log::info("Validation du fichier: extension={$extension}, types_autorisés=" . implode(', ', $allowedTypes));
+        
         if (!in_array($extension, $allowedTypes)) {
             throw new \Exception("Type de fichier non autorisé. Types autorisés: " . implode(', ', $allowedTypes));
         }
