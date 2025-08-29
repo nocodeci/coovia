@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react"
 import { cache, CACHE_KEYS } from "@/lib/cache"
 import apiService from "@/lib/api"
-import { isAuthenticated } from "@/utils/clear-cache"
+import { useAuthStore } from "@/stores/authStore"
 
 interface Store {
   id: string
@@ -42,6 +42,7 @@ interface StoreProviderProps {
 }
 
 export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
+  const { isAuthenticated, user, token } = useAuthStore()
   const [stores, setStores] = useState<Store[]>([])
   const [currentStore, setCurrentStoreState] = useState<Store | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -59,7 +60,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
       setError(null)
       
       // Vérifier l'authentification d'abord
-      if (!isAuthenticated()) {
+      if (!isAuthenticated || !user || !token) {
         console.log('🚫 Utilisateur non authentifié')
         setError('Vous devez être connecté pour voir vos boutiques')
         setStores([])
