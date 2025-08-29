@@ -12,12 +12,12 @@ return [
 
     'r2' => [
         'driver' => 's3',
-        'key' => env('CLOUDFLARE_R2_ACCESS_KEY_ID', 'dummy'),
-        'secret' => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY', 'dummy'),
-        'region' => env('CLOUDFLARE_R2_DEFAULT_REGION', 'auto'),
-        'bucket' => env('CLOUDFLARE_R2_BUCKET', 'dummy-bucket'),
-        'url' => env('CLOUDFLARE_R2_URL', 'https://dummy.r2.cloudflarestorage.com'),
-        'endpoint' => env('CLOUDFLARE_R2_ENDPOINT', 'https://dummy.r2.cloudflarestorage.com'),
+        'key' => env('CLOUDFLARE_R2_ACCESS_KEY_ID'),
+        'secret' => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
+        'region' => 'auto',
+        'bucket' => env('CLOUDFLARE_R2_BUCKET'),
+        'url' => env('CLOUDFLARE_R2_URL'),
+        'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
         'use_path_style_endpoint' => false,
     ],
 
