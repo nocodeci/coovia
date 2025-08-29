@@ -17,7 +17,7 @@ class CloudflareUploadService
     {
         $this->config = config('cloudflare');
         try {
-            $this->disk = Storage::disk('r2');
+            $this->disk = Storage::disk('cloudflare');
         } catch (\Exception $e) {
             // En mode local, utiliser le disque local
             $this->disk = Storage::disk('local');
