@@ -18,8 +18,10 @@ class CloudflareUploadService
         $this->config = config('cloudflare');
         try {
             $this->disk = Storage::disk('cloudflare');
+            Log::info("Disque Cloudflare R2 configuré avec succès");
         } catch (\Exception $e) {
             // En mode local, utiliser le disque local
+            Log::warning("Erreur configuration Cloudflare R2: " . $e->getMessage() . " - Fallback vers disque local");
             $this->disk = Storage::disk('local');
         }
     }
