@@ -17,7 +17,7 @@ class CloudflareUploadService
     {
         $this->config = config('cloudflare');
         try {
-            $this->disk = Storage::disk('cloudflare');
+            $this->disk = Storage::disk('r2');
             Log::info("Disque Cloudflare R2 configuré avec succès");
         } catch (\Exception $e) {
             // En mode local, utiliser le disque local
@@ -40,11 +40,7 @@ class CloudflareUploadService
             $path = $directory . '/' . $filename;
 
             // Upload du fichier
-            Log::info("Tentative d'upload vers Cloudflare R2: directory={$directory}, filename={$filename}");
-            Log::info("Disque utilisé: " . get_class($this->disk));
-            
             $uploaded = $this->disk->putFileAs($directory, $file, $filename);
-            Log::info("Résultat upload: " . ($uploaded ? 'SUCCÈS' : 'ÉCHEC'));
 
             if (!$uploaded) {
                 throw new \Exception('Échec de l\'upload vers Cloudflare R2');
