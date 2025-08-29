@@ -6,7 +6,6 @@ import { LogOut, Plus, RefreshCw, ArrowRight, Building2, Search, X, ChevronDown,
 
 import { useSanctumAuth } from "@/hooks/useSanctumAuth"
 import { useStore } from "@/context/store-context"
-import { AuthTestComponent } from "@/components/AuthTestComponent"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
 
 import { Button } from "@/components/ui/button"
@@ -356,9 +355,6 @@ function StoreSelectionContent() {
             </main>
           </Card>
         </div>
-        
-        {/* Composant de test d'authentification */}
-        <AuthTestComponent />
       </div>
     </UnifiedPageWrapper>
   )
