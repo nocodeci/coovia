@@ -22,12 +22,12 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'system',
+  defaultTheme = 'light', // Forcer le thème clair par défaut
   storageKey = 'vite-ui-theme',
   ...props
 }: ThemeProviderProps) {
   const [theme, _setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+    () => 'light' // Forcer le thème clair, ignorer le localStorage
   )
 
   useEffect(() => {
@@ -36,9 +36,8 @@ export function ThemeProvider({
 
     const applyTheme = (theme: Theme) => {
       root.classList.remove('light', 'dark') // Remove existing theme classes
-      const systemTheme = mediaQuery.matches ? 'dark' : 'light'
-      const effectiveTheme = theme === 'system' ? systemTheme : theme
-      root.classList.add(effectiveTheme) // Add the new theme class
+      // Forcer le thème clair, ignorer les préférences système
+      root.classList.add('light') // Always add light theme
     }
 
     const handleChange = () => {
@@ -55,8 +54,10 @@ export function ThemeProvider({
   }, [theme])
 
   const setTheme = (theme: Theme) => {
-    localStorage.setItem(storageKey, theme)
-    _setTheme(theme)
+    // Désactiver le changement de thème - toujours forcer le thème clair
+    console.log('🔒 Changement de thème désactivé - thème clair forcé')
+    // localStorage.setItem(storageKey, theme) // Commenté pour empêcher le stockage
+    // _setTheme(theme) // Commenté pour empêcher le changement
   }
 
   const value = {

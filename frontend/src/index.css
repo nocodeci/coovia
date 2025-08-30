@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* Mode sombre désactivé */
 
 :root {
   --radius: 0.625rem;
@@ -183,67 +183,7 @@
   --universal-sidebar-width: 356px;
 }
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.14 0.04 259.21);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  /* Nouvelle couleur principale pour le thème sombre */
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar-foreground: oklch(1 0 0); /* Texte blanc en dark mode aussi */
-  --sidebar-accent: oklch(1 0 0 / 0.15); /* Fond blanc semi-transparent pour la sélection */
-  --sidebar-accent-foreground: oklch(1 0 0); /* Texte blanc pour la sélection */
-
-  /* Polaris dark mode colors */
-  --p-color-bg: var(--background);
-  --p-color-bg-surface: var(--card);
-  --p-color-bg-surface-hover: oklch(0.16 0.045 259.21);
-  --p-color-bg-surface-active: oklch(0.18 0.05 259.21);
-  --p-color-bg-surface-selected: var(--accent);
-  --p-color-bg-surface-secondary: var(--secondary);
-  --p-color-bg-surface-secondary-hover: oklch(0.3 0.045 260.031);
-  --p-color-bg-surface-secondary-active: oklch(0.32 0.05 260.031);
-
-  --p-color-text: var(--foreground);
-  --p-color-text-secondary: var(--muted-foreground);
-  --p-color-text-disabled: oklch(0.5 0.03 256.788);
-  --p-color-text-link: var(--primary);
-  --p-color-text-link-hover: oklch(0.25 0.05 265.755);
-  --p-color-text-link-active: oklch(0.3 0.055 265.755);
-
-  --p-color-border: var(--border);
-  --p-color-border-hover: oklch(1 0 0 / 15%);
-  --p-color-border-focus: var(--ring);
-  --p-color-border-secondary: oklch(1 0 0 / 8%);
-
-  --p-color-icon: oklch(0.8 0.02 247.858);
-  --p-color-icon-hover: var(--foreground);
-  --p-color-icon-secondary: var(--muted-foreground);
-  --p-color-icon-highlight: var(--primary);
-
-  --p-color-bg-fill: var(--card);
-  --p-color-bg-fill-hover: oklch(0.16 0.045 259.21);
-  --p-color-bg-fill-brand: var(--primary);
-  --p-color-bg-fill-brand-hover: oklch(0.25 0.05 265.755);
-}
+/* Mode sombre désactivé - thème clair forcé */
 
 @theme inline {
   --font-inter: "Inter", "sans-serif";
