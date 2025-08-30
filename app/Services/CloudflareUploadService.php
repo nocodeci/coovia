@@ -167,16 +167,27 @@ class CloudflareUploadService
      */
     protected function isImage(UploadedFile $file): bool
     {
+        // Vérification par MIME type (plus fiable)
+        $mimeType = $file->getMimeType();
+        if (str_starts_with($mimeType, 'image/')) {
+            return true;
+        }
+        
+        // Vérification par extension (fallback)
         $imageTypes = $this->config['upload']['allowed_types']['images'] ?? [];
         $extension = strtolower($file->getClientOriginalExtension());
         
-        return in_array($extension, $imageTypes);
+        $isImage = in_array($extension, $imageTypes);
+        
+        Log::info("🔥 Détection image - MIME: {$mimeType}, Extension: {$extension}, Résultat: " . ($isImage ? 'true' : 'false'));
+        
+        return $isImage;
     }
 
     /**
      * Générer les thumbnails pour une image
      */
-    protected function generateThumbnails(UploadedFile $file, string $directory, string $filename): array
+    public function generateThumbnails(UploadedFile $file, string $directory, string $filename): array
     {
         $thumbnails = [];
         $sizes = $this->config['upload']['thumbnails'] ?? [];
@@ -207,6 +218,10 @@ class CloudflareUploadService
 
         } catch (\Exception $e) {
             Log::error("Erreur lors de la génération des thumbnails: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+            
+            // En cas d'erreur, retourner un tableau vide pour éviter les erreurs
+            return [];
         }
 
         return $thumbnails;
