@@ -27,6 +27,8 @@ class CloudflareController extends Controller
             $validator = Validator::make($request->all(), [
                 'file' => 'required|file|max:10240', // 10MB max
                 'directory' => 'string|max:255',
+                'store_id' => 'string|exists:stores,id', // Ajout du store_id optionnel
+                'type' => 'string|in:image,video,document,avatar,product', // Ajout du type optionnel
             ]);
 
             if ($validator->fails()) {
@@ -39,10 +41,18 @@ class CloudflareController extends Controller
 
             $file = $request->file('file');
             $directory = $request->input('directory', 'uploads');
+            $storeId = $request->input('store_id'); // Récupérer le store_id
+            $type = $request->input('type', 'document'); // Récupérer le type
 
             $result = $this->cloudflareService->uploadFile($file, $directory);
 
             if ($result['success']) {
+                // Enregistrer dans la base de données si un store_id est fourni
+                if ($storeId) {
+                    Log::info("🔥 Appel de saveMediaRecord depuis upload() - Store: {$storeId}, Type: {$type}");
+                    $this->saveMediaRecord($result, $type, $storeId);
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Fichier uploadé avec succès',
