@@ -43,12 +43,9 @@ class CloudflareController extends Controller
             $directory = $request->input('directory', 'uploads');
             $storeId = $request->input('store_id'); // Récupérer le store_id
             
-            // Détecter automatiquement le type de fichier si non fourni
-            $type = $request->input('type');
-            if (!$type) {
-                $type = $this->detectFileType($file);
-                Log::info("🔥 Type détecté automatiquement: {$type} pour le fichier: " . $file->getClientOriginalName());
-            }
+            // Détecter automatiquement le type de fichier
+            $type = $this->detectFileType($file);
+            Log::info("🔥 Type détecté automatiquement: {$type} pour le fichier: " . $file->getClientOriginalName());
 
             $result = $this->cloudflareService->uploadFile($file, $directory);
 
@@ -308,6 +305,8 @@ class CloudflareController extends Controller
         $mimeType = $file->getMimeType();
         $extension = strtolower($file->getClientOriginalExtension());
         
+        Log::info("🔥 Détection du type - MIME: {$mimeType}, Extension: {$extension}");
+        
         // Détection par MIME type
         if (str_starts_with($mimeType, 'image/')) {
             return 'image';
@@ -353,6 +352,15 @@ class CloudflareController extends Controller
                 return;
             }
             
+            // Gérer les thumbnails selon le type de fichier
+            $thumbnailUrl = null;
+            if ($type === 'image' && isset($uploadResult['urls']['thumbnails']['medium']['url'])) {
+                $thumbnailUrl = $uploadResult['urls']['thumbnails']['medium']['url'];
+            } elseif ($type === 'image') {
+                // Pour les images sans thumbnail, utiliser l'image originale
+                $thumbnailUrl = $uploadResult['urls']['original'];
+            }
+            
             // Créer l'enregistrement média
             $mediaFile = \App\Models\StoreMediaFile::create([
                 'store_id' => $storeId,
@@ -361,13 +369,15 @@ class CloudflareController extends Controller
                 'type' => $type,
                 'size' => $uploadResult['size'],
                 'url' => $uploadResult['urls']['original'],
-                'thumbnail_url' => $uploadResult['urls']['thumbnails']['medium']['url'] ?? null,
+                'thumbnail_url' => $thumbnailUrl,
                 'mime_type' => $uploadResult['mime_type'] ?? 'application/octet-stream',
                 'cloudflare_path' => $uploadResult['path'],
                 'metadata' => json_encode([
                     'original_name' => $uploadResult['filename'],
                     'cloudflare_urls' => $uploadResult['urls'],
                     'upload_type' => $type,
+                    'detected_mime_type' => $uploadResult['mime_type'],
+                    'file_extension' => pathinfo($uploadResult['filename'], PATHINFO_EXTENSION),
                     'saved_at' => now()->toISOString(),
                 ]),
             ]);
