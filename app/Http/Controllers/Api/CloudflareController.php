@@ -42,7 +42,13 @@ class CloudflareController extends Controller
             $file = $request->file('file');
             $directory = $request->input('directory', 'uploads');
             $storeId = $request->input('store_id'); // Récupérer le store_id
-            $type = $request->input('type', 'document'); // Récupérer le type
+            
+            // Détecter automatiquement le type de fichier si non fourni
+            $type = $request->input('type');
+            if (!$type) {
+                $type = $this->detectFileType($file);
+                Log::info("🔥 Type détecté automatiquement: {$type} pour le fichier: " . $file->getClientOriginalName());
+            }
 
             $result = $this->cloudflareService->uploadFile($file, $directory);
 
@@ -292,6 +298,43 @@ class CloudflareController extends Controller
         }
 
         return $baseDirectory;
+    }
+
+    /**
+     * Détecter automatiquement le type de fichier
+     */
+    protected function detectFileType($file): string
+    {
+        $mimeType = $file->getMimeType();
+        $extension = strtolower($file->getClientOriginalExtension());
+        
+        // Détection par MIME type
+        if (str_starts_with($mimeType, 'image/')) {
+            return 'image';
+        }
+        if (str_starts_with($mimeType, 'video/')) {
+            return 'video';
+        }
+        if (str_starts_with($mimeType, 'audio/')) {
+            return 'audio';
+        }
+        
+        // Détection par extension (fallback)
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+        $videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
+        $audioExtensions = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'wma'];
+        
+        if (in_array($extension, $imageExtensions)) {
+            return 'image';
+        }
+        if (in_array($extension, $videoExtensions)) {
+            return 'video';
+        }
+        if (in_array($extension, $audioExtensions)) {
+            return 'audio';
+        }
+        
+        return 'document';
     }
 
     /**
