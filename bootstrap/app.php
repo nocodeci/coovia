@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         // Configuration pour éviter la redirection vers 'login'
-        $middleware->redirectGuestsTo(function (Request $request) {
+        $middleware->redirectGuestsTo(function (Illuminate\Http\Request $request) {
             if ($request->is('api/*')) {
                 return null; // Pas de redirection pour les API
             }
