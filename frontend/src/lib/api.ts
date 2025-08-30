@@ -24,6 +24,10 @@ class ApiService {
   private baseUrl: string
   private token: string | null = null
   private requestCache = new Map<string, { data: any; timestamp: number; ttl: number }>()
+  
+  // Événements pour la déconnexion automatique
+  private static instance: ApiService
+  private logoutCallbacks: (() => void)[] = []
 
   constructor() {
     // Utilisation de la configuration automatique d'environnement
@@ -38,6 +42,22 @@ class ApiService {
         apiUrl: environment.apiUrl
       })
     }
+    
+    // Singleton pattern
+    if (ApiService.instance) {
+      return ApiService.instance
+    }
+    ApiService.instance = this
+  }
+  
+  // Méthodes pour la déconnexion automatique
+  onLogout(callback: () => void) {
+    this.logoutCallbacks.push(callback)
+  }
+  
+  private triggerLogout() {
+    console.log('🔐 Déclenchement de la déconnexion automatique...')
+    this.logoutCallbacks.forEach(callback => callback())
   }
 
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -94,6 +114,20 @@ class ApiService {
       }
 
       if (!response.ok) {
+        // Gestion spéciale des erreurs 401 (non authentifié)
+        if (response.status === 401) {
+          console.log('🔐 Erreur 401 détectée, token invalide')
+          
+          // Nettoyer le token invalide
+          localStorage.removeItem('sanctum_token')
+          this.token = null
+          
+          // Déclencher la déconnexion automatique
+          this.triggerLogout()
+          
+          throw new Error('Non authentifié. Token manquant ou invalide.')
+        }
+        
         if (response.status === 422) {
           // Validation errors
           const errorMessage = data.message || 'Erreurs de validation'

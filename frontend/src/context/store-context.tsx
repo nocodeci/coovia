@@ -135,9 +135,25 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     } catch (err: any) {
       console.error("🚨 Erreur lors du chargement des boutiques:", err)
       
-      // Gérer les erreurs d'authentification
-      if (err.message && err.message.includes('401')) {
-        setError('Votre session a expiré. Veuillez vous reconnecter.')
+      // Gérer les erreurs d'authentification - DÉCONNEXION AUTOMATIQUE
+      if (err.message && (err.message.includes('401') || err.message.includes('Non authentifié') || err.message.includes('Token manquant'))) {
+        console.log('🔐 Token invalide détecté, déconnexion automatique...')
+        setError('Votre session a expiré. Vous avez été déconnecté automatiquement.')
+        
+        // Déconnexion automatique
+        localStorage.removeItem('sanctum_token')
+        localStorage.removeItem('user')
+        localStorage.removeItem('selectedStoreId')
+        
+        // Réinitialiser l'état
+        setStores([])
+        setCurrentStoreState(null)
+        setHasLoaded(true)
+        setIsLoading(false)
+        
+        // Rediriger vers la page de connexion
+        window.location.href = '/sign-in'
+        return
       } else {
         setError(err.message || "Erreur lors du chargement des boutiques")
       }
@@ -180,6 +196,21 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
       }
     } catch (error: any) {
       console.error("🚨 Erreur lors du chargement des stats:", error)
+      
+      // Gérer les erreurs d'authentification - DÉCONNEXION AUTOMATIQUE
+      if (error.message && (error.message.includes('401') || error.message.includes('Non authentifié') || error.message.includes('Token manquant'))) {
+        console.log('🔐 Token invalide détecté dans loadStoreStats, déconnexion automatique...')
+        
+        // Déconnexion automatique
+        localStorage.removeItem('sanctum_token')
+        localStorage.removeItem('user')
+        localStorage.removeItem('selectedStoreId')
+        
+        // Rediriger vers la page de connexion
+        window.location.href = '/sign-in'
+        return
+      }
+      
       throw error
     }
   }
@@ -229,8 +260,33 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
         setIsLoading(false)
       }
     }
-
+    
+    // Écouter les événements de déconnexion automatique
+    const handleAutoLogout = () => {
+      console.log('🔐 Déconnexion automatique reçue dans StoreContext')
+      setStores([])
+      setCurrentStoreState(null)
+      setHasLoaded(true)
+      setIsLoading(false)
+      setError('Votre session a expiré. Vous avez été déconnecté automatiquement.')
+      
+      // Rediriger vers la page de connexion
+      setTimeout(() => {
+        window.location.href = '/sign-in'
+      }, 1000)
+    }
+    
+    // S'abonner aux événements de déconnexion
+    apiService.onLogout(handleAutoLogout)
+    
     loadStoresIfAuthenticated()
+    
+    // Cleanup
+    return () => {
+      // Note: On ne peut pas facilement se désabonner avec le système actuel
+      // mais ce n'est pas critique car le composant est détruit
+    }
+
   }, [])
 
   const value: StoreContextType = {
