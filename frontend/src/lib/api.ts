@@ -1,5 +1,6 @@
 import { toast } from "sonner"
 import { cache, CACHE_KEYS } from "./cache"
+import { environment } from "../config/environment"
 
 // Fonction de log conditionnel (pour les logs de cache uniquement)
 export const debugLog = (message: string, data?: any) => {
@@ -25,8 +26,18 @@ class ApiService {
   private requestCache = new Map<string, { data: any; timestamp: number; ttl: number }>()
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'https://api.wozif.com/api'
+    // Utilisation de la configuration automatique d'environnement
+    this.baseUrl = `${environment.apiUrl}/api`
     this.token = localStorage.getItem('sanctum_token')
+    
+    // Log de debug pour l'environnement
+    if (environment.debug) {
+      console.log('🚀 ApiService initialisé avec:', {
+        baseUrl: this.baseUrl,
+        environment: environment.isDevelopment ? 'local' : 'production',
+        apiUrl: environment.apiUrl
+      })
+    }
   }
 
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {

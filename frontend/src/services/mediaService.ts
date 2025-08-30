@@ -1,6 +1,8 @@
 import axios from 'axios'
+import { environment } from '../config/environment'
 
-const API_BASE_URL = 'https://api.wozif.com/api'
+// Configuration automatique de l'URL de l'API
+const API_BASE_URL = `${environment.apiUrl}/api`
 
 export interface MediaItem {
   id: string
@@ -77,7 +79,7 @@ class MediaService {
       console.log('🔍 Récupération des médias pour le store:', storeId)
       console.log('🔍 Paramètres:', params)
       
-      const response = await axios.get(`${API_BASE_URL}/public/stores/${storeId}/media`, {
+      const response = await axios.get(`${API_BASE_URL}/stores/${storeId}/media-public`, {
         headers: this.getAuthHeaders(),
         params
       })
@@ -98,17 +100,18 @@ class MediaService {
     try {
       const formData = new FormData()
       files.forEach(file => {
-        formData.append('files[]', file)
+        formData.append('file', file)  // ✅ Corrigé : 'file' au lieu de 'files[]'
+        // Ajouter le type détecté automatiquement
+        const fileType = this.getFileType(file.type)
+        formData.append('type', fileType)
+        console.log(`📁 Fichier: ${file.name}, Type détecté: ${fileType}, MIME: ${file.type}`)
       })
 
       // Utiliser l'endpoint Cloudflare pour l'upload
-      const response = await axios.post(`${API_BASE_URL}/cloudflare/upload`, formData, {
+      const response = await axios.post(`https://api.wozif.com/api/cloudflare/upload?store_id=${storeId}`, formData, {
         headers: {
           ...this.getAuthHeaders(),
-          'Content-Type': 'multipart/form-data',
-        },
-        params: {
-          store_id: storeId
+          // ✅ Supprimé Content-Type pour FormData
         },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1))
@@ -185,12 +188,19 @@ class MediaService {
   }
 
   /**
-   * Obtenir le type de fichier à partir du MIME type
+   * Obtenir le type de fichier à partir du MIME type et de l'extension
    */
   getFileType(mimeType: string): 'image' | 'video' | 'document' | 'audio' {
+    // Détection par MIME type
     if (mimeType.startsWith('image/')) return 'image'
     if (mimeType.startsWith('video/')) return 'video'
     if (mimeType.startsWith('audio/')) return 'audio'
+    
+    // Fallback pour les types non reconnus
+    if (mimeType === 'application/pdf') return 'document'
+    if (mimeType === 'text/plain') return 'document'
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'document'
+    
     return 'document'
   }
 }

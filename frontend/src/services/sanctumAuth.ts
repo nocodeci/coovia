@@ -1,4 +1,5 @@
 import { useAuthStore } from '../stores/authStore';
+import { environment } from '../config/environment';
 
 export interface LoginCredentials {
   email: string;
@@ -37,9 +38,19 @@ class SanctumAuthService {
   private token: string | null = null;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'https://api.wozif.com/api';
+    // Utilisation de la configuration automatique d'environnement
+    this.baseUrl = `${environment.apiUrl}/api`;
     // Utiliser le store Zustand au lieu de localStorage directement
     this.token = useAuthStore.getState().token;
+    
+    // Log de debug pour l'environnement
+    if (environment.debug) {
+      console.log('🔐 SanctumAuthService initialisé avec:', {
+        baseUrl: this.baseUrl,
+        environment: environment.isDevelopment ? 'local' : 'production',
+        apiUrl: environment.apiUrl
+      })
+    }
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}, skipRefresh = false): Promise<T> {
