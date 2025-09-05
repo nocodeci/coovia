@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Flux de Chargement Simplifié</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .problem {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .problem h3 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+        .solution {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .solution h3 {
+            color: #15803d;
+            margin-top: 0;
+        }
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .before {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        .after {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+        .before h4 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+        .after h4 {
+            color: #16a34a;
+            margin-top: 0;
+        }
+        .code {
+            background: #1e293b;
+            color: #e2e8e0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .benefits {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .benefits h4 {
+            color: #059669;
+            margin-top: 0;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            background: #dcfce7;
+            color: #166534;
+        }
+        .flow {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .flow h3 {
+            color: #0c4a6e;
+            margin-top: 0;
+        }
+        .step {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #0ea5e9;
+        }
+        .step h4 {
+            color: #0c4a6e;
+            margin-top: 0;
+        }
+        .final {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .final h3 {
+            color: #92400e;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Flux de Chargement Simplifié</h1>
+            <p>Élimination des redondances et optimisation de l'UX</p>
+        </div>
+
+        <div class="problem">
+            <h3>❌ Problème Identifié</h3>
+            <p><strong>Cascade de vérifications redondantes :</strong></p>
+            <div class="code">
+1. AuthenticatedLayout
+   ↓ "Vérification de votre compte..." + "Chargement de vos boutiques..."
+   
+2. StoreGuard (REDONDANT)
+   ↓ "Vérification de la boutique..."
+   
+3. Dashboard
+   ↓ "Chargement du dashboard..." (re-vérifie auth + stores)
+            </div>
+            <p><strong>Résultat :</strong> 3 étapes de chargement pour la même vérification !</p>
+        </div>
+
+        <div class="solution">
+            <h3>✅ Solution Implémentée</h3>
+            <div class="before-after">
+                <div class="before">
+                    <h4>❌ Avant</h4>
+                    <div class="code">
+// 3 niveaux de vérification
+AuthenticatedLayout → StoreGuard → Dashboard
+
+// Messages multiples
+"Vérification de votre compte..."
+"Chargement de vos boutiques..."
+"Vérification de la boutique..."
+"Chargement du dashboard..."
+                    </div>
+                </div>
+                <div class="after">
+                    <h4>✅ Après</h4>
+                    <div class="code">
+// 1 niveau de vérification
+AuthenticatedLayout → Dashboard
+
+// Message unifié
+"Chargement de l'application..."
+"Chargement des données..." (stats seulement)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flow">
+            <h3>🔄 Nouveau Flux Simplifié</h3>
+            
+            <div class="step">
+                <h4>1. AuthenticatedLayout</h4>
+                <p><strong>Responsabilité :</strong> Vérification complète (auth + stores + redirection)</p>
+                <div class="code">
+// Vérifie l'authentification
+if (authLoading) return "Chargement de l'application..."
+
+// Vérifie les boutiques
+if (storesLoading) return "Chargement de l'application..."
+
+// Redirige vers la bonne page
+navigate({ to: `/${storeId}/dashboard` })
+                </div>
+            </div>
+
+            <div class="step">
+                <h4>2. Dashboard</h4>
+                <p><strong>Responsabilité :</strong> Chargement des données spécifiques (stats seulement)</p>
+                <div class="code">
+// Charge seulement les stats
+const { data: stats, isLoading: statsLoading } = useStoreStats(storeId)
+
+// Affiche le loader seulement pour les stats
+if (statsLoading) return "Chargement des données..."
+                </div>
+            </div>
+        </div>
+
+        <div class="benefits">
+            <h4>🎯 Bénéfices de la Simplification</h4>
+            <ul>
+                <li><strong>UX Améliorée</strong> : Un seul message "Chargement de l'application..."</li>
+                <li><strong>Performance</strong> : Suppression des vérifications redondantes</li>
+                <li><strong>Maintenabilité</strong> : Code plus simple et clair</li>
+                <li><strong>Logique</strong> : Chaque composant a une responsabilité unique</li>
+                <li><strong>Debugging</strong> : Plus facile de tracer les problèmes</li>
+            </ul>
+        </div>
+
+        <div class="solution">
+            <h3>🔧 Modifications Apportées</h3>
+            
+            <h4>1. Suppression de StoreGuard</h4>
+            <div class="code">
+// _authenticated/$storeId.tsx
+- import { StoreGuard } from '@/components/layout/store-guard'
+- &lt;StoreGuard&gt;...&lt;/StoreGuard&gt;
+
+// Maintenant simple
+&lt;div&gt;&lt;Outlet /&gt;&lt;/div&gt;
+            </div>
+
+            <h4>2. Message unifié dans AuthenticatedLayout</h4>
+            <div class="code">
+// Avant
+message={
+  authLoading 
+    ? "Vérification de votre compte..." 
+    : "Chargement de vos boutiques..."
+}
+
+// Après
+message="Chargement de l'application..."
+            </div>
+
+            <h4>3. Dashboard optimisé</h4>
+            <div class="code">
+// Supprimé
+- const { user, isLoading: authLoading } = useSanctumAuth()
+- const { data: stores, isLoading: storesLoading } = useStores()
+
+// Gardé seulement
+const { data: stats, isLoading: statsLoading } = useStoreStats(storeId)
+            </div>
+        </div>
+
+        <div class="final">
+            <h3>🎉 Résultat Final</h3>
+            <p><strong>Flux de chargement optimisé :</strong></p>
+            <ul>
+                <li>✅ <strong>1 seule vérification</strong> au lieu de 3</li>
+                <li>✅ <strong>Message unifié</strong> : "Chargement de l'application..."</li>
+                <li>✅ <strong>Performance améliorée</strong> : Pas de re-vérifications</li>
+                <li>✅ <strong>Code plus simple</strong> : Responsabilités claires</li>
+                <li>✅ <strong>UX fluide</strong> : Pas de cascade de loaders</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+            <p style="color: #64748b; font-size: 0.9em;">
+                Flux de chargement simplifié et optimisé ! 🚀
+            </p>
+        </div>
+    </div>
+</body>
+</html>

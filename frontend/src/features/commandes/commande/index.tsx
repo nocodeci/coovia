@@ -218,7 +218,7 @@ function Commandes({ storeId }: CommandesProps) {
       <div className="min-h-screen flex items-center justify-center">
         <CircleLoader 
           size="lg" 
-          message="Chargement des commandes..." 
+          message="Préparation des commandes..." 
         />
       </div>
     )

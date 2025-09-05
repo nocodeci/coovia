@@ -94,7 +94,7 @@ export function OptimizedPageWrapper<T>({
   })
 
   if (showSkeleton) {
-    return <OptimizedLoading type="skeleton" message="Chargement en cours..." />
+    return <OptimizedLoading type="skeleton" message="Préparation en cours..." />
   }
 
   if (shouldShowError) {
@@ -127,5 +127,5 @@ export function OptimizedPageWrapper<T>({
     return <>{children}</>
   }
 
-  return <OptimizedLoading type="skeleton" message="Chargement en cours..." />
+  return <OptimizedLoading type="skeleton" message="Préparation en cours..." />
 } 

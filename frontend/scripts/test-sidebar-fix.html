@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Sidebar Fix - Coovia</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-description {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .fix-summary {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 20px;
+        }
+        .fix-summary h3 {
+            margin-top: 0;
+            color: #155724;
+        }
+        .fix-summary ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .fix-summary li {
+            margin-bottom: 8px;
+            color: #155724;
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-title">🔧 Correction du Sidebar - Sous-menus Intégrés</h1>
+        
+        <div class="test-description">
+            <p>Le problème du dropdown Radix UI qui s'affichait en dehors de la sidebar a été corrigé. Les sous-menus sont maintenant intégrés directement dans la sidebar avec un style d'indentation.</p>
+        </div>
+
+        <div class="fix-summary">
+            <h3>✅ Corrections Apportées</h3>
+            <ul>
+                <li><strong>Suppression du dropdown Radix UI</strong> : Plus de dropdown qui s'affiche en dehors de la sidebar</li>
+                <li><strong>Intégration des sous-menus</strong> : Utilisation de <code>SidebarMenuSub</code> pour rester dans la sidebar</li>
+                <li><strong>Style d'indentation</strong> : Les sous-menus s'affichent avec un décalage vers la droite</li>
+                <li><strong>Ligne de séparation</strong> : Bordure gauche pour indiquer la hiérarchie</li>
+                <li><strong>Indicateur visuel</strong> : Petit point pour marquer les sous-éléments</li>
+                <li><strong>Animation fluide</strong> : Animation slideInLeft pour l'apparition</li>
+            </ul>
+        </div>
+
+        <h3>🎨 Nouveau Style des Sous-menus</h3>
+        <div class="code-block">
+/* Styles pour les sous-menus intégrés dans la sidebar */
+[data-sidebar="menu-sub"] {
+  margin-left: 1rem;           /* Indentation vers la droite */
+  border-left: 2px solid var(--border);  /* Ligne de séparation */
+  padding-left: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+[data-sidebar="menu-sub-button"] {
+  padding-left: 1rem;          /* Espacement pour l'indicateur */
+  font-size: 0.875rem;         /* Taille de police plus petite */
+  height: 2rem;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+/* Indicateur visuel pour les sous-menus */
+[data-sidebar="menu-sub-button"]::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background-color: var(--muted-foreground);
+  border-radius: 50%;
+  transition: all 0.2s ease-in-out;
+}
+        </div>
+
+        <h3>🔧 Modifications Techniques</h3>
+        <div class="code-block">
+// 1. Retour à la structure SidebarMenuSub
+&lt;CollapsibleContent className='CollapsibleContent'&gt;
+  &lt;SidebarMenuSub&gt;
+    {item.items.map((subItem) =&gt; (
+      &lt;SidebarMenuSubItem key={subItem.title}&gt;
+        &lt;SidebarMenuSubButton
+          asChild
+          isActive={checkIsActive(href, subItem)}
+        &gt;
+          &lt;Link to={subItem.url} onClick={() =&gt; setOpenMobile(false)}&gt;
+            {subItem.icon && &lt;subItem.icon /&gt;}
+            &lt;span&gt;{subItem.title}&lt;/span&gt;
+            {subItem.badge && &lt;NavBadge&gt;{subItem.badge}&lt;/NavBadge&gt;}
+          &lt;/Link&gt;
+        &lt;/SidebarMenuSubButton&gt;
+      &lt;/SidebarMenuSubItem&gt;
+    ))}
+  &lt;/SidebarMenuSub&gt;
+&lt;/CollapsibleContent&gt;
+        </div>
+
+        <h3>📱 Résultat Final</h3>
+        <ul>
+            <li>✅ Les sous-menus restent dans la sidebar</li>
+            <li>✅ Style d'indentation clair et professionnel</li>
+            <li>✅ Animation fluide d'apparition</li>
+            <li>✅ Indicateurs visuels pour la hiérarchie</li>
+            <li>✅ Compatible avec le thème existant</li>
+            <li>✅ Responsive et accessible</li>
+        </ul>
+
+        <div class="success">
+            <h4>🎉 Problème Résolu !</h4>
+            <p>Le dropdown Radix UI ne s'affiche plus en dehors de la sidebar. Les sous-menus sont maintenant parfaitement intégrés avec un style d'indentation élégant.</p>
+        </div>
+    </div>
+</body>
+</html>

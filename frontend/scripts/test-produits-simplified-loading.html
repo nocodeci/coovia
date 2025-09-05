@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Simplification Chargement Produits</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .content {
+            padding: 40px;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #4f46e5;
+            background: #f8fafc;
+        }
+        .section h2 {
+            color: #1e293b;
+            margin-top: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .section h3 {
+            color: #475569;
+            margin-top: 25px;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .success {
+            background: #dcfce7;
+            border-left-color: #16a34a;
+            color: #166534;
+        }
+        .success h2 {
+            color: #166534;
+        }
+        .warning {
+            background: #fef3c7;
+            border-left-color: #d97706;
+            color: #92400e;
+        }
+        .warning h2 {
+            color: #92400e;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .before {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        .after {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+        .before h4 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+        .after h4 {
+            color: #16a34a;
+            margin-top: 0;
+        }
+        .checklist {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .checklist h3 {
+            color: #166534;
+            margin-top: 0;
+        }
+        .checklist ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .checklist li {
+            margin: 8px 0;
+            color: #166534;
+        }
+        .checklist li::marker {
+            content: "✅ ";
+        }
+        .media-example {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .media-example h3 {
+            color: #0369a1;
+            margin-top: 0;
+        }
+        .flow-diagram {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .flow-step {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            position: relative;
+        }
+        .flow-step::before {
+            content: "→";
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4f46e5;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .flow-step:first-child::before {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Simplification Chargement Produits</h1>
+            <p>Suppression des vérifications redondantes - Approche features/media</p>
+        </div>
+
+        <div class="content">
+            <!-- Problème identifié -->
+            <div class="section warning">
+                <h2>⚠️ Problème Identifié</h2>
+                <p>La page produits faisait des vérifications d'authentification redondantes qui gâchaient l'expérience utilisateur avec des messages "Vérification en cours...". Ces vérifications sont déjà faites au niveau du layout parent.</p>
+                
+                <div class="media-example">
+                    <h3>🎨 Approche de features/media (Référence)</h3>
+                    <p>La page media va directement au contenu car les vérifications d'auth sont faites au niveau du layout parent. Elle affiche directement les skeletons pendant le chargement des données.</p>
+                </div>
+            </div>
+
+            <!-- Solution appliquée -->
+            <div class="section success">
+                <h2>✅ Solution Appliquée</h2>
+                <p>Suppression complète des vérifications d'authentification redondantes dans la page produits. La page charge maintenant directement avec les skeletons, comme dans features/media.</p>
+                
+                <div class="comparison">
+                    <div class="before">
+                        <h4>❌ Avant - Vérifications Redondantes</h4>
+                        <div class="code-block">
+// Hooks d'auth redondants
+const { data: user, isLoading: authLoading, isError: authError } = useAuth()
+const { data: stores, isLoading: storesLoading, isError: storesError } = useStores()
+
+// Vérifications bloquantes
+if (isAuthLoading) {
+  return &lt;div&gt;Vérification en cours...&lt;/div&gt;
+}
+
+if (authError) {
+  return &lt;div&gt;Erreur d'authentification&lt;/div&gt;
+}
+
+if (!user) {
+  return &lt;div&gt;Accès refusé&lt;/div&gt;
+}
+
+if (!currentStore) {
+  return &lt;div&gt;Aucune boutique sélectionnée&lt;/div&gt;
+}
+                        </div>
+                    </div>
+                    <div class="after">
+                        <h4>✅ Après - Approche Simplifiée</h4>
+                        <div class="code-block">
+// Les vérifications d'auth sont faites au niveau du layout parent
+// On récupère seulement la boutique actuelle depuis le contexte
+const { currentStore } = useStore()
+
+// On peut directement afficher la page avec les skeletons
+return (
+  &lt;&gt;
+    &lt;ProductsTopBar /&gt;
+    {productsLoading ? (
+      &lt;ProductHeaderSkeleton /&gt;
+    ) : (
+      &lt;ProductsHeader /&gt;
+    )}
+    {productsLoading ? (
+      &lt;AccessibleTableSkeleton /&gt;
+    ) : (
+      &lt;ProductListTable /&gt;
+    )}
+  &lt;/&gt;
+)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flux de chargement -->
+            <div class="section">
+                <h2>🔄 Nouveau Flux de Chargement</h2>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <strong>1. Layout Parent</strong><br>
+                        Vérifications d'authentification et de boutique
+                    </div>
+                    <div class="flow-step">
+                        <strong>2. Page Produits</strong><br>
+                        Affichage immédiat avec ProductsTopBar
+                    </div>
+                    <div class="flow-step">
+                        <strong>3. Chargement Données</strong><br>
+                        Skeletons pour header et table pendant le chargement
+                    </div>
+                    <div class="flow-step">
+                        <strong>4. Contenu Final</strong><br>
+                        Affichage des données une fois chargées
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avantages de la solution -->
+            <div class="section success">
+                <h2>🚀 Avantages de la Solution</h2>
+                
+                <div class="checklist">
+                    <h3>✅ Expérience Utilisateur</h3>
+                    <ul>
+                        <li><strong>Chargement immédiat :</strong> Plus d'attente pour les vérifications</li>
+                        <li><strong>Skeletons visuels :</strong> L'utilisateur voit la structure de la page</li>
+                        <li><strong>Pas de messages bloquants :</strong> Plus de "Vérification en cours..."</li>
+                        <li><strong>UX fluide :</strong> Transition directe vers le contenu</li>
+                        <li><strong>Cohérence :</strong> Même approche que features/media</li>
+                    </ul>
+                </div>
+
+                <div class="checklist">
+                    <h3>✅ Avantages Techniques</h3>
+                    <ul>
+                        <li><strong>Code simplifié :</strong> Moins de logique redondante</li>
+                        <li><strong>Performance :</strong> Pas de vérifications multiples</li>
+                        <li><strong>Maintenabilité :</strong> Logique centralisée dans le layout</li>
+                        <li><strong>Fiabilité :</strong> Moins de points de défaillance</li>
+                        <li><strong>Debugging :</strong> Plus facile à diagnostiquer</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Comparaison avec Media -->
+            <div class="section">
+                <h2>🎨 Comparaison avec features/media</h2>
+                
+                <div class="media-example">
+                    <h3>✅ features/media (Référence)</h3>
+                    <ul>
+                        <li>Pas de vérifications d'auth dans la page</li>
+                        <li>Affichage immédiat du contenu</li>
+                        <li>Skeletons pendant le chargement des médias</li>
+                        <li>Message contextuel : "Préparation des médias..."</li>
+                    </ul>
+                </div>
+
+                <div class="media-example">
+                    <h3>✅ features/produits (Maintenant aligné)</h3>
+                    <ul>
+                        <li>Pas de vérifications d'auth dans la page</li>
+                        <li>Affichage immédiat du contenu</li>
+                        <li>Skeletons pendant le chargement des produits</li>
+                        <li>Pas de message bloquant</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Fichiers modifiés -->
+            <div class="section">
+                <h2>📁 Fichiers Modifiés</h2>
+                
+                <h3>Page Produits</h3>
+                <ul>
+                    <li><code>src/features/produits/produit/index.tsx</code></li>
+                </ul>
+
+                <h3>Changements Effectués</h3>
+                <ul>
+                    <li>Suppression des imports <code>useAuth</code> et <code>useStores</code></li>
+                    <li>Suppression des vérifications d'authentification</li>
+                    <li>Suppression des messages "Vérification en cours..."</li>
+                    <li>Suppression des composants <code>ErrorRetrySection</code> et <code>CircleLoader</code></li>
+                    <li>Simplification du code avec seulement <code>useStore</code> pour la boutique actuelle</li>
+                </ul>
+            </div>
+
+            <!-- Instructions de test -->
+            <div class="section warning">
+                <h2>🧪 Instructions de Test</h2>
+                <p>Pour vérifier que les changements fonctionnent correctement :</p>
+                
+                <div class="checklist">
+                    <h3>✅ Tests à Effectuer</h3>
+                    <ul>
+                        <li>Naviguer vers Produits - Vérifier l'affichage immédiat</li>
+                        <li>Vérifier que "Vérification en cours..." n'apparaît plus</li>
+                        <li>Vérifier l'affichage des skeletons pendant le chargement</li>
+                        <li>Comparer avec la page Media pour la cohérence</li>
+                        <li>Tester la performance de chargement</li>
+                        <li>Vérifier l'accessibilité avec screen reader</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Résultat final -->
+            <div class="section success">
+                <h2>🎉 Résultat Final</h2>
+                <p>La page produits est maintenant parfaitement alignée avec l'approche de <code>features/media</code> :</p>
+                
+                <div class="checklist">
+                    <h3>✅ État Final</h3>
+                    <ul>
+                        <li><strong>Chargement immédiat :</strong> Plus d'attente pour les vérifications</li>
+                        <li><strong>Skeletons contextuels :</strong> Affichage de la structure pendant le chargement</li>
+                        <li><strong>Pas de messages bloquants :</strong> Plus de "Vérification en cours..."</li>
+                        <li><strong>Code simplifié :</strong> Logique centralisée dans le layout parent</li>
+                        <li><strong>UX cohérente :</strong> Même approche que features/media</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

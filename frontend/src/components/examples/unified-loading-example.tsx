@@ -54,7 +54,7 @@ export function ExamplePage() {
       error={error?.message || null}
       cacheKey="users-page"
       resourceKey="users"
-      loadingMessage="Chargement des utilisateurs..."
+      loadingMessage="Préparation des utilisateurs..."
       loadingType="skeleton"
     >
       <div className="p-6">
@@ -97,7 +97,7 @@ export function ExampleSection() {
         error={error?.message || null}
         cacheKey="products-section"
         resourceKey="products"
-        loadingMessage="Chargement des produits..."
+        loadingMessage="Préparation des produits..."
         loadingType="spinner"
         skeleton={
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -142,7 +142,7 @@ export function ExampleContent() {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Utilisateurs (Chargement local)</h2>
+      <h2 className="text-xl font-semibold mb-4">Utilisateurs (Préparation locale)</h2>
       
       <UnifiedContentWrapper
         data={users}
@@ -194,7 +194,7 @@ export function ExampleDashboard() {
       error={error}
       cacheKey="dashboard"
       resourceKey="dashboard"
-      loadingMessage="Chargement du tableau de bord..."
+      loadingMessage="Préparation du tableau de bord..."
       loadingType="skeleton"
     >
       <div className="p-6">

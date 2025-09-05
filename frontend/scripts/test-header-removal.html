@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Suppression du Header</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .removal {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .removal h3 {
+            color: #15803d;
+            margin-top: 0;
+        }
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .before {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        .after {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+        .before h4 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+        .after h4 {
+            color: #16a34a;
+            margin-top: 0;
+        }
+        .code {
+            background: #1e293b;
+            color: #e2e8e0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .benefits {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .benefits h4 {
+            color: #059669;
+            margin-top: 0;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            background: #dcfce7;
+            color: #166534;
+        }
+        .files {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .files h3 {
+            color: #0c4a6e;
+            margin-top: 0;
+        }
+        .file-list {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .file-list h4 {
+            color: #374151;
+            margin-top: 0;
+        }
+        .file-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .file-list li {
+            margin: 5px 0;
+        }
+        .final {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .final h3 {
+            color: #92400e;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗑️ Suppression du Header</h1>
+            <p>Élimination du header redondant de l'interface</p>
+        </div>
+
+        <div class="removal">
+            <h3>✅ Header Supprimé <span class="status">TERMINÉ</span></h3>
+            <p><strong>Le header avec le bouton de sidebar et le sélecteur de boutique a été complètement supprimé.</strong></p>
+            
+            <div class="before-after">
+                <div class="before">
+                    <h4>❌ Avant</h4>
+                    <div class="code">
+&lt;header class="bg-background flex h-16 items-center gap-3 p-4 sm:gap-4 header-fixed peer/header fixed z-50 w-[inherit] rounded-md shadow-none"&gt;
+  &lt;button data-slot="sidebar-trigger"&gt;...&lt;/button&gt;
+  &lt;div data-orientation="vertical" role="none"&gt;...&lt;/div&gt;
+  &lt;button data-slot="dropdown-menu-trigger"&gt;
+    &lt;div class="flex items-center space-x-2"&gt;
+      &lt;svg&gt;...&lt;/svg&gt;
+      &lt;span class="truncate"&gt;YOHaN ERIC KOFFI&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;svg&gt;...&lt;/svg&gt;
+  &lt;/button&gt;
+  &lt;div class="flex-1"&gt;&lt;/div&gt;
+  &lt;div class="flex items-center space-x-4"&gt;
+    &lt;div&gt;
+      &lt;h1 class="text-2xl font-bold"&gt;YOHaN ERIC KOFFI&lt;/h1&gt;
+      &lt;p class="text-sm text-muted-foreground"&gt;Dashboard&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;span data-slot="badge"&gt;Inactif&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/header&gt;
+                    </div>
+                </div>
+                <div class="after">
+                    <h4>✅ Après</h4>
+                    <div class="code">
+// Header complètement supprimé
+// Plus de header fixe en haut de page
+// Interface plus épurée
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="files">
+            <h3>📁 Fichiers Modifiés</h3>
+            
+            <div class="file-list">
+                <h4>1. Layout Principal</h4>
+                <ul>
+                    <li><strong>store-layout.tsx</strong> - Suppression du Header et de ses props</li>
+                    <li><strong>header.tsx</strong> - Composant conservé mais non utilisé</li>
+                </ul>
+            </div>
+
+            <div class="file-list">
+                <h4>2. Pages Utilisateurs</h4>
+                <ul>
+                    <li><strong>users/index.tsx</strong> - Suppression du Header fixed</li>
+                    <li><strong>tasks/index.tsx</strong> - Suppression du Header fixed</li>
+                    <li><strong>settings/index.tsx</strong> - Suppression du Header</li>
+                    <li><strong>chats/index.tsx</strong> - Suppression du Header</li>
+                </ul>
+            </div>
+
+            <div class="file-list">
+                <h4>3. Imports Nettoyés</h4>
+                <ul>
+                    <li>Suppression de <code>import { Header } from '@/components/layout/header'</code></li>
+                    <li>Suppression des balises <code>&lt;Header&gt;</code> et <code>&lt;Header fixed&gt;</code></li>
+                    <li>Conservation de la structure Main pour le contenu</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="benefits">
+            <h4>🎯 Bénéfices de la Suppression</h4>
+            <ul>
+                <li><strong>Interface Épurée</strong> : Plus d'header fixe encombrant</li>
+                <li><strong>Espace Maximisé</strong> : Plus d'espace pour le contenu principal</li>
+                <li><strong>UX Simplifiée</strong> : Moins d'éléments visuels distrayants</li>
+                <li><strong>Performance</strong> : Moins de composants à rendre</li>
+                <li><strong>Maintenabilité</strong> : Code plus simple et clair</li>
+            </ul>
+        </div>
+
+        <div class="removal">
+            <h3>🔧 Modifications Techniques</h3>
+            
+            <h4>1. StoreLayout Simplifié</h4>
+            <div class="code">
+// Avant
+&lt;Header fixed&gt;
+  &lt;div className="flex items-center space-x-4"&gt;
+    &lt;div&gt;
+      &lt;h1 className="text-2xl font-bold"&gt;{storeFromUrl.name}&lt;/h1&gt;
+      &lt;p className="text-sm text-muted-foreground"&gt;Dashboard&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;Badge variant={...}&gt;{...}&lt;/Badge&gt;
+  &lt;/div&gt;
+&lt;/Header&gt;
+
+// Après
+&lt;div className="flex flex-col h-full"&gt;
+  &lt;div className="flex-1"&gt;
+    {children}
+  &lt;/div&gt;
+&lt;/div&gt;
+            </div>
+
+            <h4>2. Pages Nettoyées</h4>
+            <div class="code">
+// Suppression systématique
+- import { Header } from '@/components/layout/header'
+- &lt;Header fixed&gt;...&lt;/Header&gt;
+- &lt;Header&gt;...&lt;/Header&gt;
+
+// Conservation de la structure
++ &lt;Main&gt;...&lt;/Main&gt;
++ Contenu principal préservé
+            </div>
+        </div>
+
+        <div class="final">
+            <h3>🎉 Résultat Final</h3>
+            <p><strong>Le header a été complètement supprimé de l'interface !</strong></p>
+            <ul>
+                <li>✅ <strong>Interface épurée</strong> sans header fixe</li>
+                <li>✅ <strong>Espace maximisé</strong> pour le contenu</li>
+                <li>✅ <strong>Code simplifié</strong> et maintenable</li>
+                <li>✅ <strong>UX améliorée</strong> sans distractions</li>
+                <li>✅ <strong>Performance optimisée</strong> avec moins de composants</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+            <p style="color: #64748b; font-size: 0.9em;">
+                Header supprimé avec succès ! 🗑️
+            </p>
+        </div>
+    </div>
+</body>
+</html>

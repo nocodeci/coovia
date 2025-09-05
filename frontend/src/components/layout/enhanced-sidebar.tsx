@@ -192,7 +192,7 @@ function EnhancedTeamSwitcher({ teams }: { teams: any[] }) {
           </div>
           <div className="flex-1 text-left">
             <div className="text-sm font-semibold">
-              {isLoading ? 'Chargement...' : 'Sélectionner une boutique'}
+              {isLoading ? 'Préparation...' : 'Sélectionner une boutique'}
             </div>
             <div className="text-xs text-muted-foreground">
               {isLoading ? 'Vérification des boutiques' : 'Cliquez pour choisir'}
@@ -317,17 +317,17 @@ function EnhancedNavGroup({ title, items }: NavGroup) {
       </SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
-          const key = `${item.title}-${item.url}`
+          const key = `${item.title}-${'url' in item ? item.url : 'collapsible'}`
 
-          if (!item.items)
-            return <EnhancedSidebarMenuLink key={key} item={item} href={href} isTopLevelLink={true} />
+          if (!('items' in item) || !item.items)
+            return <EnhancedSidebarMenuLink key={key} item={item as NavLink} href={href} isTopLevelLink={true} />
 
           if (state === 'collapsed' && !isMobile)
             return (
-              <EnhancedSidebarMenuCollapsedDropdown key={key} item={item} href={href} />
+              <EnhancedSidebarMenuCollapsedDropdown key={key} item={item as NavCollapsible} href={href} />
             )
 
-          return <EnhancedSidebarMenuCollapsible key={key} item={item} href={href} />
+          return <EnhancedSidebarMenuCollapsible key={key} item={item as NavCollapsible} href={href} />
         })}
       </SidebarMenu>
     </SidebarGroup>
@@ -352,7 +352,14 @@ const EnhancedSidebarMenuLink = ({
   isTopLevelLink?: boolean 
 }) => {
   const { setOpenMobile } = useSidebar()
+  const navigate = useNavigate()
   const isActive = checkIsActive(href, item, isTopLevelLink)
+  
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setOpenMobile(false)
+    navigate({ to: item.url })
+  }
   
   return (
     <SidebarMenuItem>
@@ -362,7 +369,7 @@ const EnhancedSidebarMenuLink = ({
         tooltip={item.title}
         className="group relative overflow-hidden"
       >
-        <Link to={item.url} onClick={() => setOpenMobile(false)}>
+        <a href={item.url} onClick={handleClick}>
           {item.icon && (
             <div className="relative">
               <item.icon className="transition-transform group-hover:scale-110" />
@@ -373,7 +380,7 @@ const EnhancedSidebarMenuLink = ({
           )}
           <span className="transition-colors">{item.title}</span>
           {item.badge && <EnhancedNavBadge>{item.badge}</EnhancedNavBadge>}
-        </Link>
+        </a>
       </SidebarMenuButton>
     </SidebarMenuItem>
   )
@@ -388,6 +395,7 @@ const EnhancedSidebarMenuCollapsible = ({
   href: string
 }) => {
   const { setOpenMobile } = useSidebar()
+  const navigate = useNavigate()
   const isActive = checkIsActive(href, item, true)
   
   return (
@@ -418,25 +426,33 @@ const EnhancedSidebarMenuCollapsible = ({
         </CollapsibleTrigger>
         <CollapsibleContent className="CollapsibleContent">
           <SidebarMenuSub>
-            {item.items.map((subItem) => (
-              <SidebarMenuSubItem key={subItem.title}>
-                <SidebarMenuSubButton
-                  asChild
-                  isActive={checkIsActive(href, subItem)}
-                  className="group relative overflow-hidden"
-                >
-                  <Link to={subItem.url} onClick={() => setOpenMobile(false)}>
-                    {subItem.icon && (
-                      <div className="relative">
-                        <subItem.icon className="transition-transform group-hover:scale-110" />
-                      </div>
-                    )}
-                    <span className="transition-colors">{subItem.title}</span>
-                    {subItem.badge && <EnhancedNavBadge>{subItem.badge}</EnhancedNavBadge>}
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ))}
+            {item.items.map((subItem) => {
+              const handleSubItemClick = (e: React.MouseEvent) => {
+                e.preventDefault()
+                setOpenMobile(false)
+                navigate({ to: subItem.url })
+              }
+              
+              return (
+                <SidebarMenuSubItem key={subItem.title}>
+                  <SidebarMenuSubButton
+                    asChild
+                    isActive={checkIsActive(href, subItem)}
+                    className="group relative overflow-hidden"
+                  >
+                    <a href={subItem.url} onClick={handleSubItemClick}>
+                      {subItem.icon && (
+                        <div className="relative">
+                          <subItem.icon className="transition-transform group-hover:scale-110" />
+                        </div>
+                      )}
+                      <span className="transition-colors">{subItem.title}</span>
+                      {subItem.badge && <EnhancedNavBadge>{subItem.badge}</EnhancedNavBadge>}
+                    </a>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              )
+            })}
           </SidebarMenuSub>
         </CollapsibleContent>
       </SidebarMenuItem>
@@ -452,6 +468,8 @@ const EnhancedSidebarMenuCollapsedDropdown = ({
   item: NavCollapsible
   href: string
 }) => {
+  const navigate = useNavigate()
+  
   return (
     <SidebarMenuItem>
       <DropdownMenu>
@@ -482,20 +500,28 @@ const EnhancedSidebarMenuCollapsedDropdown = ({
             {item.title} {item.badge ? `(${item.badge})` : ''}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {item.items.map((sub) => (
-            <DropdownMenuItem key={`${sub.title}-${sub.url}`} asChild>
-              <Link
-                to={sub.url}
-                className={`flex items-center gap-2 ${checkIsActive(href, sub) ? 'bg-accent' : ''}`}
-              >
-                {sub.icon && <sub.icon className="h-4 w-4" />}
-                <span className="max-w-52 text-wrap">{sub.title}</span>
-                {sub.badge && (
-                  <span className="ml-auto text-xs">{sub.badge}</span>
-                )}
-              </Link>
-            </DropdownMenuItem>
-          ))}
+          {item.items.map((sub) => {
+            const handleSubClick = (e: React.MouseEvent) => {
+              e.preventDefault()
+              navigate({ to: sub.url })
+            }
+            
+            return (
+              <DropdownMenuItem key={`${sub.title}-${sub.url}`} asChild>
+                <a
+                  href={sub.url}
+                  onClick={handleSubClick}
+                  className={`flex items-center gap-2 ${checkIsActive(href, sub) ? 'bg-accent' : ''}`}
+                >
+                  {sub.icon && <sub.icon className="h-4 w-4" />}
+                  <span className="max-w-52 text-wrap">{sub.title}</span>
+                  {sub.badge && (
+                    <span className="ml-auto text-xs">{sub.badge}</span>
+                  )}
+                </a>
+              </DropdownMenuItem>
+            )
+          })}
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarMenuItem>
@@ -550,7 +576,7 @@ function EnhancedSidebarFooter({ user }: { user: any }) {
 // Fonction utilitaire pour vérifier l'état actif
 function checkIsActive(href: string, item: NavItem, mainNav = false) {
   const currentPath = href.split('?')[0] 
-  const itemPath = item.url ?? ''
+  const itemPath = 'url' in item ? item.url ?? '' : ''
 
   if (itemPath === '/') {
     return currentPath === '/'; 
@@ -558,7 +584,7 @@ function checkIsActive(href: string, item: NavItem, mainNav = false) {
 
   if (currentPath === itemPath) return true
 
-  if (item.items?.some((i) => currentPath === i.url)) return true
+  if ('items' in item && item.items?.some((i) => currentPath === i.url)) return true
 
   if (mainNav && currentPath.startsWith(itemPath)) return true
 

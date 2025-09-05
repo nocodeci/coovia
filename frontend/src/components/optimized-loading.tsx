@@ -6,7 +6,7 @@ interface OptimizedLoadingProps {
   message?: string
 }
 
-export function OptimizedLoading({ type = "spinner", message = "Chargement en cours..." }: OptimizedLoadingProps) {
+export function OptimizedLoading({ type = "spinner", message = "Préparation en cours..." }: OptimizedLoadingProps) {
   if (type === "skeleton") {
     return (
       <div className="min-h-screen bg-background p-6">

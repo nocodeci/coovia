@@ -5,7 +5,7 @@ interface LoadingScreenProps {
   size?: "sm" | "md" | "lg"
 }
 
-export function LoadingScreen({ message = "Chargement en cours...", size = "md" }: LoadingScreenProps) {
+export function LoadingScreen({ message = "Préparation en cours...", size = "md" }: LoadingScreenProps) {
   const sizeMap = {
     sm: "sm" as const,
     md: "md" as const,

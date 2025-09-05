@@ -10,7 +10,7 @@ interface CircleLoaderProps {
 export function CircleLoader({ 
   size = "md", 
   className,
-  message = "Chargement en cours..." 
+  message = "Préparation en cours..." 
 }: CircleLoaderProps) {
   const sizeClasses = {
     sm: "h-4 w-4",

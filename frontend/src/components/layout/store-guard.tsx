@@ -1,6 +1,8 @@
 import { ReactNode, useEffect, useRef } from "react"
 import { useStore } from "@/context/store-context"
 import { useNavigate, useLocation } from "@tanstack/react-router"
+import { FullPageLoader } from "@/components/ui/full-page-loader"
+import { IGNORED_STORE_PATHS } from "@/constants/routes"
 
 interface StoreGuardProps {
   children: ReactNode
@@ -16,8 +18,8 @@ export function StoreGuard({ children }: StoreGuardProps) {
     // Éviter les redirections multiples
     if (isLoading) return
 
-    // Si on est sur store-selection ou create-store, ne rien faire
-    if (location.pathname === '/store-selection' || location.pathname === '/create-store') {
+    // Si on est sur une route ignorée, ne rien faire
+    if (IGNORED_STORE_PATHS.includes(location.pathname as any)) {
       return
     }
 
@@ -33,7 +35,7 @@ export function StoreGuard({ children }: StoreGuardProps) {
     // Si on est sur une route avec storeId mais que la boutique ne correspond pas
     // Ne pas rediriger automatiquement, laisser le StoreSelector gérer les changements
     const pathSegments = location.pathname.split('/')
-    const urlStoreId = pathSegments[1] // Le storeId est le premier segment après le slash
+    const urlStoreId = pathSegments[1] || null // Vérification null pour les routes sans storeId
     
     // Reset le flag de redirection quand l'URL correspond
     if (urlStoreId && currentStore.id === urlStoreId) {
@@ -41,33 +43,19 @@ export function StoreGuard({ children }: StoreGuardProps) {
     }
   }, [currentStore?.id, isLoading, location.pathname, navigate])
 
-  // Si on est sur store-selection ou create-store, afficher le contenu sans vérification
-  if (location.pathname === '/store-selection' || location.pathname === '/create-store') {
+  // Si on est sur une route ignorée, afficher le contenu sans vérification
+  if (IGNORED_STORE_PATHS.includes(location.pathname as any)) {
     return <>{children}</>
   }
 
   // Si en cours de chargement, afficher un loader
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-neutral-600">Vérification de la boutique...</p>
-        </div>
-      </div>
-    )
+    return <FullPageLoader message="Vérification de la boutique..." />
   }
 
   // Si aucune boutique n'est sélectionnée, ne rien afficher (redirection en cours)
   if (!currentStore) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-neutral-600">Redirection vers la sélection de boutique...</p>
-        </div>
-      </div>
-    )
+    return <FullPageLoader message="Redirection vers la sélection de boutique..." />
   }
 
   // Si tout est correct, afficher le contenu

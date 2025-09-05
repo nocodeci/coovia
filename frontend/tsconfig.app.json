@@ -18,7 +18,11 @@
     /* Alias */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/components/ui/*": ["./components/ui/*"],
+      "@/config/*": ["./config/*"],
+      "@/docs/*": ["./docs/*"],
+      "@/scripts/*": ["./scripts/*"]
     },
 
     /* Linting - Temporarily disabled for deployment */

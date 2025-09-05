@@ -1,79 +1,79 @@
-# Shadcn Admin Dashboard
+# Frontend Coovia - Plateforme E-commerce Multivendeur
 
-Admin Dashboard UI crafted with Shadcn and Vite. Built with responsiveness and accessibility in mind.
+## 📁 Structure du Projet
 
-![alt text](public/images/shadcn-admin.png)
-
-I've been creating dashboard UIs at work and for my personal projects. I always wanted to make a reusable collection of dashboard UI for future projects; and here it is now. While I've created a few custom components, some of the code is directly adapted from ShadcnUI examples.
-
-> This is not a starter project (template) though. I'll probably make one in the future.
-
-## Features
-
-- Light/dark mode
-- Responsive
-- Accessible
-- With built-in Sidebar component
-- Global Search Command
-- 10+ pages
-- Extra custom components
-
-## Tech Stack
-
-**UI:** [ShadcnUI](https://ui.shadcn.com) (TailwindCSS + RadixUI)
-
-**Build Tool:** [Vite](https://vitejs.dev/)
-
-**Routing:** [TanStack Router](https://tanstack.com/router/latest)
-
-**Type Checking:** [TypeScript](https://www.typescriptlang.org/)
-
-**Linting/Formatting:** [Eslint](https://eslint.org/) & [Prettier](https://prettier.io/)
-
-**Icons:** [Tabler Icons](https://tabler.io/icons)
-
-**Auth (partial):** [Clerk](https://go.clerk.com/GttUAaK)
-
-## Run Locally
-
-Clone the project
-
-```bash
-  git clone https://github.com/satnaing/shadcn-admin.git
+```
+coovia/frontend/
+├── 📁 src/                    # Code source principal
+│   ├── 📁 components/         # Composants réutilisables
+│   ├── 📁 features/           # Fonctionnalités par domaine
+│   ├── 📁 pages/              # Pages de l'application
+│   ├── 📁 routes/             # Configuration des routes
+│   ├── 📁 hooks/              # Hooks personnalisés
+│   ├── 📁 services/           # Services API
+│   ├── 📁 types/              # Définitions TypeScript
+│   └── 📁 utils/              # Utilitaires
+├── 📁 components/             # Composants UI de base
+│   └── 📁 ui/                 # Composants UI shadcn/ui
+├── 📁 config/                 # Fichiers de configuration
+├── 📁 docs/                   # Documentation du projet
+├── 📁 scripts/                # Scripts de test et utilitaires
+├── 📁 public/                 # Assets statiques
+└── 📁 docker/                 # Configuration Docker
 ```
 
-Go to the project directory
+## 🚀 Démarrage Rapide
 
 ```bash
-  cd shadcn-admin
+# Installation des dépendances
+npm install
+
+# Développement
+npm run dev
+
+# Build de production
+npm run build
+
+# Preview de production
+npm run preview
 ```
 
-Install dependencies
+## 📚 Documentation
 
-```bash
-  pnpm install
-```
+Toute la documentation détaillée se trouve dans le dossier `docs/` :
+- Guide d'authentification
+- Configuration des domaines
+- Optimisations de performance
+- Guides de déploiement
 
-Start the server
+## 🛠️ Configuration
 
-```bash
-  pnpm run dev
-```
+Les fichiers de configuration sont organisés dans `config/` :
+- TypeScript : `tsconfig.*.json`
+- ESLint : `eslint.config.js`
+- Composants : `components.json`
 
-## Sponsoring this project ❤️
+## 🧪 Tests et Scripts
 
-If you find this project helpful or use this in your own work, consider [sponsoring me](https://github.com/sponsors/satnaing) to support development and maintenance. You can [buy me a coffee](https://buymeacoffee.com/satnaing) as well. Don’t worry, every penny helps. Thank you! 🙏
+Les scripts de test et utilitaires sont dans `scripts/` :
+- Tests d'authentification
+- Scripts de déploiement
+- Outils de debug
 
-For questions or sponsorship inquiries, feel free to reach out at [contact@satnaing.dev](mailto:contact@satnaing.dev).
+## 🎨 Composants UI
 
-### Current Sponsor
+Les composants UI de base (shadcn/ui) sont dans `components/ui/` :
+- button.tsx
+- input.tsx
+- popover.tsx
+- select.tsx
+- etc.
 
-- [Clerk](https://go.clerk.com/GttUAaK) - for backing the implementation of Clerk in this project
+## 📦 Technologies
 
-## Author
-
-Crafted with 🤍 by [@satnaing](https://github.com/satnaing)
-
-## License
-
-Licensed under the [MIT License](https://choosealicense.com/licenses/mit/)
+- **React 18** avec TypeScript
+- **Vite** pour le build
+- **TanStack Router** pour le routing
+- **shadcn/ui** pour les composants
+- **Tailwind CSS** pour le styling
+- **Auth0** pour l'authentification

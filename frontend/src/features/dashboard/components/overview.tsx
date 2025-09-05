@@ -78,7 +78,7 @@ export function Overview() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[250px]">
-        <p className="text-muted-foreground">Chargement du graphique...</p>
+        <p className="text-muted-foreground">Préparation du graphique...</p>
       </div>
     )
   }

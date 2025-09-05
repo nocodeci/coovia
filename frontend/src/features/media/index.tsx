@@ -508,7 +508,7 @@ export default function MediaLibrary({ storeId }: MediaLibraryProps) {
             <CardContent className="p-12">
               <div className="text-center">
                 <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">Chargement des médias...</h3>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">Préparation des médias...</h3>
                 <p className="text-slate-500">Veuillez patienter</p>
               </div>
             </CardContent>

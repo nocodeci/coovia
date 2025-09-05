@@ -115,7 +115,7 @@ export function UnifiedPageWrapper<T>({
   cacheTtl,
   children,
   emptyMessage = "Aucune donnée disponible",
-  loadingMessage = "Chargement de la page...",
+  loadingMessage = "Préparation de la page...",
   loadingType = 'skeleton'
 }: UnifiedPageWrapperProps<T>) {
   const { showSkeleton, shouldShowContent, shouldShowError, shouldShowEmpty } = useUnifiedDataLoading({
@@ -191,7 +191,7 @@ export function UnifiedSectionWrapper<T>({
   skeleton,
   emptyState,
   errorState,
-  loadingMessage = "Chargement...",
+  loadingMessage = "Préparation...",
   loadingType = 'spinner'
 }: UnifiedSectionWrapperProps<T>) {
   const { showSkeleton, shouldShowContent, shouldShowError, shouldShowEmpty } = useUnifiedDataLoading({

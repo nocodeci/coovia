@@ -4,13 +4,18 @@ import { useState, useEffect } from "react"
 import { ProductsTopBar } from "./components/products-top-bar"
 import { ProductsHeader } from "./components/products-header"
 import { ProductListTable } from "./components/product-list-table"
+import { ProductHeaderSkeleton } from "./components/product-table-skeleton"
 import { Button } from "@/components/ui/button"
+import { AccessibleButton } from "@/components/ui/accessible-button"
+import { AccessibleTableSkeleton } from "@/components/ui/accessible-skeleton"
+// ErrorRetrySection supprimé car les vérifications sont faites au layout parent
+import { ProductsErrorRetry } from "./components/products-error-retry"
 import { Plus } from "lucide-react"
-import { useAuth } from "@/hooks/useAuthQuery"
-import { useStores } from "@/hooks/useStores"
-import { useParams } from "@tanstack/react-router"
-import { CircleLoader } from "@/components/ui/circle-loader"
-import apiService from "@/lib/api"
+// Les vérifications d'auth sont faites au niveau du layout parent
+import { useProducts } from "@/hooks/useProducts"
+import { useStore } from "@/context/store-context"
+import { useParams, useNavigate } from "@tanstack/react-router"
+// CircleLoader supprimé car plus de vérifications d'auth dans cette page
 
 type TabType = "tous" | "actifs" | "brouillons" | "archives"
 
@@ -22,13 +27,11 @@ interface FilterState {
 export default function Produits() {
   const params = useParams({ from: "/_authenticated/$storeId/produits" })
   const storeId = params.storeId
+  const navigate = useNavigate()
   
-  // Hooks React Query
-  const { data: user, isLoading: authLoading, isError: authError } = useAuth()
-  const { data: stores, isLoading: storesLoading, isError: storesError } = useStores()
-  
-  // Trouver la boutique actuelle
-  const currentStore = stores?.find(store => store.id === storeId)
+  // Les vérifications d'auth sont faites au niveau du layout parent
+  // On récupère seulement la boutique actuelle depuis le contexte
+  const { currentStore } = useStore()
   
   const [activeTab, setActiveTab] = useState<TabType>("tous")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
@@ -36,47 +39,27 @@ export default function Produits() {
     searchTerm: "",
     category: "",
   })
-  const [products, setProducts] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
 
-  // Charger les produits
-  useEffect(() => {
-    const loadProducts = async () => {
-      if (!currentStore?.id) {
-        setLoading(false)
-        return
-      }
+  // Hook React Query pour les produits avec filtres côté backend
+  const { 
+    data: productsData, 
+    isLoading: productsLoading, 
+    isError: productsError,
+    error: productsErrorDetails,
+    refetch: refetchProducts
+  } = useProducts(storeId, {
+    search: filters.searchTerm,
+    category: filters.category,
+    status: activeTab === "tous" ? undefined : activeTab === "actifs" ? "active" : activeTab === "brouillons" ? "draft" : "archived",
+    sortBy: "created_at", // Tri par défaut
+    sortOrder: sortOrder
+  })
 
-      try {
-        setLoading(true)
-        const response = await apiService.getStoreProducts(currentStore.id)
-        
-        if (response.success && response.data) {
-          let productsData = (response.data as any).data || response.data
-          
-          // Filtrer par onglet
-          if (activeTab !== "tous") {
-            const statusMap = {
-              "actifs": "active",
-              "brouillons": "draft", 
-              "archives": "archived"
-            }
-            productsData = productsData.filter((product: any) => 
-              product.status === statusMap[activeTab as keyof typeof statusMap]
-            )
-          }
+  // Extraire les produits des données
+  const products = productsData?.data || []
 
-          setProducts(productsData)
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des produits:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadProducts()
-  }, [currentStore?.id, activeTab])
+  // Note: Les erreurs de produits sont gérées via ProductsErrorRetry dans le rendu
+  // Pas besoin de toast pour éviter la redondance
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab)
@@ -97,83 +80,23 @@ export default function Produits() {
   }
 
   const handleBack = () => {
-    window.location.href = "/"
+    navigate({ to: "/" })
   }
 
   const handleAddProduct = () => {
     if (storeId) {
-      window.location.href = `/${storeId}/produits/addproduit`
+      navigate({ to: "/_authenticated/$storeId/produits/addproduit" })
     } else {
-      window.location.href = "/stores"
+      navigate({ to: "/stores" })
     }
   }
 
-  // États de chargement et d'erreur
-  const isLoading = authLoading || storesLoading || loading
-  const isError = authError || storesError
-
-  // Vérifications avant affichage
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <CircleLoader 
-          size="lg" 
-          message="Chargement des produits..." 
-        />
-      </div>
-    )
-  }
-
-  if (isError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-destructive text-lg font-semibold mb-2">Erreur</div>
-          <div className="text-muted-foreground">
-            {authError ? "Erreur d'authentification" : "Erreur de chargement des boutiques"}
-          </div>
-          <Button 
-            onClick={() => window.location.reload()}
-            className="mt-4"
-          >
-            Réessayer
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-destructive text-lg font-semibold mb-2">Accès refusé</div>
-          <div className="text-muted-foreground">Vous devez être connecté pour accéder à cette page.</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!currentStore) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-destructive text-lg font-semibold mb-2">Aucune boutique sélectionnée</div>
-          <div className="text-muted-foreground">Veuillez sélectionner une boutique pour continuer.</div>
-          <Button 
-            onClick={() => window.location.href = "/store-selection"}
-            className="mt-4"
-          >
-            Sélectionner une boutique
-          </Button>
-        </div>
-      </div>
-    )
-  }
+  // Les vérifications d'auth et de boutique sont faites au niveau du layout parent
+  // On peut directement afficher la page avec les skeletons
 
   return (
     <>
-      {/* ProductsTopBar avec recherche dynamique */}
+      {/* ProductsTopBar - toujours affiché pour une UX fluide */}
       <ProductsTopBar
         activeTab={activeTab}
         filters={filters}
@@ -188,34 +111,51 @@ export default function Produits() {
       {/* Contenu principal avec padding-top pour compenser le TopBar fixe */}
       <div className="polaris-frame" style={{ paddingTop: "6rem" }}>
         <main className="flex-1 space-y-6 p-4 md:p-6" style={{ backgroundColor: "var(--p-color-bg)" }}>
-          <ProductsHeader />
+          {productsLoading ? (
+            <ProductHeaderSkeleton />
+          ) : (
+            <ProductsHeader />
+          )}
 
           {/* Bouton Ajouter un produit */}
           <div className="flex justify-end">
-            <Button
+            <AccessibleButton
               onClick={handleAddProduct}
               className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2"
+              aria-label="Ajouter un nouveau produit"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4" aria-hidden="true" />
               Ajouter un produit
-            </Button>
+            </AccessibleButton>
           </div>
 
-          {/* Table des produits */}
-          <ProductListTable productData={products} />
-
-          <div
-            className="text-center"
-            style={{
-              fontSize: "var(--p-font-size-300)",
-              color: "var(--p-color-text-secondary)",
-            }}
-          >
-            En savoir plus sur les{" "}
-            <a href="#" className="polaris-text-link">
-              produits
-            </a>
-          </div>
+          {/* Table des produits avec skeleton loading */}
+          {productsLoading ? (
+            <AccessibleTableSkeleton rows={5} columns={6} />
+          ) : productsError ? (
+            <ProductsErrorRetry
+              onRetry={() => refetchProducts()}
+              loading={productsLoading}
+              error={productsErrorDetails?.message}
+            />
+          ) : (
+            <>
+              <ProductListTable productData={products} />
+              
+              <div
+                className="text-center"
+                style={{
+                  fontSize: "var(--p-font-size-300)",
+                  color: "var(--p-color-text-secondary)",
+                }}
+              >
+                En savoir plus sur les{" "}
+                <a href="#" className="polaris-text-link">
+                  produits
+                </a>
+              </div>
+            </>
+          )}
         </main>
       </div>
     </>

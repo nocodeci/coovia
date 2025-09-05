@@ -13,9 +13,8 @@ import { RecentSales } from "./components/recent-sales"
 import Paiement from "@/components/paiement"
 import { DashboardTopBar } from "./components/dashboard-top-bar"
 import { useParams, useNavigate } from "@tanstack/react-router"
-import { useSanctumAuth } from "@/hooks/useSanctumAuth"
-import { useStores, useStoreStats } from "@/hooks/useStores"
-import { CircleLoader } from "@/components/ui/circle-loader"
+import { useStoreStats } from "@/hooks/useStores"
+// CircleLoader supprimé car plus de vérifications d'auth dans cette page
 
 interface StatsData {
   revenue: {
@@ -46,16 +45,10 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const storeId = params.storeId
   
-  // Hooks React Query pour les vraies données
-  const { user, isLoading: authLoading } = useSanctumAuth()
-  const { data: stores, isLoading: storesLoading } = useStores()
+  // Hooks React Query pour les données
   const { data: stats, isLoading: statsLoading } = useStoreStats(storeId || '')
-  
-  // État de chargement global
-  const isLoading = authLoading || storesLoading || statsLoading
 
-  // Trouver la vraie boutique actuelle
-  const currentStore = stores?.find(store => store.id === storeId)
+  // La boutique est déjà vérifiée par AuthenticatedLayout
 
   // État du Dynamic Island
   const [dynamicIslandView, setDynamicIslandView] = useState<"idle" | "search" | "filter" | "actions" | "analytics" | "notifications">("idle")
@@ -92,24 +85,13 @@ export default function Dashboard() {
     storeId,
     storeIdType: typeof storeId,
     storeIdLength: storeId?.length,
-    isLoading,
-    authLoading,
-    storesLoading,
     statsLoading,
     hasStats: !!stats,
-    hasDisplayStats: !!displayStats,
-    stores: stores?.map(s => ({ id: s.id, name: s.name }))
+    hasDisplayStats: !!displayStats
   })
 
-  // Afficher le CircleLoader seulement pendant le chargement initial
-  if (authLoading || storesLoading) {
-    console.log('Affichage du CircleLoader - chargement auth/stores')
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <CircleLoader size="lg" message="Chargement du dashboard..." />
-      </div>
-    )
-  }
+  // Les vérifications d'auth sont faites au niveau du layout parent
+  // On peut directement afficher la page avec les skeletons
 
   // Si les stats ne sont pas encore chargées, on affiche le dashboard avec les valeurs par défaut
   console.log('Affichage du dashboard avec les données:', displayStats)
@@ -273,7 +255,9 @@ export default function Dashboard() {
               <Card className="col-span-3">
                 <CardHeader>
                   <CardTitle>Ventes récentes</CardTitle>
-                  <CardDescription>Vous avez fait {displayStats?.sales?.current || 0} ventes ce mois.</CardDescription>
+                  <CardDescription>
+                    Vous avez fait {displayStats?.sales?.current || 0} ventes ce mois.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <RecentSales />

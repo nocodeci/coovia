@@ -135,7 +135,7 @@ export function AuthLoading({ text = "Vérification de l'authentification..." }:
   )
 }
 
-export function PageLoading({ text = "Chargement de la page..." }: { text?: string }) {
+export function PageLoading({ text = "Préparation de la page..." }: { text?: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center space-y-6">
@@ -148,7 +148,7 @@ export function PageLoading({ text = "Chargement de la page..." }: { text?: stri
   )
 }
 
-export function ContentLoading({ text = "Chargement..." }: { text?: string }) {
+export function ContentLoading({ text = "Préparation..." }: { text?: string }) {
   return (
     <div className="flex items-center justify-center py-12">
       <Loading variant="pulse" size="md" text={text} />
@@ -160,7 +160,7 @@ export function ButtonLoading({ size = 'sm' }: { size?: 'sm' | 'md' | 'lg' }) {
   return (
     <div className="flex items-center space-x-2">
       <Loading variant="default" size={size} />
-      <span>Chargement...</span>
+      <span>Préparation...</span>
     </div>
   )
 }

@@ -184,7 +184,7 @@ export function StoresManagement() {
           error={error}
           cacheKey="stores-management"
           resourceKey="stores-management"
-          loadingMessage="Chargement des boutiques..."
+          loadingMessage="Préparation des boutiques..."
           loadingType="skeleton"
         >
           <div className="space-y-6" style={{ paddingTop: "2rem" }}>

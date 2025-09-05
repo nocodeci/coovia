@@ -21,7 +21,7 @@ export function useUnifiedDataLoading<T>({
   cacheKey,
   resourceKey,
   cacheTtl = 5 * 60 * 1000,
-  loadingMessage = 'Chargement des données...',
+  loadingMessage = 'Préparation des données...',
   loadingType = 'spinner',
   fallbackDelay = 300
 }: UseUnifiedDataLoadingProps<T>) {
@@ -92,7 +92,7 @@ export function useUnifiedListLoading<T>({
   cacheKey,
   resourceKey,
   cacheTtl = 10 * 60 * 1000,
-  loadingMessage = 'Chargement de la liste...',
+  loadingMessage = 'Préparation de la liste...',
   loadingType = 'skeleton',
   fallbackDelay = 200
 }: UseUnifiedDataLoadingProps<T[]>) {

@@ -436,16 +436,38 @@ class ApiService {
     return response
   }
 
-  // Product methods - OPTIMISÉ avec pagination
-  async getStoreProducts(storeId: string, page: number = 1, perPage: number = 20) {
-    // Vérifier le cache d'abord
-    const cacheKey = `${CACHE_KEYS.PRODUCTS(storeId)}_page_${page}_per_${perPage}`
+  // Product methods - OPTIMISÉ avec pagination et filtres
+  async getStoreProducts(
+    storeId: string, 
+    page: number = 1, 
+    perPage: number = 20,
+    filters: {
+      search?: string
+      category?: string
+      status?: string
+      sortBy?: string
+      sortOrder?: 'asc' | 'desc'
+    } = {}
+  ) {
+    // Construire les paramètres de requête
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      per_page: perPage.toString(),
+      ...(filters.search && { search: filters.search }),
+      ...(filters.category && { category: filters.category }),
+      ...(filters.status && { status: filters.status }),
+      ...(filters.sortBy && { sort_by: filters.sortBy }),
+      ...(filters.sortOrder && { sort_order: filters.sortOrder }),
+    })
+
+    // Vérifier le cache d'abord (avec filtres dans la clé)
+    const cacheKey = `${CACHE_KEYS.PRODUCTS(storeId)}_${queryParams.toString()}`
     const cachedProducts = cache.get(cacheKey)
     if (cachedProducts) {
       return { success: true, data: cachedProducts, message: 'Produits depuis le cache' }
     }
 
-    const response = await this.request(`/stores/${storeId}/products?page=${page}&per_page=${perPage}`)
+    const response = await this.request(`/stores/${storeId}/products?${queryParams.toString()}`)
     
     // Mettre en cache si succès avec TTL plus long
     if (response.success && response.data) {

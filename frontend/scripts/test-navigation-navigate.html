@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Navigation avec Navigate - Coovia</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .changes-summary {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+        }
+        .changes-summary h3 {
+            margin-top: 0;
+            color: #155724;
+        }
+        .changes-summary ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .changes-summary li {
+            margin-bottom: 8px;
+            color: #155724;
+        }
+        .code-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .code-box {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .code-box h4 {
+            margin-top: 0;
+            color: #555;
+            font-size: 14px;
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            margin-top: 20px;
+        }
+        .benefits {
+            background: #d1ecf1;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid #17a2b8;
+            margin: 20px 0;
+        }
+        .benefits h3 {
+            margin-top: 0;
+            color: #0c5460;
+        }
+        .benefits ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .benefits li {
+            margin-bottom: 8px;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-title">🚀 Test Navigation avec Navigate - Coovia</h1>
+        
+        <div class="changes-summary">
+            <h3>✅ Modifications Apportées</h3>
+            <ul>
+                <li><strong>Import de useNavigate</strong> : Ajouté dans nav-group.tsx et enhanced-sidebar.tsx</li>
+                <li><strong>Remplacement des Link par navigate</strong> : Tous les liens utilisent maintenant navigate()</li>
+                <li><strong>Gestion des événements</strong> : preventDefault() pour éviter la navigation par défaut</li>
+                <li><strong>Fermeture mobile</strong> : setOpenMobile(false) maintenu</li>
+                <li><strong>Navigation programmatique</strong> : navigate({ to: item.url }) pour tous les éléments</li>
+            </ul>
+        </div>
+
+        <div class="code-comparison">
+            <div class="code-box">
+                <h4>❌ Ancien Code (Link direct)</h4>
+                <div class="code-block">
+&lt;Link to={item.url} onClick={() =&gt; setOpenMobile(false)}&gt;
+  {item.icon && &lt;item.icon /&gt;}
+  &lt;span&gt;{item.title}&lt;/span&gt;
+  {item.badge && &lt;NavBadge&gt;{item.badge}&lt;/NavBadge&gt;}
+&lt;/Link&gt;
+                </div>
+            </div>
+
+            <div class="code-box">
+                <h4>✅ Nouveau Code (navigate)</h4>
+                <div class="code-block">
+const navigate = useNavigate()
+
+const handleClick = (e: React.MouseEvent) =&gt; {
+  e.preventDefault()
+  setOpenMobile(false)
+  navigate({ to: item.url })
+}
+
+&lt;a href={item.url} onClick={handleClick}&gt;
+  {item.icon && &lt;item.icon /&gt;}
+  &lt;span&gt;{item.title}&lt;/span&gt;
+  {item.badge && &lt;NavBadge&gt;{item.badge}&lt;/NavBadge&gt;}
+&lt;/a&gt;
+                </div>
+            </div>
+        </div>
+
+        <h3>🔧 Composants Modifiés</h3>
+        <ul>
+            <li><strong>SidebarMenuLink</strong> : Navigation principale</li>
+            <li><strong>SidebarMenuCollapsible</strong> : Sous-menus collapsibles</li>
+            <li><strong>SidebarMenuCollapsedDropdown</strong> : Dropdown en mode collapsed</li>
+            <li><strong>EnhancedSidebarMenuLink</strong> : Version améliorée</li>
+            <li><strong>EnhancedSidebarMenuCollapsible</strong> : Version améliorée avec animations</li>
+            <li><strong>EnhancedSidebarMenuCollapsedDropdown</strong> : Version améliorée du dropdown</li>
+        </ul>
+
+        <div class="benefits">
+            <h3>🎯 Avantages de l'Utilisation de Navigate</h3>
+            <ul>
+                <li><strong>Contrôle programmatique</strong> : Navigation gérée par le code plutôt que par le navigateur</li>
+                <li><strong>Gestion des états</strong> : Possibilité de gérer l'état avant la navigation</li>
+                <li><strong>Validation</strong> : Possibilité de valider les données avant la navigation</li>
+                <li><strong>Logging</strong> : Possibilité de logger les navigations</li>
+                <li><strong>Redirection conditionnelle</strong> : Navigation conditionnelle basée sur l'état</li>
+                <li><strong>Performance</strong> : Évite les rechargements de page inutiles</li>
+            </ul>
+        </div>
+
+        <h3>🧪 Test de Navigation</h3>
+        <ol>
+            <li>Ouvrir l'application Coovia</li>
+            <li>Cliquer sur "Produits" dans la sidebar</li>
+            <li>Vérifier que la navigation se fait via navigate()</li>
+            <li>Cliquer sur "Liste des produits" ou "Ajouter un produit"</li>
+            <li>Vérifier que la navigation fonctionne correctement</li>
+            <li>Tester avec d'autres éléments de menu (Commandes, Media, etc.)</li>
+        </ol>
+
+        <h3>📝 Code de Navigation</h3>
+        <div class="code-block">
+// Exemple d'utilisation dans les composants
+const navigate = useNavigate()
+
+const handleClick = (e: React.MouseEvent) =&gt; {
+  e.preventDefault() // Empêche la navigation par défaut
+  setOpenMobile(false) // Ferme le menu mobile
+  navigate({ to: item.url }) // Navigation programmatique
+}
+
+// Utilisation dans le JSX
+&lt;a href={item.url} onClick={handleClick}&gt;
+  {item.icon && &lt;item.icon /&gt;}
+  &lt;span&gt;{item.title}&lt;/span&gt;
+  {item.badge && &lt;NavBadge&gt;{item.badge}&lt;/NavBadge&gt;}
+&lt;/a&gt;
+        </div>
+
+        <div class="success">
+            <h4>🎉 Navigation avec Navigate Implémentée !</h4>
+            <p>Tous les éléments de navigation de la sidebar utilisent maintenant <code>navigate()</code> au lieu des liens directs. Cela permet un meilleur contrôle de la navigation et une expérience utilisateur plus fluide.</p>
+        </div>
+    </div>
+</body>
+</html>

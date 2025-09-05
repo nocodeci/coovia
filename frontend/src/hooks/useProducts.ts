@@ -7,6 +7,8 @@ export interface ProductFilters {
   search?: string
   category?: string
   status?: string
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
   page?: number
   per_page?: number
 }
@@ -19,7 +21,14 @@ export const useProducts = (storeId: string, filters: ProductFilters = {}) => {
       const response = await apiService.getStoreProducts(
         storeId, 
         filters.page || 1, 
-        filters.per_page || 20
+        filters.per_page || 20,
+        {
+          search: filters.search,
+          category: filters.category,
+          status: filters.status,
+          sortBy: filters.sortBy,
+          sortOrder: filters.sortOrder
+        }
       )
       
       if (!response.success || !response.data) {

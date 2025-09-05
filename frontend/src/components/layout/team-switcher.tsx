@@ -74,7 +74,7 @@ export function TeamSwitcher({
           </div>
           <div className="flex-1 text-left">
             <div className="text-sm font-semibold">
-              {isLoading ? 'Chargement...' : 'Sélectionner une boutique'}
+              {isLoading ? 'Préparation...' : 'Sélectionner une boutique'}
             </div>
             <div className="text-xs text-muted-foreground">
               {isLoading ? 'Vérification des boutiques' : 'Cliquez pour choisir'}

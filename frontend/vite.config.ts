@@ -18,6 +18,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@/components/ui': path.resolve(__dirname, './components/ui'),
+      '@/config': path.resolve(__dirname, './config'),
+      '@/docs': path.resolve(__dirname, './docs'),
+      '@/scripts': path.resolve(__dirname, './scripts'),
       // fix loading all icon chunks in dev mode
       '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
     },

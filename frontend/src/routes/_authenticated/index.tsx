@@ -62,17 +62,18 @@ function AuthenticatedLayout() {
     }
   }, [authLoading, isAuthenticated, user, hasLoaded, storesLoading, currentStore, stores.length, navigate])
 
-  // Afficher un loader optimisé pendant la vérification
+  // Afficher un loader discret pendant la vérification
   if (authLoading || storesLoading) {
     return (
-      <OptimizedLoading 
-        type="spinner"
-        message={
-          authLoading 
-            ? "Vérification de votre compte..." 
-            : "Chargement de vos boutiques..."
-        }
-      />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Vérification en cours...</h3>
+          <p className="text-slate-500">Veuillez patienter</p>
+        </div>
+      </div>
     )
   }
 

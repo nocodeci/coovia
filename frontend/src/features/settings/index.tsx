@@ -8,7 +8,6 @@ import {
   IconSettings,
 } from '@tabler/icons-react'
 import { Separator } from '@/components/ui/separator'
-import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
@@ -18,15 +17,6 @@ import SidebarNav from './components/sidebar-nav'
 export default function Settings() {
   return (
     <>
-      {/* ===== Top Heading ===== */}
-      <Header>
-        <Search />
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
-      </Header>
-
       <Main fixed>
         <div className='flex h-full flex-col'>
           {/* Header Section */}

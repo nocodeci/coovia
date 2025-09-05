@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ProtectedStoreRoute - Améliorations</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .improvement {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .improvement h3 {
+            color: #15803d;
+            margin-top: 0;
+        }
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .before {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        .after {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+        .before h4 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+        .after h4 {
+            color: #16a34a;
+            margin-top: 0;
+        }
+        .code {
+            background: #1e293b;
+            color: #e2e8e0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .benefits {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .benefits h4 {
+            color: #059669;
+            margin-top: 0;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            background: #dcfce7;
+            color: #166534;
+        }
+        .flow {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .flow h3 {
+            color: #374151;
+            margin-top: 0;
+        }
+        .flow-step {
+            background: #f1f5f9;
+            border-left: 3px solid #3b82f6;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .flow-step strong {
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 ProtectedStoreRoute - Améliorations</h1>
+            <p>Optimisation du composant de protection des routes par boutique</p>
+        </div>
+
+        <div class="improvement">
+            <h3>1. Navigation avec useNavigate <span class="status">AMÉLIORÉ</span></h3>
+            <div class="before-after">
+                <div class="before">
+                    <h4>❌ Avant</h4>
+                    <div class="code">
+window.location.href = "/store-selection"
+window.location.href = `/${storeId}/dashboard`
+// Rechargement complet de la page
+                    </div>
+                </div>
+                <div class="after">
+                    <h4>✅ Après</h4>
+                    <div class="code">
+const navigate = useNavigate()
+navigate({ to: "/store-selection" })
+navigate({ to: `/${storeId}/dashboard` })
+// Navigation client-side fluide
+                    </div>
+                </div>
+            </div>
+            <div class="benefits">
+                <h4>Bénéfices</h4>
+                <ul>
+                    <li>Navigation instantanée sans rechargement</li>
+                    <li>Préservation du cache et de l'état</li>
+                    <li>UX plus fluide</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="improvement">
+            <h3>2. useEffect simplifié avec early returns <span class="status">REFACTORISÉ</span></h3>
+            <div class="before-after">
+                <div class="before">
+                    <h4>❌ Avant</h4>
+                    <div class="code">
+useEffect(() => {
+  if (!isLoading) {
+    if (!currentStore) {
+      // redirection
+      return
+    }
+    if (storeId && currentStore.id !== storeId) {
+      // logique complexe imbriquée
+    }
+  }
+}, [currentStore, storeId, stores, isLoading])
+// Logique imbriquée difficile à lire
+                    </div>
+                </div>
+                <div class="after">
+                    <h4>✅ Après</h4>
+                    <div class="code">
+useEffect(() => {
+  if (isLoading) return
+  
+  if (!currentStore) {
+    navigate({ to: "/store-selection" })
+    return
+  }
+  
+  if (storeId && currentStore.id !== storeId) {
+    // logique claire
+  }
+}, [isLoading, currentStore, storeId, stores, navigate])
+// Early returns, logique claire
+                    </div>
+                </div>
+            </div>
+            <div class="benefits">
+                <h4>Bénéfices</h4>
+                <ul>
+                    <li>Code plus lisible</li>
+                    <li>Logique claire et séquentielle</li>
+                    <li>Moins d'imbrication</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="improvement">
+            <h3>3. État de redirection au lieu de null <span class="status">AMÉLIORÉ</span></h3>
+            <div class="before-after">
+                <div class="before">
+                    <h4>❌ Avant</h4>
+                    <div class="code">
+if (!currentStore || (storeId && currentStore.id !== storeId)) {
+  return null
+}
+// Écran vide si redirection échoue
+                    </div>
+                </div>
+                <div class="after">
+                    <h4>✅ Après</h4>
+                    <div class="code">
+const [isRedirecting, setIsRedirecting] = useState(false)
+
+if (isRedirecting || !currentStore || ...) {
+  return &lt;RedirectState message="Redirection en cours..." /&gt;
+}
+// État visuel de redirection
+                    </div>
+                </div>
+            </div>
+            <div class="benefits">
+                <h4>Bénéfices</h4>
+                <ul>
+                    <li>Pas d'écran vide</li>
+                    <li>Feedback visuel pour l'utilisateur</li>
+                    <li>UX plus professionnelle</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="improvement">
+            <h3>4. Accessibilité améliorée <span class="status">OPTIMISÉ</span></h3>
+            <div class="before-after">
+                <div class="before">
+                    <h4>❌ Avant</h4>
+                    <div class="code">
+&lt;p className="text-neutral-600"&gt;
+  Vérification de la boutique...
+&lt;/p&gt;
+// Pas d'attributs d'accessibilité
+                    </div>
+                </div>
+                <div class="after">
+                    <h4>✅ Après</h4>
+                    <div class="code">
+&lt;p 
+  className="text-neutral-600" 
+  aria-live="polite"
+  role="status"
+&gt;
+  Vérification de la boutique...
+&lt;/p&gt;
+// Support des lecteurs d'écran
+                    </div>
+                </div>
+            </div>
+            <div class="benefits">
+                <h4>Bénéfices</h4>
+                <ul>
+                    <li>Support des lecteurs d'écran</li>
+                    <li>Annonces automatiques des changements</li>
+                    <li>Accessibilité complète</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="improvement">
+            <h3>5. Composants réutilisables <span class="status">CRÉÉ</span></h3>
+            <div class="before-after">
+                <div class="before">
+                    <h4>❌ Avant</h4>
+                    <div class="code">
+// Code dupliqué pour les loaders
+&lt;div className="min-h-screen flex items-center justify-center"&gt;
+  &lt;div className="text-center"&gt;
+    &lt;div className="animate-spin..."&gt;&lt;/div&gt;
+    &lt;p&gt;Message...&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+// Duplication de code
+                    </div>
+                </div>
+                <div class="after">
+                    <h4>✅ Après</h4>
+                    <div class="code">
+// Composants réutilisables
+&lt;LoadingState message="Vérification..." /&gt;
+&lt;RedirectState message="Redirection..." /&gt;
+// Code DRY et maintenable
+                    </div>
+                </div>
+            </div>
+            <div class="benefits">
+                <h4>Bénéfices</h4>
+                <ul>
+                    <li>Code DRY (Don't Repeat Yourself)</li>
+                    <li>Composants réutilisables</li>
+                    <li>Maintenance facilitée</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="flow">
+            <h3>🔄 Flux de Vérification Optimisé</h3>
+            <div class="flow-step">
+                <strong>1. Chargement initial</strong> → <LoadingState message="Vérification de la boutique..." />
+            </div>
+            <div class="flow-step">
+                <strong>2. Vérification de la boutique</strong> → Early return si pas de boutique
+            </div>
+            <div class="flow-step">
+                <strong>3. Vérification du storeId</strong> → Navigation si nécessaire
+            </div>
+            <div class="flow-step">
+                <strong>4. État de redirection</strong> → <RedirectState message="Redirection en cours..." />
+            </div>
+            <div class="flow-step">
+                <strong>5. Affichage du contenu</strong> → {children} si tout est correct
+            </div>
+        </div>
+
+        <div style="background: #f0f9ff; border: 1px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 30px 0;">
+            <h3 style="color: #0c4a6e; margin-top: 0;">🎯 Résultat Final</h3>
+            <ul style="margin: 0;">
+                <li><strong>Navigation fluide</strong> : useNavigate au lieu de window.location</li>
+                <li><strong>Code clair</strong> : Early returns et logique séquentielle</li>
+                <li><strong>UX professionnelle</strong> : États visuels au lieu de null</li>
+                <li><strong>Accessibilité</strong> : Support complet des lecteurs d'écran</li>
+                <li><strong>Maintenabilité</strong> : Composants réutilisables</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+            <p style="color: #64748b; font-size: 0.9em;">
+                Le composant ProtectedStoreRoute est maintenant optimisé pour un grand projet ! 🚀
+            </p>
+        </div>
+    </div>
+</body>
+</html>
