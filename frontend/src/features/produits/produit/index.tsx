@@ -114,7 +114,7 @@ export default function Produits() {
           {productsLoading ? (
             <ProductHeaderSkeleton />
           ) : (
-            <ProductsHeader />
+          <ProductsHeader />
           )}
 
           {/* Bouton Ajouter un produit */}
@@ -140,20 +140,20 @@ export default function Produits() {
             />
           ) : (
             <>
-              <ProductListTable productData={products} />
-              
-              <div
-                className="text-center"
-                style={{
-                  fontSize: "var(--p-font-size-300)",
-                  color: "var(--p-color-text-secondary)",
-                }}
-              >
-                En savoir plus sur les{" "}
-                <a href="#" className="polaris-text-link">
-                  produits
-                </a>
-              </div>
+          <ProductListTable productData={products} />
+
+          <div
+            className="text-center"
+            style={{
+              fontSize: "var(--p-font-size-300)",
+              color: "var(--p-color-text-secondary)",
+            }}
+          >
+            En savoir plus sur les{" "}
+            <a href="#" className="polaris-text-link">
+              produits
+            </a>
+          </div>
             </>
           )}
         </main>

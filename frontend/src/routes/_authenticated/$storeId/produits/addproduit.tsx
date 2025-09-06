@@ -8,4 +8,4 @@ export const Route = createFileRoute('/_authenticated/$storeId/produits/addprodu
 function AddProductPage() {
   const { storeId } = Route.useParams()
   return <AddProduct storeId={storeId} />
-} 
+}

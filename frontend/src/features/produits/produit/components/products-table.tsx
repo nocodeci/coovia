@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useNavigate } from "@tanstack/react-router"
 import { 
   MoreHorizontal, 
   Edit, 
@@ -97,6 +98,7 @@ const statusConfig = {
 
 export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTableProps) {
   const { currentStore } = useStore()
+  const navigate = useNavigate()
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -288,10 +290,10 @@ export function ProductsTable({ activeTab, sortOrder, filters }: ProductsTablePr
     
     switch (action) {
       case "view":
-        window.location.href = `/${currentStore?.id}/produits/${product.id}`
+        navigate({ to: "/_authenticated/$storeId/produits/$productId" })
         break
       case "edit":
-        window.location.href = `/${currentStore?.id}/produits/${product.id}/edit`
+        navigate({ to: "/_authenticated/$storeId/produits/$productId/edit" })
         break
       case "duplicate":
         try {

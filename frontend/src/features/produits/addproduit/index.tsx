@@ -40,7 +40,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { RichTextEditor } from "@/components/editor/rich-text-editor"
+import { Editor } from "@/components/blocks/editor-x/editor"
+import { SerializedEditorState } from "lexical"
 import { ShineBorder } from "@/components/magicui/shine-border"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -205,12 +206,69 @@ export default function AddProduct({ storeId }: AddProductProps) {
     return tempDiv.textContent || tempDiv.innerText || ''
   }
 
+  // Fonction utilitaire pour extraire le texte de l'état Lexical
+  const getTextFromEditorState = (editorState: SerializedEditorState): string => {
+    if (!editorState) return ""
+    
+    try {
+      // Extraire le texte brut de l'état sérialisé
+      const root = editorState.root
+      if (!root || !root.children) return ""
+      
+      let text = ""
+      const extractText = (node: any) => {
+        if (node.type === "text") {
+          text += node.text || ""
+        } else if (node.children) {
+          node.children.forEach(extractText)
+        }
+      }
+      
+      root.children.forEach(extractText)
+      return text.trim()
+    } catch (error) {
+      console.error("Erreur lors de l'extraction du texte:", error)
+      return ""
+    }
+  }
+
   // États locaux uniquement (pas d'appels API)
   const [productName, setProductName] = useState("")
   const [selectedType, setSelectedType] = useState("telechargeable")
   const [category, setCategory] = useState("")
   const [price, setPrice] = useState("")
-  const [description, setDescription] = useState("")
+  // État initial pour l'éditeur Lexical
+  const initialEditorState = {
+    root: {
+      children: [
+        {
+          children: [
+            {
+              detail: 0,
+              format: 0,
+              mode: 'normal',
+              style: '',
+              text: '',
+              type: 'text',
+              version: 1,
+            },
+          ],
+          direction: 'ltr',
+          format: '',
+          indent: 0,
+          type: 'paragraph',
+          version: 1,
+        },
+      ],
+      direction: 'ltr',
+      format: '',
+      indent: 0,
+      type: 'root',
+      version: 1,
+    },
+  } as unknown as SerializedEditorState
+
+  const [description, setDescription] = useState<SerializedEditorState>(initialEditorState)
   const [promotionalPrice, setPromotionalPrice] = useState("")
   const [sku, setSku] = useState("")
   const [stockQuantity, setStockQuantity] = useState("")
@@ -265,7 +323,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
     category && 
     selectedType && 
     price && 
-    description.trim() && 
+    getTextFromEditorState(description) && 
     selectedMedia.featuredImage
   )
 
@@ -400,8 +458,9 @@ export default function AddProduct({ storeId }: AddProductProps) {
       return
     }
 
-    const videoHtml = `<iframe src="${videoUrl}" width="560" height="315" frameborder="0" allowfullscreen style="max-width: 100%; height: auto;"></iframe>`
-    setDescription(description + videoHtml)
+    // Pour l'instant, on ne peut pas facilement insérer du HTML dans l'éditeur Lexical
+    // Cette fonctionnalité nécessiterait une implémentation plus complexe
+    console.log("Insertion de vidéo pas encore implémentée pour l'éditeur Lexical")
     setVideoUrl("")
     setIsVideoDialogOpen(false)
     toast.success("Vidéo ajoutée", {
@@ -421,7 +480,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
       // Préparer les données du produit pour l'API
       const productData = {
         name: productName,
-        description,
+        description: getTextFromEditorState(description),
         price: Number.parseFloat(price) || 0,
         sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : null,
         sku,
@@ -443,7 +502,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
         },
         seo: {
           meta_title: productName,
-          meta_description: stripHtml(description).substring(0, 160),
+          meta_description: getTextFromEditorState(description).substring(0, 160),
         },
       }
 
@@ -485,7 +544,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
     try {
       const productData = {
         name: productName || "Produit sans titre",
-        description,
+        description: getTextFromEditorState(description),
         price: Number.parseFloat(price) || 0,
         sale_price: promotionalPrice ? Number.parseFloat(promotionalPrice) : null,
         sku: sku || `draft-${Date.now()}`,
@@ -507,7 +566,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
         },
         seo: {
           meta_title: productName,
-          meta_description: stripHtml(description).substring(0, 160),
+          meta_description: getTextFromEditorState(description).substring(0, 160),
         },
       }
 
@@ -559,7 +618,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
     setSelectedType("telechargeable")
     setCategory("")
     setPrice("")
-    setDescription("")
+    setDescription(initialEditorState)
     setPromotionalPrice("")
     setSku("")
     setStockQuantity("")
@@ -665,7 +724,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
           productName,
           category,
           price,
-          description,
+          description: getTextFromEditorState(description),
           selectedType,
           stockQuantity,
           images: [] // Ajouter les images quand elles seront disponibles
@@ -969,8 +1028,11 @@ export default function AddProduct({ storeId }: AddProductProps) {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <RichTextEditor value={description} onChange={setDescription} />
-                  {!description.trim() && (
+                  <Editor
+                    editorSerializedState={description}
+                    onSerializedChange={setDescription}
+                  />
+                  {!getTextFromEditorState(description) && (
                     <p className="text-xs text-destructive mt-2">La description est requise pour publier le produit</p>
                   )}
                 </CardContent>
@@ -1157,7 +1219,7 @@ export default function AddProduct({ storeId }: AddProductProps) {
                           {!productName.trim() && <li className="text-destructive">• Nom du produit</li>}
                           {!category && <li className="text-destructive">• Catégorie</li>}
                           {!price && <li className="text-destructive">• Prix de vente</li>}
-                          {!description.trim() && <li className="text-destructive">• Description</li>}
+                                                      {!getTextFromEditorState(description) && <li className="text-destructive">• Description</li>}
                           {!selectedMedia.featuredImage && <li className="text-destructive">• Image principale</li>}
                         </ul>
                       </div>

@@ -17,7 +17,7 @@ export function ProduitsPrimaryButtons() {
     }
     
     // Redirige vers la nouvelle route avec le storeId
-    navigate({ to: `/${currentStore.id}/produits/addproduit` })
+    navigate({ to: "/_authenticated/$storeId/produits/addproduit" })
   }
 
   return (

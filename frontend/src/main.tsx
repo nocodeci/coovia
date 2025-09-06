@@ -5,6 +5,17 @@ import NotFound from "@/components/not-found"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 
+// Import Prism.js for syntax highlighting in the editor
+import "prismjs"
+import "prismjs/themes/prism.css"
+import "prismjs/components/prism-javascript"
+import "prismjs/components/prism-typescript"
+import "prismjs/components/prism-jsx"
+import "prismjs/components/prism-tsx"
+import "prismjs/components/prism-css"
+import "prismjs/components/prism-json"
+import "prismjs/components/prism-markdown"
+
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen"
 

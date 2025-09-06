@@ -106,9 +106,9 @@ export default function Dashboard() {
 
   const handleAddProduct = () => {
     if (storeId) {
-      window.location.href = `/${storeId}/produits/addproduit`
+      navigate({ to: "/_authenticated/$storeId/produits/addproduit" })
     } else {
-      window.location.href = "/stores"
+      navigate({ to: "/stores" })
     }
   }
 
