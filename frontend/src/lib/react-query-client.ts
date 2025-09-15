@@ -3,33 +3,40 @@ import { QueryClient } from '@tanstack/react-query'
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Temps avant que les données soient considérées comme périmées
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      // Cache agressif pour les données statiques (stores, produits)
+      staleTime: 10 * 60 * 1000, // 10 minutes (augmenté)
       
-      // Temps de cache (données gardées en mémoire même si non utilisées)
-      gcTime: 10 * 60 * 1000, // 10 minutes (anciennement cacheTime)
+      // Cache plus long pour éviter les re-fetch
+      gcTime: 30 * 60 * 1000, // 30 minutes (augmenté)
       
-      // Nombre de tentatives en cas d'échec
-      retry: 2,
+      // Retry intelligent basé sur le type d'erreur
+      retry: (failureCount, error: any) => {
+        // Ne pas retry sur les erreurs 4xx (client)
+        if (error?.response?.status >= 400 && error?.response?.status < 500) {
+          return false
+        }
+        return failureCount < 3
+      },
       
-      // Temps entre les tentatives
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Backoff exponentiel optimisé
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       
-      // Refetch automatique quand la fenêtre reprend le focus
-      refetchOnWindowFocus: false,
-      
-      // Refetch automatique quand la connexion reprend
+      // Optimisations UX
+      refetchOnWindowFocus: false, // Éviter les re-fetch agressifs
       refetchOnReconnect: true,
+      refetchOnMount: false, // Éviter les re-fetch inutiles
       
-      // Refetch automatique quand le composant remonte
-      refetchOnMount: true,
+      // Cache persistant pour les données critiques
+      networkMode: 'online',
     },
     mutations: {
-      // Nombre de tentatives pour les mutations
-      retry: 1,
+      // Pas de retry pour les mutations (éviter les doublons)
+      retry: false,
       
-      // Temps entre les tentatives pour les mutations
-      retryDelay: 1000,
+      // Gestion d'erreurs centralisée
+      onError: (error: any) => {
+        console.error('Mutation error:', error)
+      },
     },
   },
 })

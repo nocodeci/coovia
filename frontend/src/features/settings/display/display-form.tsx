@@ -56,7 +56,7 @@ const displayFormSchema = z.object({
 type DisplayFormValues = z.infer<typeof displayFormSchema>
 
 export default function DisplayForm() {
-  const { profile, loading, updateProfile } = useUserProfile()
+  const { profile, updateProfile } = useUserProfile()
 
   const form = useForm<DisplayFormValues>({
     resolver: zodResolver(displayFormSchema),
@@ -106,16 +106,6 @@ export default function DisplayForm() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Chargement des préférences...</p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <Form {...form}>

@@ -32,8 +32,8 @@ export default function Settings() {
           <Separator className='my-4 lg:my-6' />
           
           {/* Content Section */}
-          <div className='flex flex-1 min-h-0'>
-            <aside className='w-64 flex-shrink-0 pr-6'>
+          <div className='flex flex-1 min-h-0 overflow-visible'>
+            <aside className='w-64 flex-shrink-0 pr-6 sticky top-4 self-start overflow-visible'>
               <SidebarNav items={sidebarNavItems} />
             </aside>
             
@@ -51,33 +51,18 @@ export default function Settings() {
 
 const sidebarNavItems = [
   {
-    title: 'Paramètres',
+    title: 'Paramètres de la boutique',
     icon: <IconSettings size={18} />,
-    href: '/settings',
+    href: '/settings/store',
   },
   {
-    title: 'Profil',
+    title: 'Paramètres du compte',
     icon: <IconUser size={18} />,
-    href: '/settings/profile',
-  },
-  {
-    title: 'Compte',
-    icon: <IconTool size={18} />,
     href: '/settings/account',
   },
   {
-    title: 'Apparence',
-    icon: <IconPalette size={18} />,
-    href: '/settings/appearance',
-  },
-  {
-    title: 'Notifications',
-    icon: <IconNotification size={18} />,
-    href: '/settings/notifications',
-  },
-  {
-    title: 'Affichage',
-    icon: <IconBrowserCheck size={18} />,
-    href: '/settings/display',
+    title: 'Paramètres avancés',
+    icon: <IconTool size={18} />,
+    href: '/settings/advanced',
   },
 ]

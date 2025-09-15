@@ -52,18 +52,23 @@ export function useZIndex({ layer, offset = 0, custom }: UseZIndexOptions) {
  * Gère automatiquement la priorité selon le type
  */
 export function useLoadingZIndex(type: 'overlay' | 'content' | 'indicator' = 'overlay') {
+  // Calculer les z-index directement sans appeler d'autres hooks
+  const overlayZIndex = useZIndex({ layer: 'loading' })
+  const contentZIndex = useZIndex({ layer: 'overlay', offset: -5 })
+  const indicatorZIndex = useZIndex({ layer: 'content', offset: 5 })
+  
   return useMemo(() => {
     switch (type) {
       case 'overlay':
-        return useZIndex({ layer: 'loading' })
+        return overlayZIndex
       case 'content':
-        return useZIndex({ layer: 'overlay', offset: -5 })
+        return contentZIndex
       case 'indicator':
-        return useZIndex({ layer: 'content', offset: 5 })
+        return indicatorZIndex
       default:
-        return useZIndex({ layer: 'loading' })
+        return overlayZIndex
     }
-  }, [type])
+  }, [type, overlayZIndex, contentZIndex, indicatorZIndex])
 }
 
 /**

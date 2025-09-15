@@ -34,7 +34,7 @@ const notificationsFormSchema = z.object({
 type NotificationsFormValues = z.infer<typeof notificationsFormSchema>
 
 export default function NotificationsForm() {
-  const { profile, loading, updateProfile } = useUserProfile()
+  const { profile, updateProfile } = useUserProfile()
 
   const form = useForm<NotificationsFormValues>({
     resolver: zodResolver(notificationsFormSchema),
@@ -86,16 +86,6 @@ export default function NotificationsForm() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Chargement des préférences...</p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <Form {...form}>

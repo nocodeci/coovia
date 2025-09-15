@@ -296,6 +296,24 @@ export default function AddProduct({ storeId }: AddProductProps) {
   // États pour les combobox
   const [openCategory, setOpenCategory] = useState(false)
 
+  // Fermer le dropdown quand on clique à l'extérieur
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (openCategory && !target.closest('[data-category-dropdown]')) {
+        setOpenCategory(false)
+      }
+    }
+
+    if (openCategory) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openCategory])
+
   // Magasin simulé (côté client uniquement)
   const currentStore = { id: storeId, name: "Boutique sélectionnée" }
 
@@ -824,49 +842,48 @@ export default function AddProduct({ storeId }: AddProductProps) {
                     <Label className="text-sm font-medium">
                       Catégorie <span className="text-destructive">*</span>
                     </Label>
-                    <Popover open={openCategory} onOpenChange={setOpenCategory}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openCategory}
-                          className="w-full h-12 justify-between bg-transparent"
-                        >
-                          {category
-                            ? getCategoriesByType(selectedType).find((cat) => cat.name === category)?.name
-                            : "Sélectionner une catégorie..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-(--radix-popover-trigger-width) min-w-[var(--radix-popover-trigger-width)] max-h-[300px] p-0">
-                        <Command>
-                          <CommandInput placeholder="Rechercher une catégorie..." className="h-9" />
-                          <CommandList>
-                            <CommandEmpty>Aucune catégorie trouvée.</CommandEmpty>
-                            <CommandGroup>
-                              {getCategoriesByType(selectedType).map((cat) => (
-                                <CommandItem
-                                  key={cat.id}
-                                  value={cat.name}
-                                  onSelect={(currentValue) => {
-                                    setCategory(currentValue === category ? "" : currentValue)
-                                    setOpenCategory(false)
-                                  }}
-                                >
-                                  {cat.name}
-                                  <Check
-                                    className={cn(
-                                      "ml-auto h-4 w-4",
-                                      category === cat.name ? "opacity-100" : "opacity-0",
-                                    )}
-                                  />
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <div className="relative" data-category-dropdown>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openCategory}
+                        className="w-full h-12 justify-between bg-transparent"
+                        onClick={() => {
+                          console.log("Bouton catégorie cliqué, openCategory:", openCategory)
+                          setOpenCategory(!openCategory)
+                        }}
+                      >
+                        {category
+                          ? getCategoriesByType(selectedType).find((cat) => cat.name === category)?.name
+                          : "Sélectionner une catégorie..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                      
+                      {openCategory && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                          {(() => {
+                            const categories = getCategoriesByType(selectedType)
+                            console.log("Catégories disponibles pour", selectedType, ":", categories)
+                            return categories.map((cat) => (
+                              <div
+                                key={cat.id}
+                                className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer hover:bg-accent rounded-sm"
+                                onClick={() => {
+                                  console.log("Catégorie sélectionnée:", cat.name)
+                                  setCategory(cat.name)
+                                  setOpenCategory(false)
+                                }}
+                              >
+                                <span>{cat.name}</span>
+                                {category === cat.name && (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </div>
+                            ))
+                          })()}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Section Prix */}

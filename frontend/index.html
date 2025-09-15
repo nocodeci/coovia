@@ -62,13 +62,21 @@
       content="https://shadcn-admin.netlify.app/images/shadcn-admin.png"
     />
 
-    <!-- font family -->
+    <!-- Optimisations DNS et Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://api.wozif.store" />
+    <link rel="dns-prefetch" href="https://cdn.wozif.store" />
+    
+    <!-- Fonts optimisées avec display=swap -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&display=swap"
       rel="stylesheet"
     />
+    
+    <!-- Préchargement des ressources critiques -->
+    <link rel="preload" href="/src/main.tsx" as="script" />
+    <link rel="preload" href="/src/index.css" as="style" />
 
     <meta name="theme-color" content="#fff" />
   </head>

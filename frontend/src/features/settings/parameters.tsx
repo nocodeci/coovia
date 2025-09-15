@@ -1,20 +1,15 @@
-import { useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import ParametersForm from './parameters/parameters-form'
 
 export default function SettingsParameters() {
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    // Rediriger vers la page des paramètres généraux
-    navigate({ to: '/settings/parameters' })
-  }, [navigate])
-
   return (
-    <div className="flex items-center justify-center p-8">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-        <p>Redirection vers les paramètres...</p>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">Paramètres Généraux</h3>
+        <p className="text-sm text-muted-foreground">
+          Configurez les paramètres généraux de votre application.
+        </p>
       </div>
+      <ParametersForm />
     </div>
   )
 }

@@ -134,39 +134,8 @@ export const getSidebarData = (storeId?: string): SidebarData => {
         items: [
           {
             title: "Paramètres",
+            url: "/settings" as any,
             icon: IconSettings,
-            items: [
-              {
-                title: "Paramètres",
-                url: "/settings" as any,
-                icon: IconSettings,
-              },
-              {
-                title: "Profil",
-                url: "/settings/profile" as any,
-                icon: IconUserCog,
-              },
-              {
-                title: "Compte",
-                url: "/settings/account" as any,
-                icon: IconTool,
-              },
-              {
-                title: "Apparence",
-                url: "/settings/appearance" as any,
-                icon: IconPalette,
-              },
-              {
-                title: "Notifications",
-                url: "/settings/notifications" as any,
-                icon: IconNotification,
-              },
-              {
-                title: "Affichage",
-                url: "/settings/display" as any,
-                icon: IconBrowserCheck,
-              },
-            ],
           },
         ],
       },

@@ -43,11 +43,13 @@ import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authentica
 import { Route as ClerkAuthenticatedUserManagementRouteImport } from './routes/clerk/_authenticated/user-management'
 import { Route as ClerkauthSignUpRouteImport } from './routes/clerk/(auth)/sign-up'
 import { Route as ClerkauthSignInRouteImport } from './routes/clerk/(auth)/sign-in'
+import { Route as AuthenticatedSettingsStoreRouteImport } from './routes/_authenticated/settings/store'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings/profile'
 import { Route as AuthenticatedSettingsParametersRouteImport } from './routes/_authenticated/settings/parameters'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
+import { Route as AuthenticatedSettingsAdvancedRouteImport } from './routes/_authenticated/settings/advanced'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedStoreIdTasksRouteImport } from './routes/_authenticated/$storeId.tasks'
 import { Route as AuthenticatedStoreIdSettingsRouteImport } from './routes/_authenticated/$storeId.settings'
@@ -241,6 +243,12 @@ const ClerkauthSignInRoute = ClerkauthSignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => ClerkauthRouteRoute,
 } as any)
+const AuthenticatedSettingsStoreRoute =
+  AuthenticatedSettingsStoreRouteImport.update({
+    id: '/store',
+    path: '/store',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsProfileRoute =
   AuthenticatedSettingsProfileRouteImport.update({
     id: '/profile',
@@ -269,6 +277,12 @@ const AuthenticatedSettingsAppearanceRoute =
   AuthenticatedSettingsAppearanceRouteImport.update({
     id: '/appearance',
     path: '/appearance',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsAdvancedRoute =
+  AuthenticatedSettingsAdvancedRouteImport.update({
+    id: '/advanced',
+    path: '/advanced',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
 const AuthenticatedSettingsAccountRoute =
@@ -390,11 +404,13 @@ export interface FileRoutesByFullPath {
   '/$storeId/settings': typeof AuthenticatedStoreIdSettingsRoute
   '/$storeId/tasks': typeof AuthenticatedStoreIdTasksRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/advanced': typeof AuthenticatedSettingsAdvancedRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/parameters': typeof AuthenticatedSettingsParametersRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
+  '/settings/store': typeof AuthenticatedSettingsStoreRoute
   '/clerk/sign-in': typeof ClerkauthSignInRoute
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
@@ -440,11 +456,13 @@ export interface FileRoutesByTo {
   '/$storeId/settings': typeof AuthenticatedStoreIdSettingsRoute
   '/$storeId/tasks': typeof AuthenticatedStoreIdTasksRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/advanced': typeof AuthenticatedSettingsAdvancedRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/parameters': typeof AuthenticatedSettingsParametersRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
+  '/settings/store': typeof AuthenticatedSettingsStoreRoute
   '/clerk/sign-in': typeof ClerkauthSignInRoute
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
@@ -497,11 +515,13 @@ export interface FileRoutesById {
   '/_authenticated/$storeId/settings': typeof AuthenticatedStoreIdSettingsRoute
   '/_authenticated/$storeId/tasks': typeof AuthenticatedStoreIdTasksRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/_authenticated/settings/advanced': typeof AuthenticatedSettingsAdvancedRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/parameters': typeof AuthenticatedSettingsParametersRoute
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
+  '/_authenticated/settings/store': typeof AuthenticatedSettingsStoreRoute
   '/clerk/(auth)/sign-in': typeof ClerkauthSignInRoute
   '/clerk/(auth)/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/_authenticated/user-management': typeof ClerkAuthenticatedUserManagementRoute
@@ -553,11 +573,13 @@ export interface FileRouteTypes {
     | '/$storeId/settings'
     | '/$storeId/tasks'
     | '/settings/account'
+    | '/settings/advanced'
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
     | '/settings/parameters'
     | '/settings/profile'
+    | '/settings/store'
     | '/clerk/sign-in'
     | '/clerk/sign-up'
     | '/clerk/user-management'
@@ -603,11 +625,13 @@ export interface FileRouteTypes {
     | '/$storeId/settings'
     | '/$storeId/tasks'
     | '/settings/account'
+    | '/settings/advanced'
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
     | '/settings/parameters'
     | '/settings/profile'
+    | '/settings/store'
     | '/clerk/sign-in'
     | '/clerk/sign-up'
     | '/clerk/user-management'
@@ -659,11 +683,13 @@ export interface FileRouteTypes {
     | '/_authenticated/$storeId/settings'
     | '/_authenticated/$storeId/tasks'
     | '/_authenticated/settings/account'
+    | '/_authenticated/settings/advanced'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/parameters'
     | '/_authenticated/settings/profile'
+    | '/_authenticated/settings/store'
     | '/clerk/(auth)/sign-in'
     | '/clerk/(auth)/sign-up'
     | '/clerk/_authenticated/user-management'
@@ -942,6 +968,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClerkauthSignInRouteImport
       parentRoute: typeof ClerkauthRouteRoute
     }
+    '/_authenticated/settings/store': {
+      id: '/_authenticated/settings/store'
+      path: '/store'
+      fullPath: '/settings/store'
+      preLoaderRoute: typeof AuthenticatedSettingsStoreRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/profile': {
       id: '/_authenticated/settings/profile'
       path: '/profile'
@@ -975,6 +1008,13 @@ declare module '@tanstack/react-router' {
       path: '/appearance'
       fullPath: '/settings/appearance'
       preLoaderRoute: typeof AuthenticatedSettingsAppearanceRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/advanced': {
+      id: '/_authenticated/settings/advanced'
+      path: '/advanced'
+      fullPath: '/settings/advanced'
+      preLoaderRoute: typeof AuthenticatedSettingsAdvancedRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/settings/account': {
@@ -1087,23 +1127,27 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
+  AuthenticatedSettingsAdvancedRoute: typeof AuthenticatedSettingsAdvancedRoute
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
   AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
   AuthenticatedSettingsParametersRoute: typeof AuthenticatedSettingsParametersRoute
   AuthenticatedSettingsProfileRoute: typeof AuthenticatedSettingsProfileRoute
+  AuthenticatedSettingsStoreRoute: typeof AuthenticatedSettingsStoreRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
   {
     AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
+    AuthenticatedSettingsAdvancedRoute: AuthenticatedSettingsAdvancedRoute,
     AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
     AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
     AuthenticatedSettingsNotificationsRoute:
       AuthenticatedSettingsNotificationsRoute,
     AuthenticatedSettingsParametersRoute: AuthenticatedSettingsParametersRoute,
     AuthenticatedSettingsProfileRoute: AuthenticatedSettingsProfileRoute,
+    AuthenticatedSettingsStoreRoute: AuthenticatedSettingsStoreRoute,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 

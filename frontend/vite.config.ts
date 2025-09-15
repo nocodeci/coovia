@@ -22,7 +22,7 @@ export default defineConfig({
       '@/config': path.resolve(__dirname, './config'),
       '@/docs': path.resolve(__dirname, './docs'),
       '@/scripts': path.resolve(__dirname, './scripts'),
-      // fix loading all icon chunks in dev mode
+      // Optimisation des icônes Tabler - tree shaking
       '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
     },
   },
@@ -44,7 +44,9 @@ export default defineConfig({
           'router-vendor': ['@tanstack/react-router'],
           'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
           'animation-vendor': ['framer-motion'],
-          'icons-vendor': ['lucide-react', '@tabler/icons-react'],
+          // Séparation des icônes pour optimiser le tree-shaking
+          'icons-lucide': ['lucide-react'],
+          'icons-tabler': ['@tabler/icons-react'],
           
           // Features par domaine
           'product-features': [

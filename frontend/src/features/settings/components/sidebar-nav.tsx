@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -54,14 +53,10 @@ export default function SidebarNav({
         </Select>
       </div>
 
-      <ScrollArea
-        orientation='horizontal'
-        type='always'
-        className='bg-background hidden w-full min-w-40 px-1 py-2 md:block'
-      >
+      <div className='bg-background w-full min-w-40 px-2 py-2 block rounded-lg border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-background to-muted/20 backdrop-blur-sm relative z-10'>
         <nav
           className={cn(
-            'flex space-x-2 py-1 lg:flex-col lg:space-y-1 lg:space-x-0',
+            'flex flex-col space-y-1',
             className
           )}
           {...props}
@@ -71,19 +66,21 @@ export default function SidebarNav({
               key={item.href}
               to={item.href}
               className={cn(
-                buttonVariants({ variant: 'ghost' }),
+                'inline-flex items-center gap-2 whitespace-nowrap rounded-md text-xs font-medium transition-all duration-200',
+                'disabled:pointer-events-none disabled:opacity-50 outline-none',
+                'focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-1',
+                'h-8 px-3 py-1 justify-start',
                 pathname === item.href
-                  ? 'bg-muted hover:bg-muted'
-                  : 'hover:bg-transparent hover:underline',
-                'justify-start'
+                  ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:shadow-sm'
               )}
             >
-              <span className='mr-2'>{item.icon}</span>
+              <span className='flex h-3 w-3 items-center justify-center'>{item.icon}</span>
               {item.title}
             </Link>
           ))}
         </nav>
-      </ScrollArea>
+      </div>
     </>
   )
 }

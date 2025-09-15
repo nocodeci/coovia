@@ -70,22 +70,39 @@ interface ApiResponse<T = any> {
   error?: string
 }
 
+// Cache global pour les paramètres
+let globalSettingsCache: Settings | null = null
+let settingsInitialized = false
+
 // Hook pour les paramètres globaux
 export function useGlobalSettings() {
-  const [settings, setSettings] = useState<Settings>({})
-  const [loading, setLoading] = useState(true)
+  const [settings, setSettings] = useState<Settings>(globalSettingsCache || {})
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchPublicSettings()
+    // Ne charger que si pas encore initialisé
+    if (!settingsInitialized) {
+      settingsInitialized = true
+      fetchPublicSettings()
+    }
   }, [])
 
   const fetchPublicSettings = async () => {
+    // Si on a déjà des données en cache, ne pas recharger
+    if (globalSettingsCache && Object.keys(globalSettingsCache).length > 0) {
+      console.log("📦 Utilisation du cache des paramètres")
+      setSettings(globalSettingsCache)
+      return
+    }
+
     try {
       setLoading(true)
       const response = await apiService.get('/settings/public') as ApiResponse<Settings>
       if (response.success) {
-        setSettings(response.data || {})
+        const settingsData = response.data || {}
+        globalSettingsCache = settingsData
+        setSettings(settingsData)
       } else {
         setError(response.message || 'Erreur lors du chargement des paramètres')
       }
@@ -160,21 +177,37 @@ export function useSettingsByGroup(group: string) {
   }
 }
 
+// Cache global pour le profil utilisateur
+let globalProfileCache: UserProfile | null = null
+let profileInitialized = false
+
 // Hook pour le profil utilisateur
 export function useUserProfile() {
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [profile, setProfile] = useState<UserProfile | null>(globalProfileCache)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchProfile()
+    // Ne charger que si pas encore initialisé
+    if (!profileInitialized) {
+      profileInitialized = true
+      fetchProfile()
+    }
   }, [])
 
   const fetchProfile = async () => {
+    // Si on a déjà des données en cache, ne pas recharger
+    if (globalProfileCache) {
+      console.log("📦 Utilisation du cache du profil")
+      setProfile(globalProfileCache)
+      return
+    }
+
     try {
       setLoading(true)
       const response = await apiService.get('/profile') as ApiResponse<{ profile: UserProfile }>
       if (response.success && response.data) {
+        globalProfileCache = response.data.profile
         setProfile(response.data.profile)
       } else {
         setError(response.message || 'Erreur lors du chargement du profil')

@@ -4,15 +4,33 @@ import { useState, useEffect } from "react"
 import type { Store } from "@/types/store"
 import apiService from "@/lib/api"
 
+// Cache global pour éviter les re-chargements
+let globalStoresCache: Store[] | null = null
+let globalCurrentStoreCache: Store | null = null
+let isInitialized = false
+
 export function useStore() {
-  const [stores, setStores] = useState<Store[]>([])
-  const [currentStore, setCurrentStore] = useState<Store | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [stores, setStores] = useState<Store[]>(globalStoresCache || [])
+  const [currentStore, setCurrentStore] = useState<Store | null>(globalCurrentStoreCache)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loadStores = async () => {
+    // Si on a déjà des données en cache, ne pas recharger
+    if (globalStoresCache && globalStoresCache.length > 0) {
+      console.log("📦 Utilisation du cache des boutiques")
+      setStores(globalStoresCache)
+      if (globalCurrentStoreCache) {
+        setCurrentStore(globalCurrentStoreCache)
+      }
+      return
+    }
+
     try {
-      setIsLoading(true)
+      // Ne pas afficher le loading si on a déjà des données
+      if (stores.length === 0) {
+        setIsLoading(true)
+      }
       setError(null)
       console.log("🔄 Chargement des boutiques depuis l'API...")
       
@@ -68,7 +86,16 @@ export function useStore() {
         }))
 
         console.log("✅ Boutiques transformées:", transformedStores)
+        
+        // Mettre en cache global
+        globalStoresCache = transformedStores
         setStores(transformedStores)
+        
+        // Sélectionner automatiquement la première boutique si aucune n'est sélectionnée
+        if (!globalCurrentStoreCache && transformedStores.length > 0) {
+          globalCurrentStoreCache = transformedStores[0]
+          setCurrentStore(transformedStores[0])
+        }
       } else {
         console.error("❌ Erreur API stores:", response.message)
         setError(response.message || 'Erreur lors du chargement des boutiques')
@@ -82,7 +109,11 @@ export function useStore() {
   }
 
   useEffect(() => {
-    loadStores()
+    // Ne charger que si pas encore initialisé
+    if (!isInitialized) {
+      isInitialized = true
+      loadStores()
+    }
   }, [])
 
   return {
