@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Images - YOHaN ERIC KOFFI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .product-card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; }
+        .product-image { width: 100%; height: 200px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+        .product-image img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+        .fallback { color: #666; font-size: 24px; }
+    </style>
+</head>
+<body>
+    <h1>Test des Images - YOHaN ERIC KOFFI</h1>
+    <p>Vérification que les images s'affichent correctement sans déformation</p>
+    
+    <div class="product-grid">
+        <div class="product-card">
+            <h3>Cisco</h3>
+            <div class="product-image">
+                <img src="https://pub-f24a39478f6a41e7ab82e6f4291ed5ae.r2.dev/uploads/thumbnails/img-1228_1757000786_IOiHO7Vd_medium.JPG" 
+                     alt="Cisco" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="fallback" style="display: none;">🛍️</div>
+            </div>
+            <p><strong>2 000 F CFA</strong> - Templates</p>
+        </div>
+        
+        <div class="product-card">
+            <h3>dbfv</h3>
+            <div class="product-image">
+                <img src="https://pub-f24a39478f6a41e7ab82e6f4291ed5ae.r2.dev/uploads/thumbnails/img-1228_1757000786_IOiHO7Vd_medium.JPG" 
+                     alt="dbfv" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="fallback" style="display: none;">🛍️</div>
+            </div>
+            <p><strong>2 000 F CFA</strong> - Documents</p>
+        </div>
+        
+        <div class="product-card">
+            <h3>Cisco Audio</h3>
+            <div class="product-image">
+                <img src="https://pub-f24a39478f6a41e7ab82e6f4291ed5ae.r2.dev/uploads/thumbnails/img-1228_1757000786_IOiHO7Vd_medium.JPG" 
+                     alt="Cisco Audio" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="fallback" style="display: none;">🛍️</div>
+            </div>
+            <p><strong>2 000 F CFA</strong> - Audio</p>
+        </div>
+    </div>
+    
+    <h2>Test avec Next.js Image Component</h2>
+    <p>Ouvrez <a href="http://localhost:3000/yohan-eric-koffi" target="_blank">http://localhost:3000/yohan-eric-koffi</a> pour voir le rendu avec Next.js</p>
+</body>
+</html>

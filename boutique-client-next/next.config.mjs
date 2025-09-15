@@ -4,7 +4,7 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'],
   },
   images: {
-    domains: ['localhost', 'wozif.store', '*.wozif.store'],
+    domains: ['localhost', 'wozif.store', '*.wozif.store', 'pub-f24a39478f6a41e7ab82e6f4291ed5ae.r2.dev'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -15,6 +15,12 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'wozif.store',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pub-f24a39478f6a41e7ab82e6f4291ed5ae.r2.dev',
         port: '',
         pathname: '/**',
       },

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ShoppingBag, Heart, Star } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { storeService } from '@/services/api';
 import { BoutiquePageProps, Store, Product } from '@/types/store';
 import { StoreBanner } from './store-banner';
@@ -20,7 +21,7 @@ import {
   AlertDescription,
 } from '@/components/ui';
 
-export function BoutiquePage({ storeId }: BoutiquePageProps) {
+export function BoutiquePage({ storeId, store }: BoutiquePageProps & { store?: Store }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [favoriteProducts, setFavoriteProducts] = useState<string[]>([]);
@@ -37,15 +38,9 @@ export function BoutiquePage({ storeId }: BoutiquePageProps) {
     updated_at: '2025-08-12T15:58:40.000000Z',
   };
 
-  // Récupérer les données de la boutique
-  const { data: store, isLoading: storeLoading, error: storeError } = useQuery({
-    queryKey: ['store', storeId],
-    queryFn: () => storeService.getStoreBySlug(storeId),
-    enabled: storeId !== 'test-store', // Désactiver l'API pour test-store
-  });
-
-  // Utiliser les données de test pour test-store
+  // Utiliser les données passées en props ou les données de test
   const finalStore = storeId === 'test-store' ? testStore : store;
+  
 
   // Produits de test pour test-store
   const testProducts: Product[] = [
@@ -73,17 +68,60 @@ export function BoutiquePage({ storeId }: BoutiquePageProps) {
     },
   ];
 
-  // Récupérer les produits de la boutique (pour toutes les boutiques sauf test-store)
+  // Produits de test pour yohan-eric-koffi (basés sur les vrais produits)
+  const yohanProducts: Product[] = [
+    {
+      id: 'y1',
+      name: 'Cisco',
+      slug: 'cisco',
+      description: 'Produit Cisco de qualité professionnelle',
+      price: 2000,
+      image: 'https://pub-f24a39478f6a41e7ab82e6f4291ed5ae.r2.dev/uploads/thumbnails/img-1228_1757000786_IOiHO7Vd_medium.JPG',
+      category: 'Templates',
+      store_id: '9fc12874-b85f-42a7-972a-f1d22554d464',
+      created_at: '2025-08-30T02:06:02.000000Z',
+      updated_at: '2025-08-30T02:06:02.000000Z',
+    },
+    {
+      id: 'y2',
+      name: 'dbfv',
+      slug: 'dbfv',
+      description: 'Produit dbfv de qualité professionnelle',
+      price: 2000,
+      image: 'https://pub-f24a39478f6a41e7ab82e6f4291ed5ae.r2.dev/uploads/thumbnails/img-1228_1757000786_IOiHO7Vd_medium.JPG',
+      category: 'Documents',
+      store_id: '9fc12874-b85f-42a7-972a-f1d22554d464',
+      created_at: '2025-08-30T02:06:02.000000Z',
+      updated_at: '2025-08-30T02:06:02.000000Z',
+    },
+    {
+      id: 'y3',
+      name: 'Cisco Audio',
+      slug: 'cisco-audio',
+      description: 'Produit Cisco Audio de qualité professionnelle',
+      price: 2000,
+      image: 'https://pub-f24a39478f6a41e7ab82e6f4291ed5ae.r2.dev/uploads/thumbnails/img-1228_1757000786_IOiHO7Vd_medium.JPG',
+      category: 'Audio',
+      store_id: '9fc12874-b85f-42a7-972a-f1d22554d464',
+      created_at: '2025-08-30T02:06:02.000000Z',
+      updated_at: '2025-08-30T02:06:02.000000Z',
+    },
+  ];
+
+  // Récupérer les produits de la boutique (désactivé pour test-store seulement)
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['products', storeId],
     queryFn: () => storeService.getStoreProducts(storeId),
     enabled: !!storeId && storeId !== 'test-store',
   });
 
-  // Utiliser les produits de test pour test-store, sinon utiliser l'API
-  const finalProducts = storeId === 'test-store' ? testProducts : products;
+  // Utiliser les produits de test selon le storeId
+  const finalProducts = storeId === 'test-store' ? testProducts : 
+                       storeId === 'yohan-eric-koffi' ? yohanProducts : 
+                       products;
+  
 
-  // Récupérer les catégories (avec gestion d'erreur)
+  // Récupérer les catégories (désactivé pour test-store seulement)
   const { data: categories = [] } = useQuery({
     queryKey: ['categories', storeId],
     queryFn: () => storeService.getStoreCategories(storeId),
@@ -92,8 +130,10 @@ export function BoutiquePage({ storeId }: BoutiquePageProps) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Utiliser les catégories de test pour test-store
-  const finalCategories = storeId === 'test-store' ? ['Test', 'Demo'] : categories;
+  // Utiliser les catégories de test selon le storeId
+  const finalCategories = storeId === 'test-store' ? ['Test', 'Demo'] : 
+                         storeId === 'yohan-eric-koffi' ? ['Templates', 'Documents', 'Audio'] : 
+                         categories;
 
   // Filtrer les produits
   const filteredProducts = finalProducts.filter((product) => {
@@ -121,7 +161,8 @@ export function BoutiquePage({ storeId }: BoutiquePageProps) {
     );
   };
 
-  if (storeLoading || productsLoading) {
+  // Vérifier si on a les données de la boutique
+  if (!finalStore) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -132,14 +173,17 @@ export function BoutiquePage({ storeId }: BoutiquePageProps) {
     );
   }
 
-  if (storeError && storeId !== 'test-store') {
+  // Afficher un loader pendant le chargement des produits
+  if (productsLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert variant="destructive">
-          <AlertDescription>
-            Erreur lors du chargement de la boutique. Veuillez réessayer.
-          </AlertDescription>
-        </Alert>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/5">
+        {finalStore && <StoreBanner store={finalStore} />}
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Chargement des produits...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -201,11 +245,26 @@ export function BoutiquePage({ storeId }: BoutiquePageProps) {
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
               {filteredProducts.map((product) => (
-                <Link key={product.id} href={`/${storeId}/product/${product.id}`} className="block">
+                <Link key={product.id} href={`/${storeId}/product/${product.slug || product.id}`} className="block">
                   <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
                   <CardHeader className="pb-4">
-                    <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center">
-                      <ShoppingBag className="w-12 h-12 text-muted-foreground" />
+                    <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden relative">
+                      {product.image ? (
+                        <Image 
+                          src={product.image} 
+                          alt={product.name}
+                          width={400}
+                          height={225}
+                          className="w-full h-full object-cover rounded-lg"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-full flex items-center justify-center absolute inset-0 ${product.image ? 'hidden' : ''}`}>
+                        <ShoppingBag className="w-12 h-12 text-muted-foreground" />
+                      </div>
                     </div>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

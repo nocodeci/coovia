@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page Détail Produit</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 0;
+            transition: background 0.3s;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Page Détail Produit</h1>
+        
+        <div class="status info">
+            <strong>📋 Instructions :</strong> Cliquez sur les liens ci-dessous pour tester la navigation vers les pages de détail des produits.
+        </div>
+
+        <h2>🔗 Liens de Test</h2>
+        
+        <div>
+            <a href="http://localhost:3000/yohan-eric-koffi/product/y1" class="test-link" target="_blank">
+                📱 Produit Cisco (y1)
+            </a>
+        </div>
+        
+        <div>
+            <a href="http://localhost:3000/yohan-eric-koffi/product/y2" class="test-link" target="_blank">
+                📄 Produit dbfv (y2)
+            </a>
+        </div>
+        
+        <div>
+            <a href="http://localhost:3000/yohan-eric-koffi/product/y3" class="test-link" target="_blank">
+                🎵 Produit Cisco Audio (y3)
+            </a>
+        </div>
+
+        <h2>✅ Fonctionnalités Attendues</h2>
+        <ul>
+            <li><strong>Navigation :</strong> Retour à la boutique via breadcrumb</li>
+            <li><strong>Images :</strong> Affichage correct sans déformation</li>
+            <li><strong>Informations :</strong> Nom, description, prix, catégorie</li>
+            <li><strong>Actions :</strong> Boutons d'achat, partage, wishlist</li>
+            <li><strong>Onglets :</strong> Description, Spécifications, Avis</li>
+            <li><strong>Responsive :</strong> Adaptation mobile/desktop</li>
+        </ul>
+
+        <h2>🔍 Debug</h2>
+        <div class="status info">
+            <strong>Console du navigateur :</strong> Ouvrez les outils de développement (F12) pour voir les logs API et détecter d'éventuelles erreurs.
+        </div>
+
+        <h2>📱 Test Mobile</h2>
+        <div class="status info">
+            <strong>Responsive :</strong> Testez également sur mobile en redimensionnant la fenêtre ou en utilisant les outils de développement.
+        </div>
+    </div>
+
+    <script>
+        // Test automatique des liens
+        console.log('🧪 Test des pages de détail des produits');
+        
+        const testLinks = [
+            'http://localhost:3000/yohan-eric-koffi/product/y1',
+            'http://localhost:3000/yohan-eric-koffi/product/y2', 
+            'http://localhost:3000/yohan-eric-koffi/product/y3'
+        ];
+
+        testLinks.forEach((url, index) => {
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        console.log(`✅ Page ${index + 1} accessible: ${url}`);
+                    } else {
+                        console.log(`❌ Page ${index + 1} erreur ${response.status}: ${url}`);
+                    }
+                })
+                .catch(error => {
+                    console.log(`❌ Page ${index + 1} erreur réseau: ${url}`, error);
+                });
+        });
+    </script>
+</body>
+</html>
